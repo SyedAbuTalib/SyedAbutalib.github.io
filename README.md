@@ -1,7 +1,7 @@
 ### Markdown
 
 You know who it is
-[Link](syedabutalib.me)
+[Link](http://www.syedabutalib.me)
 
 ```markdown
 Syntax highlighted code block
