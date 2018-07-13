@@ -10,6 +10,10 @@ p {
   font-family: 'PT Mono', sans-serif;
 }
 
+.sad {
+  color: gray;
+}
+
 .titles {
   margin-top: 40px;
   color: red;
