@@ -7,16 +7,17 @@ h1 {
 }
 
 p {
-  font-family: 'PT Mono', sans-serif;
+  font-family:  'Aldrich', sans-serif;
 }
 
 .sad {
   color: gray;
+  margin-top: -20px; 
 }
 
 .titles {
   margin-top: 40px;
-  color: red;
+  color: DarkBlue;
   font-family: 'PT Mono', sans-serif;
 }
 
