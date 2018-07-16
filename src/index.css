@@ -27,6 +27,26 @@ body {
   background-size: cover;
 }
 
+html {
+  font-size: 14px;
+}
+@media screen and (min-width: 320px) {
+  html {
+    font-size: calc(16px + 3 * ((100vw - 320px) / 680));
+  }
+}
+@media screen and (min-width: 1000px) {
+  html {
+    font-size: 18px;
+  }
+}
+
+
+
+
+
+/*Typing animation please ignore*/
+
 .typewriter h1 {
   overflow: hidden; /* Ensures the content is not revealed until the animation */
   border-right: .075em solid black; /* The typwriter cursor */
