@@ -12,7 +12,8 @@ p {
 
 .sad {
   color: gray;
-  margin-top: -20px; 
+  margin-top: -20px;
+  padding: 10px;
 }
 
 .titles {
@@ -46,10 +47,6 @@ html {
     font-size: 18px;
   }
 }
-
-
-
-
 
 /*Typing animation please ignore*/
 
