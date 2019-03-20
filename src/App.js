@@ -11,28 +11,25 @@ class App extends Component {
               <h1>Syed Abutalib | Developer</h1>
             </div>
             <section>
-              <h1 class='titles'> Hey, Syed here! </h1>
-              <p>Hey y'all, I'm Syed! Back in high school I did programming competitions, as well as other tech-related competitions.</p>
-              <p>I am currently a freshman at the University of Texas at Dallas, studying CS. I'm hoping to meet all kinds of people there while learning and having as much fun as I can.</p>
-              <p>In Summer 2018 I interned at Kalkomey, where I helped create a fishing app for the State of Nevada!</p>
-              <p>Currently looking for any tech jobs during the school year, as well as in the Summers.</p>
-              <p>If you're still reading, feel free to message me and tell me how to make this website better! I'm open to all suggestions!</p>
+              <h1 class='titles'>A Lil Bit About Syed </h1>
+              <p>Hey y'all I'm Syed! I am currently a freshman studying CS at the University of Texas at Dallas!.</p>
+              <p>Back in high school I did programming competitions and UIL (in Java), as well as other tech-related competitions.</p>
+              <p>In Summer 2018 I interned at Kalkomey, where I helped create a fishing app for the State of Nevada! I came back January 2019!</p>
+              <p>Would love to find an opportunity somewhere outside of Dallas! Email me for offers!</p>
+              <p>If you're still reading, feel free to message me and tell me how to make this website better! I'm open to suggestions!</p>
             </section>
             <section>
               <h1 class='titles'>Skills</h1>
-              <p>HTML, JS, CSS, Bootstrap<br/>Python, Java, Ruby, <br/>Flask, Rails, React, <br/>React Native, Android</p>
-              <p>Git, ssh, <br/>Whatever you want me to do.</p>
-            </section>
-            <section>
-              <h1 class='titles'>Experience</h1>
-              <p>Kalkomey / Intern</p>
-              <p class='sad'>Summer 2018</p>
+              <p>HTML, JS<br/>Python, Java, Ruby, C++<br/>Rails, React, React Native</p>
+              <p>Git, ssh<br/>I'll learn everything if necessary.</p>
             </section>
             <section>
               <h1 class='titles'>Contact</h1>
-              <a class='sad' href="https://twitter.com/SyedIsSoHot">Twitter</a>
-              <a class='sad' href="https://github.com/SyedAbutalib">Github</a>
-              <a class='sad' href="mailto:SyedAbutalib589@gmail.com">Email</a>
+              <a class='sad' style={{paddingLeft: 0}} href="https://twitter.com/SyedIsSoHot" target="_blank" rel="noopener noreferrer">Twitter</a>
+              <a class='sad' href="https://github.com/SyedAbutalib" target="_blank" rel="noopener noreferrer">Github</a>
+              <a class='sad' href="https://linkedin.com/in/syed-abutalib" target="_blank" rel="noopener noreferrer">LinkedIn</a>
+              <a class='sad' href="https://instagram.com/syedtx" target="_blank" rel="noopener noreferrer">Instagram</a>
+              <a class='sad' href="mailto:SyedAbutalib589@gmail.com" target="_blank" rel="noopener noreferrer">Email</a>
             </section>
           </div>
         </div>
