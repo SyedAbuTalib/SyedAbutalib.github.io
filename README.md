@@ -1,7 +1,7 @@
 ### Markdown
 
 You know who it is
-[Link.](http://www.syedabutalib.me)
+[Link](http://www.syedabutalib.me)
 
 ### Support or Contact
 
