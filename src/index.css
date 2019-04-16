@@ -28,7 +28,7 @@ a:hover {
 
 body {
   /*background: -webkit-gradient(linear, left top, left bottom, from(#ffffff), to(#ff00ff)) fixed;*/
-  background-image: linear-gradient(rgba(255, 255, 255, 0.5), rgba(255, 255, 255, 0.5)), url("../public/DSC_0037.jpg");
+  background-image: linear-gradient(rgba(255, 255, 255, 0.5), rgba(255, 255, 255, 0.5)), url("DSC_0037.jpg");
   background-size: cover;
   padding-bottom: 40px;
 }
