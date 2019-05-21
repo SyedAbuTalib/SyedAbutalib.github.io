@@ -1,6 +1,9 @@
+.bigboy {
+  font-size: 50px;
+}
+
 h1 {
   color: black;
-  /*font-family: 'PT Mono', sans-serif;*/
   font-family: Didot, "Didot LT STD", "Hoefler Text", Garamond, "Times New Roman", serif;
 
   font-size: 20px
@@ -12,7 +15,7 @@ p {
 
 .sad {
   color: gray;
-  margin-top: -20px; 
+  /* margin-top: -20px;  */
 }
 
 .titles {
@@ -28,22 +31,31 @@ a:hover {
 
 body {
   /*background: -webkit-gradient(linear, left top, left bottom, from(#ffffff), to(#ff00ff)) fixed;*/
-  background-image: linear-gradient(rgba(255, 255, 255, 0.5), rgba(255, 255, 255, 0.5)), url("DSC_0037.jpg");
+  background-image: linear-gradient(rgba(255, 250, 240, 0.5), rgba(255, 250, 240, 0.5)), url("DSC_0037.jpg");
+  background-color: floralwhite;
+  background-repeat: no-repeat;
   background-size: cover;
   padding-bottom: 40px;
 }
 
 html {
   font-size: 14px;
+  -webkit-overflow-scrolling: touch;
 }
 @media screen and (min-width: 320px) {
   html {
     font-size: calc(16px + 3 * ((100vw - 320px) / 680));
   }
+  .bigboy {
+    font-size: 30px;
+  }
 }
 @media screen and (min-width: 1000px) {
   html {
     font-size: 18px;
+  }
+  .bigboy {
+    font-size: 40px;
   }
 }
 
@@ -60,7 +72,7 @@ html {
   margin: 0em 0em auto; /* Gives that scrolling effect as the typing happens */
   letter-spacing: .05em; /* Adjust as needed */
   animation: 
-    typing 3.5s steps(40, end),
+    typing 1.5s steps(40, end),
     blink-caret .75s step-end infinite;
 }
 
