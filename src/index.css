@@ -53,7 +53,7 @@ html {
 
 /*Typing animation please ignore*/
 
-.typewriter h1 {
+.typewriter {
   overflow: hidden; /* Ensures the content is not revealed until the animation */
   border-right: .075em solid black; /* The typwriter cursor */
   white-space: nowrap; /* Keeps the content on a single line */

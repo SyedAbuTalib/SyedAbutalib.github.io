@@ -25,67 +25,69 @@
     <script src="src/timeline.js" type="text/javascript"></script>
   </head>
   <body>
+    <nav class="navbar navbar-default">
+      <div class="container-fluid">
+        <div class="navbar-header">
+          <a class="navbar-brand typewriter" href="#">Syed AbuTalib | Student Developer</a>
+        </div>
+        <ul class="nav navbar-nav">
+          <li><a href="#intro">Introduction</a></li>
+          <li><a href="#skills">Skill Set</a></li>
+          <li><a href="#contact">Contact</a></li>
+          <li><a href="#experience">Experience</a></li>
+          <li><a href="#time">Timeline</a></li>
+          <li><a href="#contact">Contact</a></li>
+        </ul>
+      </div>
+    </nav>
     <div class='container'>
-      <div class='row justify-content-center'>
-        <div class='col-6 col-md-2'>
-          <header>Hello pal</header>
-        </div>
-        <div class='col'>
-          <div class='typewriter'>
-            <h1>Syed Abutalib | Developer</h1>
-          </div>
-          <section>
-            <h1 class='titles'> Hey, Syed here! </h1>
-            <p>Life story time! I've been programming since 8th grade, and I continued into high school. I did a few CS competitions as well.</p>
-            <p>Currently a freshman at the University of Texas at Dallas, for CS. Hoping to meet everyone I can! Currently in VSA, FSA, and looking into ACM.</p>
-            <p>In Summer 2018 I interned at Kalkomey, where I helped create a fishing app for the State of Nevada!</p>
-            <p>Currently working with Kalkomey since January.</p>
-            <p>This is a fairly basic website, will take any advise to make it better!</p>
-          </section>
-          <section>
-            <h1 class='titles'>Safe Skills</h1>
-            <p>HTML, Python, Java, Ruby<br>Rails<br>React Native</p>
-            <p>Git, ssh</p>
-          </section>
-          <section>
-            <h1 class='titles'>Experience</h1>
-            <p>Kalkomey / Software Engineer Intern</p>
-            <p class='sad'>Summer 2018; January 2019 - Present</p>
-          </section>
-        </div>
+      <div id="intro" class='col'>
+        <h1 class='titles'> Hey, Syed here! </h1>
+        <p>Life story time! I've been programming since 8th grade, and I continued into high school. I did a few CS competitions as well, such as Lockheed Martin and HP CodeWars.</p>
+        <p>Just finished my freshmen year at University of Texas at Dallas, for CS. Hoping to meet everyone I can! Currently in VSA, FSA, and looking into ACM.</p>
+        <p>In Summer 2018 I interned at Kalkomey, where I helped create a fishing app for the State of Nevada!</p>
+        <p>Currently working with Kalkomey since January.</p>
+        <p>This is a fairly basic website, I'll take any advise to make it better!</p>
       </div>
-      <div class="row justify-content-left">
-        <div class="col">
-          <article class="timeline">
-            <nav class="timeline_nav">
-              <ul>
-                <li><span>1999</span></li>
-                <li><span>2018</span></li>
-                <li><span>2019</span></li>
-              </ul>
-            </nav>
-            <section class="timeline_section">
-              <div class="wrapper">
-                  <h2 class="milestone">1999</h2>
-                  <p>I was birthed...</p>
-                  <h2 class="milestone">2018</h2>
-                  <p>Kalkomey</p>
-                  <h2 class="milestone">2019</h2>
-                  <p>Kalkomey (again)</p>
-              </div>
-            </section>
-          </article>
-        </div>
+      <div id="skills" class='col'>
+        <h1 class='titles'>Safe Skills</h1>
+        <p>HTML, Python, Java, Ruby<br>Rails<br>React Native</p>
+        <p>Git, ssh</p>
       </div>
-      <div class='row justify-content-left'>
-          <div class="col">
-            <h1 class='titles'>Contact</h1>
-            <a href="https://twitter.com/syedissohot"><i class="fab fa-twitter-square fa-3x"></i></a>
-            <a href="https://github.com/SyedAbutalib"><i class="fab fa-github-square fa-3x"></i></a>
-            <a href="https://instagram.com/syedtx"><i class="fab fa-instagram fa-3x"></i></a>
-            <a href="mailto:SyedAbutalib589@gmail.com"><i class="fas fa-envelope fa-3x"></i></a>
-          </div>
-        </div>
+      <div id="experience" class='col'>
+        <h1 class='titles'>Experience</h1>
+        <p>Kalkomey / Software Engineer Intern</p>
+        <p class='sad'>Summer 2018; January 2019 - Present</p>
+      </div>
+      <div id="time" class="col">
+        <h1 class='titles'>Timeline</h1>
+        <article class="timeline">
+          <nav class="timeline_nav">
+            <ul>
+              <li><span>1999</span></li>
+              <li><span>2018</span></li>
+              <li><span>2019</span></li>
+            </ul>
+          </nav>
+          <section class="timeline_section">
+            <div class="wrapper">
+              <h2 class="milestone">1999</h2>
+              <p class="blurb">I was born on this very year. I was born in the old country and emigrated to the US soon after. Good times were had back then.</p>
+              <h2 class="milestone">2018</h2>
+              <p class="blurb">Received an offer at Kalkomey the Summer after high school. Worked on an intern project, which became a mobile app for the state of Nevada. Involved <span class='sad'>React Native</span> and <span class='sad'>Ruby on Rails.</span></p>
+              <h2 class="milestone">2019</h2>
+              <p class="blurb">Working at Kalkomey in the Summer. Working on licensing, composed of several <span class='sad'>Rails</span> servers as well as a few front ends in <span class='sad'>Angular</span> and <span class='sad'>React.</span></p>
+            </div>
+          </section>
+        </article>
+      </div>
+      <div class="col">
+        <h1 class='titles'>Contact</h1>
+        <a href="https://twitter.com/syedissohot"><i class="fab fa-twitter-square fa-3x"></i></a>
+        <a href="https://github.com/SyedAbutalib"><i class="fab fa-github-square fa-3x"></i></a>
+        <a href="https://instagram.com/syedtx"><i class="fab fa-instagram fa-3x"></i></a>
+        <a href="mailto:SyedAbutalib589@gmail.com"><i class="fas fa-envelope fa-3x"></i></a>
+      </div>
     </div>
   </body>
 </html>
