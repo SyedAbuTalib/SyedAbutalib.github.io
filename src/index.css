@@ -1,20 +1,20 @@
-.bigboy {
-  font-size: 50px;
-}
-
 h1 {
   color: black;
   font-family: Didot, "Didot LT STD", "Hoefler Text", Garamond, "Times New Roman", serif;
 
-  font-size: 20px
+  font-size: 24px
 }
 
 p {
   font-family:  'Aldrich', sans-serif;
 }
 
+.navbar {
+  position: sticky;
+}
+
 .sad {
-  color: gray;
+  color: #ff6666;
   /* margin-top: -20px;  */
 }
 
@@ -30,8 +30,9 @@ a:hover {
 }
 
 body {
+  /* position: relative; */
   /*background: -webkit-gradient(linear, left top, left bottom, from(#ffffff), to(#ff00ff)) fixed;*/
-  background-image: linear-gradient(rgba(255, 250, 240, 0.5), rgba(255, 250, 240, 0.5)), url("DSC_0037.jpg");
+  background-image: linear-gradient(rgba(255, 250, 240, .5), rgba(255, 250, 240, .99)), url("DSC_0037.jpg");
   background-color: floralwhite;
   background-repeat: no-repeat;
   background-size: cover;
@@ -46,16 +47,10 @@ html {
   html {
     font-size: calc(16px + 3 * ((100vw - 320px) / 680));
   }
-  .bigboy {
-    font-size: 30px;
-  }
 }
 @media screen and (min-width: 1000px) {
   html {
     font-size: 18px;
-  }
-  .bigboy {
-    font-size: 40px;
   }
 }
 

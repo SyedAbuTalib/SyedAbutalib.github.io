@@ -6,7 +6,7 @@ html{
 }
 .wrapper {
   margin: 0 auto;
-  padding: 0 15% 50px;
+  padding: 0 16.6% 50px;
   width: 100%;
 }
 article {
@@ -44,5 +44,5 @@ article {
 
 .blurb {
   padding-bottom: 50px;
-  color: #ff6666;
+  color: #000;
 }
