@@ -1,13 +1,19 @@
 .intro-box {
   margin-top: 2em;
 }
+
 .quote-box {
   margin-top: 10em;
 }
+
 a {
   display: inline-block;
   position: relative;
   z-index: 1;
+}
+
+div {
+  margin-top: 2em;
 }
 
 .contact {
