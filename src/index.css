@@ -13,20 +13,16 @@ a {
   z-index: 1;
   text-decoration: inherit;
 }
-a:link {
-  color: #ff7d7d;
-}
+
 a:hover {
   color: #ff7d7d;
+  text-decoration: none;
 }
 
 a:visited {
   color: #ff7d7d;
 }
 
-a:active {
-  color: #ff7d7d;
-}
 div {
   margin-top: 2em;
 }
@@ -50,26 +46,6 @@ h6 {
 
 p {
   font-family: 'Aldrich', sans-serif;
-}
-
-.navbar {
-  position: sticky;
-}
-
-.sad {
-  color: #ff6666;
-  /* margin-top: -20px;  */
-}
-
-.titles {
-  margin-top: 40px;
-  color: DarkBlue;
-  font-family: 'PT Mono', sans-serif;
-}
-
-a:hover {
-  color: black;
-  text-decoration: none;
 }
 
 body {
@@ -101,44 +77,16 @@ html {
   }
 }
 
-
-/*Typing animation please ignore*/
-
-.typewriter {
-  overflow: hidden;
-  /* Ensures the content is not revealed until the animation */
-  border-right: .075em solid black;
-  /* The typwriter cursor */
-  white-space: nowrap;
-  /* Keeps the content on a single line */
-  margin: 0em 0em auto;
-  /* Gives that scrolling effect as the typing happens */
-  letter-spacing: .05em;
-  /* Adjust as needed */
-  animation: typing 1.5s steps(40, end), blink-caret .75s step-end infinite;
+.fade {
+  animation: fadein 3s;
+  animation-fill-mode: forwards;
 }
 
-
-/* The typing effect */
-
-@keyframes typing {
+@keyframes fadein {
   from {
-    width: 0
+    opacity: 0;
   }
   to {
-    width: 100%
-  }
-}
-
-
-/* The typewriter cursor effect */
-
-@keyframes blink-caret {
-  from,
-  to {
-    border-color: transparent
-  }
-  50% {
-    border-color: transparent;
+    opacity: 1;
   }
 }
