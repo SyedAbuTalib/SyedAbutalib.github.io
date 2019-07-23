@@ -7,11 +7,26 @@
 }
 
 a {
+  color: #ff7d7d;
   display: inline-block;
   position: relative;
   z-index: 1;
+  text-decoration: inherit;
+}
+a:link {
+  color: #ff7d7d;
+}
+a:hover {
+  color: #ff7d7d;
 }
 
+a:visited {
+  color: #ff7d7d;
+}
+
+a:active {
+  color: #ff7d7d;
+}
 div {
   margin-top: 2em;
 }
