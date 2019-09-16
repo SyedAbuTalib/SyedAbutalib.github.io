@@ -1,0 +1,35 @@
+{
+  "quotes": [{
+      "author": "Warren Buffet",
+      "quote": "Price is what you pay. Value is what you get."
+    },
+    {
+      "author": "Jane Austen",
+      "quote": "There is no charm equal to tenderness of heart."
+    },
+    {
+      "author": "Khalil Gibran",
+      "quote": "Life without love is like a tree without blossoms or fruit."
+    },
+    {
+      "author": "Aesop",
+      "quote": "No act of kindness, no matter how small, is ever wasted."
+    },
+    {
+      "author": "Theodore Roosevelt",
+      "quote": "Believe you can and you\"re halfway there."
+    },
+    {
+      "author": "Aristotle",
+      "quote": "It is during our darkest moments that we must focus to see the light."
+    },
+    {
+      "author": "Emo Philips",
+      "quote": "A computer once beat me at chess, but it was no match for me at kick boxing."
+    },
+    {
+      "author": "Ralph Johnson",
+      "quote": "Before software should be reusable, it should be usable."
+    }
+  ]
+}
