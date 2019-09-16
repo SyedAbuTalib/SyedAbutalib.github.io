@@ -1,8 +1,11 @@
-### Markdown
+# AbuTalib
 
-You know who it is
-[Link](http://www.Abutalib.xyz)
+## Reasoning
 
-### Support or Contact
+Just wanted to show the world that I do indeed know how to make websites look nice.
 
-Having trouble with the webpage? Good luck bucko.
+[Quick link to the webpage](http://www.Abutalib.xyz)
+
+## Contact
+
+All popular forms of contact are on the webpage provided. My preferred method of contact is through email, but feel free to contact me on linkedIn or any other webpage!
