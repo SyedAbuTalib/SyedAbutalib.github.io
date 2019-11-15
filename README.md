@@ -8,4 +8,4 @@ Just wanted to show the world that I do indeed know how to make websites look ni
 
 ## Contact
 
-All popular forms of contact are on the webpage provided. My preferred method of contact is through email, but feel free to contact me on linkedIn or any other webpage!
+All popular forms of contact are on the webpage provided. My preferred method of contact is through linkedIn, but feel free to contact me through email or any other method!
