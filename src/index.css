@@ -1,13 +1,5 @@
-.intro-box {
-  margin-top: 2em;
-}
-
-#quote-box {
-  margin-top: 10em;
-}
-
 a {
-  color: #ff7d7d;
+  color: #1fccaf;
   display: inline-block;
   position: relative;
   z-index: 1;
@@ -15,21 +7,25 @@ a {
 }
 
 a:hover {
-  color: #ff7d7d;
+  color: #1fccaf;
   text-decoration: none;
 }
 
 a:visited {
-  color: #ff7d7d;
+  color: #1fccaf;
 }
 
-div {
+.container {
   margin-top: 2em;
 }
 
 .contact {
-  margin-top: -0.5em;
-  margin-left: -0.5em;
+  margin: auto;
+}
+
+#position {
+  font-variant: small-caps;
+  margin: auto;
 }
 
 h1,
@@ -38,30 +34,21 @@ h3,
 h4,
 h5,
 h6 {
-  font-family: "Montserrat", sans-serif;
+  font-family: "Roboto", sans-serif;
   font-weight: 300;
-  text-transform: uppercase;
-  letter-spacing: 0.15em;
 }
 
 p {
-  font-family: "Aldrich", sans-serif;
+  font-family: "Open Sans", sans-serif;
+  font-weight: 300;
+  color: #1fccaf;
 }
 
-body {
-  /* position: relative; */
-  /*background: -webkit-gradient(linear, left top, left bottom, from(#ffffff), to(#ff00ff)) fixed;*/
-  /* background-image: linear-gradient(rgba(255, 250, 240, .5), rgba(255, 250, 240, .99)), url("DSC_0037.jpg"); */
-  /* background-repeat: no-repeat;
-  background-size: cover; */
-  background-color: #131314;
-  color: #fdfdfd;
-  padding-bottom: 40px;
-  font-family: "Lora", serif;
+svg {
+  color: #000000;
 }
 
 html {
-  font-size: 14px;
   -webkit-overflow-scrolling: touch;
 }
 
