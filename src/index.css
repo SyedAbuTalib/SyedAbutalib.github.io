@@ -1,5 +1,5 @@
 a {
-  color: #1fccaf;
+  color: #00A388;
   display: inline-block;
   position: relative;
   z-index: 1;
@@ -7,12 +7,12 @@ a {
 }
 
 a:hover {
-  color: #1fccaf;
+  color: #00A388;
   text-decoration: none;
 }
 
 a:visited {
-  color: #1fccaf;
+  color: #00A388;
 }
 
 .container {
@@ -28,6 +28,10 @@ a:visited {
   margin: auto;
 }
 
+#projects {
+  margin-top: 2em;
+}
+
 h1,
 h2,
 h3,
@@ -41,7 +45,7 @@ h6 {
 p {
   font-family: "Open Sans", sans-serif;
   font-weight: 300;
-  color: #1fccaf;
+  color: #00A388;
 }
 
 svg {
