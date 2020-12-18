@@ -1,6 +1,7 @@
 arr = [
   "SyedAbuTalib/bruh",
   "SyedAbuTalib/Github-Stars",
+  "SyedAbuTalib/sytran",
   "SyedAbuTalib/language_colors",
   "SyedAbuTalib/urlke",
   "SyedAbuTalib/FireWatch",
