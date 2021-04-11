@@ -1,6 +1,6 @@
-# AbuTalib
+# Personal Website
 
-## Reasoning
+Portfolio Website that contains links to social medias as well as my favorite personal projects.
 
 Just wanted to show the world that I do indeed know how to make websites look nice.
 
