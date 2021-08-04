@@ -1,5 +1,10 @@
+:root {
+  --base-color: rgba(113,128,150,1);
+}
+
+
 a {
-  color: #00A388;
+  color: var(--base-color);
   display: inline-block;
   position: relative;
   z-index: 1;
@@ -7,12 +12,12 @@ a {
 }
 
 a:hover {
-  color: #00A388;
+  color: var(--base-color);
   text-decoration: none;
 }
 
 a:visited {
-  color: #00A388;
+  color: var(--base-color);
 }
 
 .container {
@@ -21,15 +26,8 @@ a:visited {
 
 .contact {
   margin: auto;
-}
-
-#position {
+  padding: .5em 0em;
   font-variant: small-caps;
-  margin: auto;
-}
-
-#projects {
-  margin-top: 2em;
 }
 
 h1,
@@ -40,13 +38,17 @@ h5,
 h6 {
   font-family: "Roboto", sans-serif;
   font-weight: 300;
-  font-size: 5em;
+  font-size: 3em;
+}
+
+h1 {
+  font-weight: 400;
 }
 
 p {
   font-family: "Open Sans", sans-serif;
   font-weight: 300;
-  color: #00A388;
+  color: var(--base-color);
 }
 
 svg {
