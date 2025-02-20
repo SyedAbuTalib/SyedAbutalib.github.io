@@ -23,7 +23,7 @@ async function startRecording() {
         // rotation: 'none',
         flip: hFlip // This will flip the video frame
       });
-      console.log(flippedFrame);
+      // console.log(flippedFrame);
       controller.enqueue(flippedFrame);
       videoFrame.close();
     }
@@ -35,7 +35,7 @@ async function startRecording() {
   video.srcObject = processedStream;
 
   recordedBlobs = [];
-  mediaRecorder = new MediaRecorder(processedStream, { mimeType: 'video/mp4; codecs="avc1.424028, mp4a.40.2"' });
+  mediaRecorder = new MediaRecorder(processedStream, { mimeType: 'video/mp4; codecs="vp9, opus"' });
 
 
   mediaRecorder.ondataavailable = (event) => {
