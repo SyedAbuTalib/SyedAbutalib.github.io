@@ -1,0 +1,208 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Spatial Audio & Video Demo</title>
+    <style>
+        body {
+            font-family: sans-serif;
+            line-height: 1.6;
+            margin: 20px;
+            background-color: #f4f4f4;
+            color: #333;
+        }
+        .container {
+            background-color: #fff;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 0 10px rgba(0,0,0,0.1);
+            margin-bottom: 20px;
+        }
+        h1, h2 {
+            color: #1a1a1a;
+        }
+        button {
+            background-color: #007bff;
+            color: white;
+            border: none;
+            padding: 10px 15px;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 16px;
+            margin-right: 10px;
+        }
+        button:hover {
+            background-color: #0056b3;
+        }
+        button:disabled {
+            background-color: #ccc;
+            cursor: not-allowed;
+        }
+        video { /* Changed from audio to video */
+            width: 100%;
+            max-width: 640px; /* You can adjust this */
+            height: auto;    /* Maintain aspect ratio */
+            margin-top: 10px;
+            background-color: #000; /* Background for letterboxing if any */
+        }
+        pre {
+            background-color: #eee;
+            padding: 10px;
+            border-radius: 4px;
+            overflow-x: auto;
+        }
+        .info {
+            font-size: 0.9em;
+            color: #555;
+        }
+    </style>
+</head>
+<body>
+
+    <h1>Spatial Audio & Video Demonstrations</h1>
+
+    <div class="container">
+        <h2>Demo 1: Web Audio API - 3D Positional Audio (HRTF)</h2>
+        <p>This demo uses the Web Audio API to create a sound and move it around your head. You should hear the sound change position. This works with any stereo headphones.</p>
+        <button id="playButton">Play & Move Sound</button>
+        <button id="stopButton" disabled>Stop Sound</button>
+        <p class="info" id="status">Status: Idle</p>
+    </div>
+
+    <div class="container">
+        <h2>Demo 2: Testing System-Level Spatial Audio with <code>audio.mp4</code> (Video Display)</h2>
+        <p>This section attempts to play <code>audio.mp4</code> and will display its video content. For true system-level spatial audio from the file (like Dolby Atmos or 5.1/7.1 surround being spatialized by macOS with compatible headphones), the following conditions must still be met:</p>
+        <p><strong>Prerequisites:</strong></p>
+        <ul>
+            <li>The file <code>audio.mp4</code> must contain a multi-channel audio track (e.g., 5.1 AAC, E-AC-3 JOC for Atmos).</li>
+            <li>Your browser (e.g., your custom Chromium build) must be configured to correctly output the multi-channel audio to the operating system.</li>
+            <li>On macOS, "Spatial Audio" (Fixed or Head Tracked) must be enabled in Control Center > Sound, and you must be using compatible headphones (AirPods Pro/Max, AirPods 3rd Gen, Beats Fit Pro, etc.).</li>
+        </ul>
+        
+        <video controls src="audio.mp4">  Your browser does not support the video tag or the video format. 
+            Please ensure <code>audio.mp4</code> is in the same directory as this HTML file.
+        </video>
+        <p class="info">If <code>audio.mp4</code> is a valid multi-channel audio file and your system/browser are set up correctly, you should hear spatial audio while watching the video.</p>
+    </div>
+
+    <script>
+        let audioContext;
+        let oscillator;
+        let panner;
+        let gainNode;
+        let animationFrameId;
+        let angle = 0;
+
+        const playButton = document.getElementById('playButton');
+        const stopButton = document.getElementById('stopButton');
+        const statusDisplay = document.getElementById('status');
+
+        playButton.addEventListener('click', () => {
+            if (!audioContext) {
+                audioContext = new (window.AudioContext || window.webkitAudioContext)();
+            } else if (audioContext.state === 'suspended') {
+                audioContext.resume();
+            }
+
+            oscillator = audioContext.createOscillator();
+            oscillator.type = 'sine';
+            oscillator.frequency.setValueAtTime(440, audioContext.currentTime); 
+
+            panner = audioContext.createPanner();
+            panner.panningModel = 'HRTF';
+            panner.distanceModel = 'inverse';
+            panner.refDistance = 1;
+            panner.maxDistance = 10000;
+            panner.rolloffFactor = 1;
+            panner.coneInnerAngle = 360;
+            panner.coneOuterAngle = 0;
+            panner.coneOuterGain = 0;
+
+            if (panner.positionX) { 
+                panner.positionX.setValueAtTime(0, audioContext.currentTime);
+                panner.positionY.setValueAtTime(0, audioContext.currentTime);
+                panner.positionZ.setValueAtTime(-1, audioContext.currentTime); 
+            } else { 
+                panner.setPosition(0, 0, -1);
+            }
+
+            gainNode = audioContext.createGain();
+            gainNode.gain.setValueAtTime(0.3, audioContext.currentTime);
+
+            oscillator.connect(panner);
+            panner.connect(gainNode);
+            gainNode.connect(audioContext.destination);
+
+            oscillator.start();
+            animateSound();
+
+            playButton.disabled = true;
+            stopButton.disabled = false;
+            statusDisplay.textContent = 'Status: Playing and moving sound...';
+        });
+
+        stopButton.addEventListener('click', () => {
+            if (oscillator) {
+                oscillator.stop();
+                oscillator.disconnect(); 
+                panner.disconnect();
+                gainNode.disconnect();
+                oscillator = null;
+                panner = null;
+                gainNode = null;
+            }
+            if (animationFrameId) {
+                cancelAnimationFrame(animationFrameId);
+                animationFrameId = null;
+            }
+            
+            playButton.disabled = false;
+            stopButton.disabled = true;
+            statusDisplay.textContent = 'Status: Stopped.';
+        });
+
+        function animateSound() {
+            if (!panner || !audioContext || audioContext.state === 'closed' || !oscillator) return;
+
+            const radius = 2; 
+            const x = Math.sin(angle) * radius;
+            const z = Math.cos(angle) * radius - radius; 
+
+            if (panner.positionX && typeof panner.positionX.setValueAtTime === 'function') {
+                try {
+                    panner.positionX.setValueAtTime(x, audioContext.currentTime);
+                    panner.positionZ.setValueAtTime(z, audioContext.currentTime);
+                } catch (e) {
+                    console.error("Error setting panner position:", e);
+                    if (oscillator && !stopButton.disabled) stopButton.click();
+                    return;
+                }
+            } else if (typeof panner.setPosition === 'function') { 
+                 try {
+                    panner.setPosition(x, panner.positionY ? panner.positionY.value : 0, z);
+                 } catch (e) {
+                    console.error("Error setting panner position (legacy):", e);
+                    if (oscillator && !stopButton.disabled) stopButton.click();
+                    return;
+                 }
+            } else {
+                console.warn("PannerNode does not have positionX or setPosition methods.");
+                if (oscillator && !stopButton.disabled) stopButton.click(); 
+                return;
+            }
+
+            angle += 0.01; 
+            animationFrameId = requestAnimationFrame(animateSound);
+        }
+
+        document.addEventListener('visibilitychange', () => {
+            if (document.hidden && oscillator && !stopButton.disabled) {
+                stopButton.click();
+            }
+        });
+
+    </script>
+
+</body>
+</html>
