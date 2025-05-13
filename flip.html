@@ -1,0 +1,384 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <meta name="description" content="WebRTC Live Preview, Recording, and Flipping Sample">
+    <meta name="viewport" content="width=device-width, user-scalable=yes, initial-scale=1, maximum-scale=1">
+    <meta itemprop="description" content="Client-side WebRTC code samples">
+    <meta itemprop="image" content="https://webrtc.github.io/samples/src/images/webrtc-icon-192x192.png">
+    <meta itemprop="name" content="WebRTC Live Preview, Recording, and Flipping Sample">
+    <meta name="mobile-web-app-capable" content="yes">
+    <meta id="theme-color" name="theme-color" content="#ffffff">
+
+    <title>Live Video Preview, Recording with Flip & Format Selection</title>
+
+    <style>
+        body {
+            font-family: 'Roboto', 'Helvetica', 'Arial', sans-serif;
+            margin: 0;
+            padding: 0;
+            background-color: #f0f0f0;
+            color: #333;
+        }
+
+        #container {
+            max-width: 800px;
+            margin: 20px auto;
+            padding: 20px;
+            background-color: #fff;
+            box-shadow: 0 0 10px rgba(0,0,0,0.1);
+            border-radius: 8px;
+        }
+
+        h1 {
+            font-size: 1.8em;
+            font-weight: 500;
+            color: #000;
+            margin-bottom: 20px;
+            text-align: center;
+        }
+
+        video {
+            width: 100%;
+            max-width: 720px; 
+            height: auto;
+            display: block;
+            margin: 0 auto 20px auto;
+            border: 1px solid #ccc;
+            background-color: #000;
+        }
+        
+        #controlsContainer, #buttonsContainer {
+            display: flex;
+            justify-content: center;
+            gap: 10px; 
+            margin-bottom: 20px;
+            flex-wrap: wrap; 
+            align-items: center;
+        }
+
+        button, select {
+            font-family: 'Roboto', 'Helvetica', 'Arial', sans-serif;
+            font-size: 0.9em; 
+            font-weight: 500;
+            color: #333; /* Default text color for select */
+            background-color: #f8f9fa; /* Lighter background for select */
+            border: 1px solid #ccc;
+            border-radius: 4px; 
+            padding: 10px 15px; /* Consistent padding */
+            cursor: pointer;
+            transition: background-color 0.3s ease;
+        }
+        
+        select {
+             color: #333; /* Ensure select text is visible */
+        }
+
+        button {
+            text-transform: uppercase;
+            color: #fff;
+            background-color: #4285f4; 
+            border: none; /* Buttons don't need border if they have strong bg */
+            box-shadow: 0 2px 2px 0 rgba(0,0,0,0.14), 0 3px 1px -2px rgba(0,0,0,0.12), 0 1px 5px 0 rgba(0,0,0,0.2);
+            padding: 10px 20px; /* Buttons can have slightly different padding */
+        }
+
+
+        button:hover {
+            background-color: #3367d6; 
+        }
+        select:hover {
+            border-color: #888;
+        }
+
+        button:active {
+            background-color: #2a56c6; 
+        }
+
+        button:disabled, select:disabled {
+            color: rgba(0,0,0,0.26);
+            background-color: rgba(0,0,0,0.12);
+            cursor: not-allowed;
+            box-shadow: none;
+            border-color: rgba(0,0,0,0.12);
+        }
+        
+        label {
+            margin-right: 5px;
+            font-weight: 500;
+        }
+
+        p {
+            text-align: center;
+            color: #666;
+            font-size: 0.9em;
+        }
+        #errorMessage {
+            color: red;
+            text-align: center;
+            margin-top: 10px;
+        }
+
+        @media (max-width: 600px) {
+            h1 {
+                font-size: 1.5em;
+            }
+            button, select {
+                padding: 8px 15px;
+                font-size: 0.85em;
+                width: calc(50% - 5px); /* Two controls per row */
+                box-sizing: border-box;
+            }
+            #controlsContainer, #buttonsContainer {
+                flex-direction: row; /* Keep as row, wrap will handle stacking */
+            }
+            label {
+                 width: 100%; /* Full width for label on small screens */
+                 text-align: center;
+                 margin-bottom: 5px;
+                 margin-right: 0;
+            }
+            select {
+                width: 100%; /* Make select take full width if label is above */
+            }
+        }
+    </style>
+</head>
+
+<body>
+    <div id="container">
+        <h1>Live Video Preview, Recording & Flipping</h1>
+
+        <video id="video" autoplay playsinline muted></video>
+        
+        <div id="controlsContainer">
+            <label for="codecPreferences">Recording Format:</label>
+            <select id="codecPreferences" disabled></select>
+        </div>
+
+        <div id="buttonsContainer">
+            <button id="startRecording" disabled>Start Recording</button>
+            <button id="stopRecording" disabled>Stop Recording</button>
+            <button id="flip" disabled>Enable Flip Effect</button>
+        </div>
+        <p id="statusMessage">Initializing camera...</p>
+        <p id="errorMessage"></p>
+    </div>
+
+<script src="https://webrtc.github.io/adapter/adapter-latest.js"></script>
+<script>
+    'use strict';
+
+    let mediaRecorder;
+    let recordedBlobs;
+    let hFlip = false; 
+    let liveStream = null; 
+    let processedLiveStream = null; 
+    let videoTrackGenerator = null; 
+    let originalVideoTrack = null;
+    let originalAudioTrack = null;
+
+    const initialMediaRecorderOptions = { videoBitsPerSecond: 60000000 }; // Keep VBR, might be specific to MP4/AVC1
+    const videoConstraints = {width: {ideal: 3840}, height: {ideal: 2160}, frameRate: {ideal: 60, min: 24} };
+
+    const videoElement = document.getElementById('video');
+    const startRecordingButton = document.getElementById('startRecording');
+    const stopRecordingButton = document.getElementById('stopRecording');
+    const flipButton = document.getElementById('flip');
+    const statusMessageElement = document.getElementById('statusMessage');
+    const errorMessageElement = document.getElementById('errorMessage');
+    const codecPreferencesElement = document.getElementById('codecPreferences');
+
+    function populateCodecSelector() {
+        const supportedTypes = [
+            // User's preferred MP4 format
+            { desc: 'MP4 (H.264, AAC)', mimeType: 'video/mp4; codecs="avc1.42E01E, mp4a.40.2"' }, // Added AAC for audio
+            { desc: 'MP4 (H.264)', mimeType: 'video/mp4; codecs="avc1.42E01E"' }, // Video only, if preferred
+
+            // Common WebM formats
+            { desc: 'WebM (VP9, Opus)', mimeType: 'video/webm; codecs="vp9, opus"' },
+            { desc: 'WebM (VP8, Opus)', mimeType: 'video/webm; codecs="vp8, opus"' },
+            { desc: 'WebM (H.264, Opus)', mimeType: 'video/webm; codecs="h264, opus"' }, // H.264 in WebM
+            { desc: 'WebM (VP9)', mimeType: 'video/webm; codecs=vp9' }, // VP9 video only
+            { desc: 'WebM (VP8)', mimeType: 'video/webm; codecs=vp8' }, // VP8 video only
+            { desc: 'WebM (Default)', mimeType: 'video/webm' } // Browser default for WebM
+        ];
+
+        supportedTypes.forEach(typeInfo => {
+            if (MediaRecorder.isTypeSupported(typeInfo.mimeType)) {
+                const option = document.createElement('option');
+                option.value = typeInfo.mimeType;
+                option.textContent = typeInfo.desc + ` (${typeInfo.mimeType})`;
+                codecPreferencesElement.appendChild(option);
+            } else {
+                console.warn(`MIME type not supported: ${typeInfo.mimeType}`);
+            }
+        });
+
+        if (codecPreferencesElement.options.length === 0) {
+            statusMessageElement.textContent = 'No supported recording formats found!';
+            startRecordingButton.disabled = true;
+            codecPreferencesElement.disabled = true;
+            return false;
+        }
+        codecPreferencesElement.disabled = false;
+        return true;
+    }
+
+
+    async function initCamera() {
+        errorMessageElement.textContent = '';
+        statusMessageElement.textContent = 'Requesting camera access...';
+        try {
+            if (!populateCodecSelector()) { // Populate and check if any formats are available
+                errorMessageElement.textContent = "No supported recording formats found. Cannot initialize.";
+                return;
+            }
+
+            liveStream = await navigator.mediaDevices.getUserMedia({ video: videoConstraints, audio: true });
+            statusMessageElement.textContent = 'Camera accessed. Setting up preview...';
+
+            originalVideoTrack = liveStream.getVideoTracks()[0];
+            originalAudioTrack = liveStream.getAudioTracks().length > 0 ? liveStream.getAudioTracks()[0] : null;
+            
+            const processor = new MediaStreamTrackProcessor({track: originalVideoTrack});
+            videoTrackGenerator = new MediaStreamTrackGenerator({kind: 'video'}); 
+            
+            const source = processor.readable;
+            const sink = videoTrackGenerator.writable;
+
+            const transformer = new TransformStream({
+                async transform(videoFrame, controller) {
+                    const frameProperties = {
+                        timestamp: videoFrame.timestamp,
+                        visibleRect: videoFrame.visibleRect,
+                        displayWidth: videoFrame.displayWidth,
+                        displayHeight: videoFrame.displayHeight,
+                    };
+                    if (hFlip) {
+                        frameProperties.flip = true; 
+                    }
+                    const processedFrame = new VideoFrame(videoFrame, frameProperties);
+                    controller.enqueue(processedFrame);
+                    videoFrame.close();
+                }
+            });
+
+            source.pipeThrough(transformer).pipeTo(sink);
+
+            const processedStreamTracks = [videoTrackGenerator];
+            if (originalAudioTrack) {
+                processedStreamTracks.push(originalAudioTrack); 
+            }
+            processedLiveStream = new MediaStream(processedStreamTracks);
+            
+            videoElement.srcObject = processedLiveStream;
+            
+            startRecordingButton.disabled = false;
+            flipButton.disabled = false;
+            codecPreferencesElement.disabled = false;
+            statusMessageElement.textContent = 'Live preview active. Ready to record.';
+
+        } catch (e) {
+            console.error('Error initializing camera:', e);
+            errorMessageElement.textContent = `Error initializing camera: ${e.toString()}. Please check permissions.`;
+            statusMessageElement.textContent = 'Camera initialization failed.';
+            startRecordingButton.disabled = true;
+            flipButton.disabled = true;
+            codecPreferencesElement.disabled = true;
+        }
+    }
+
+    function startRecording() {
+        if (!processedLiveStream) {
+            errorMessageElement.textContent = 'Live stream not available. Cannot start recording.';
+            console.error('Live stream not available for recording.');
+            return;
+        }
+        statusMessageElement.textContent = 'Recording started...';
+        startRecordingButton.disabled = true;
+        stopRecordingButton.disabled = false;
+        flipButton.disabled = true; 
+        codecPreferencesElement.disabled = true;
+
+        recordedBlobs = [];
+        const selectedMimeType = codecPreferencesElement.value;
+        console.log('Selected MIME type for recording:', selectedMimeType);
+
+        // Determine if videoBitsPerSecond should be applied
+        let currentMediaRecorderOptions = { mimeType: selectedMimeType };
+        if (selectedMimeType.includes('mp4') || selectedMimeType.includes('avc1') || selectedMimeType.includes('h264')) {
+             // Apply VBR only for codecs where it makes sense / is typically configured
+            currentMediaRecorderOptions.videoBitsPerSecond = initialMediaRecorderOptions.videoBitsPerSecond;
+        }
+
+
+        try {
+            mediaRecorder = new MediaRecorder(processedLiveStream, currentMediaRecorderOptions);
+        } catch (e) {
+            console.error('Exception while creating MediaRecorder:', e);
+            errorMessageElement.textContent = `Error creating MediaRecorder (MIME: ${selectedMimeType}): ${e.toString()}`;
+            statusMessageElement.textContent = 'Recording failed to start.';
+            startRecordingButton.disabled = false; 
+            stopRecordingButton.disabled = true;
+            flipButton.disabled = false; 
+            codecPreferencesElement.disabled = false;
+            return;
+        }
+
+        mediaRecorder.onstop = () => {
+            statusMessageElement.textContent = 'Processing recorded video...';
+            const blob = new Blob(recordedBlobs, { type: selectedMimeType });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.style.display = 'none';
+            a.href = url;
+            
+            const fileExtension = selectedMimeType.includes('mp4') ? 'mp4' : 'webm';
+            a.download = `video_hFlip_${hFlip ? 'ON' : 'OFF'}.${fileExtension}`;
+            document.body.appendChild(a);
+            a.click();
+            setTimeout(() => {
+                document.body.removeChild(a);
+                URL.revokeObjectURL(url);
+            }, 100);
+            statusMessageElement.textContent = 'Live preview active. Ready to record again.';
+        };
+
+        mediaRecorder.ondataavailable = (event) => {
+            if (event.data && event.data.size > 0) {
+                recordedBlobs.push(event.data);
+            }
+        };
+
+        mediaRecorder.start();
+        console.log('MediaRecorder started with options:', currentMediaRecorderOptions, mediaRecorder);
+    }
+
+    function stopRecording() {
+        if (mediaRecorder && mediaRecorder.state !== "inactive") {
+            mediaRecorder.stop();
+        }
+        statusMessageElement.textContent = 'Recording stopped. Download will start shortly.';
+        startRecordingButton.disabled = false;
+        stopRecordingButton.disabled = true;
+        flipButton.disabled = false; 
+        codecPreferencesElement.disabled = false;
+        console.log('Recording stop command issued.');
+    }
+
+    function toggleFlip() {
+        hFlip = !hFlip;
+        console.log('hFlip state for TransformStream toggled to:', hFlip);
+        flipButton.textContent = hFlip ? 'Disable Flip Effect' : 'Enable Flip Effect';
+    }
+
+    window.addEventListener('load', initCamera);
+
+    startRecordingButton.addEventListener('click', startRecording);
+    stopRecordingButton.addEventListener('click', stopRecording);
+    flipButton.addEventListener('click', toggleFlip);
+
+</script>
+</body>
+</html>
