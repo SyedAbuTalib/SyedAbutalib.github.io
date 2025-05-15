@@ -2,15 +2,15 @@
 <html>
 <head>
     <meta charset="utf-8">
-    <meta name="description" content="WebRTC Live Preview, Recording, and Flipping Sample">
+    <meta name="description" content="WebRTC Live Preview, Recording, Flipping, and Rotation Sample">
     <meta name="viewport" content="width=device-width, user-scalable=yes, initial-scale=1, maximum-scale=1">
     <meta itemprop="description" content="Client-side WebRTC code samples">
     <meta itemprop="image" content="https://webrtc.github.io/samples/src/images/webrtc-icon-192x192.png">
-    <meta itemprop="name" content="WebRTC Live Preview, Recording, and Flipping Sample">
+    <meta itemprop="name" content="WebRTC Live Preview, Recording, Flipping, and Rotation Sample">
     <meta name="mobile-web-app-capable" content="yes">
     <meta id="theme-color" name="theme-color" content="#ffffff">
 
-    <title>Live Video Preview, Recording with Flip & Format Selection</title>
+    <title>Live Video Preview, Recording with Flip, Rotation & Format Selection</title>
 
     <style>
         body {
@@ -147,7 +147,7 @@
 
 <body>
     <div id="container">
-        <h1>Live Video Preview, Recording & Flipping</h1>
+        <h1>Live Video Preview, Recording, Flip & Rotation</h1>
 
         <video id="video" autoplay playsinline muted></video>
         
@@ -160,6 +160,7 @@
             <button id="startRecording" disabled>Start Recording</button>
             <button id="stopRecording" disabled>Stop Recording</button>
             <button id="flip" disabled>Enable Flip Effect</button>
+            <button id="rotate" disabled>Rotate Camera</button>
         </div>
         <p id="statusMessage">Initializing camera...</p>
         <p id="errorMessage"></p>
@@ -172,36 +173,35 @@
     let mediaRecorder;
     let recordedBlobs;
     let hFlip = false; 
+    let currentRotation = 0;
     let liveStream = null; 
     let processedLiveStream = null; 
     let videoTrackGenerator = null; 
     let originalVideoTrack = null;
     let originalAudioTrack = null;
 
-    const initialMediaRecorderOptions = { videoBitsPerSecond: 60000000 }; // Keep VBR, might be specific to MP4/AVC1
+    const initialMediaRecorderOptions = { videoBitsPerSecond: 60000000 }; 
     const videoConstraints = {width: {ideal: 3840}, height: {ideal: 2160}, frameRate: {ideal: 60, min: 24} };
 
     const videoElement = document.getElementById('video');
     const startRecordingButton = document.getElementById('startRecording');
     const stopRecordingButton = document.getElementById('stopRecording');
     const flipButton = document.getElementById('flip');
+    const rotateButton = document.getElementById('rotate');
     const statusMessageElement = document.getElementById('statusMessage');
     const errorMessageElement = document.getElementById('errorMessage');
     const codecPreferencesElement = document.getElementById('codecPreferences');
 
     function populateCodecSelector() {
         const supportedTypes = [
-            // User's preferred MP4 format
-            { desc: 'MP4 (H.264, AAC)', mimeType: 'video/mp4; codecs="avc1.42E01E, mp4a.40.2"' }, // Added AAC for audio
-            { desc: 'MP4 (H.264)', mimeType: 'video/mp4; codecs="avc1.42E01E"' }, // Video only, if preferred
-
-            // Common WebM formats
+            { desc: 'MP4 (H.264, AAC)', mimeType: 'video/mp4; codecs="avc1.42E01E, mp4a.40.2"' },
+            { desc: 'MP4 (H.264)', mimeType: 'video/mp4; codecs="avc1.42E01E"' },
             { desc: 'WebM (VP9, Opus)', mimeType: 'video/webm; codecs="vp9, opus"' },
             { desc: 'WebM (VP8, Opus)', mimeType: 'video/webm; codecs="vp8, opus"' },
-            { desc: 'WebM (H.264, Opus)', mimeType: 'video/webm; codecs="h264, opus"' }, // H.264 in WebM
-            { desc: 'WebM (VP9)', mimeType: 'video/webm; codecs=vp9' }, // VP9 video only
-            { desc: 'WebM (VP8)', mimeType: 'video/webm; codecs=vp8' }, // VP8 video only
-            { desc: 'WebM (Default)', mimeType: 'video/webm' } // Browser default for WebM
+            { desc: 'WebM (H.264, Opus)', mimeType: 'video/webm; codecs="h264, opus"' },
+            { desc: 'WebM (VP9)', mimeType: 'video/webm; codecs=vp9' },
+            { desc: 'WebM (VP8)', mimeType: 'video/webm; codecs=vp8' },
+            { desc: 'WebM (Default)', mimeType: 'video/webm' }
         ];
 
         supportedTypes.forEach(typeInfo => {
@@ -219,6 +219,8 @@
             statusMessageElement.textContent = 'No supported recording formats found!';
             startRecordingButton.disabled = true;
             codecPreferencesElement.disabled = true;
+            flipButton.disabled = true; 
+            rotateButton.disabled = true;
             return false;
         }
         codecPreferencesElement.disabled = false;
@@ -230,7 +232,7 @@
         errorMessageElement.textContent = '';
         statusMessageElement.textContent = 'Requesting camera access...';
         try {
-            if (!populateCodecSelector()) { // Populate and check if any formats are available
+            if (!populateCodecSelector()) { 
                 errorMessageElement.textContent = "No supported recording formats found. Cannot initialize.";
                 return;
             }
@@ -254,6 +256,7 @@
                         visibleRect: videoFrame.visibleRect,
                         displayWidth: videoFrame.displayWidth,
                         displayHeight: videoFrame.displayHeight,
+                        rotation: currentRotation,
                     };
                     if (hFlip) {
                         frameProperties.flip = true; 
@@ -276,6 +279,7 @@
             
             startRecordingButton.disabled = false;
             flipButton.disabled = false;
+            rotateButton.disabled = false;
             codecPreferencesElement.disabled = false;
             statusMessageElement.textContent = 'Live preview active. Ready to record.';
 
@@ -285,6 +289,7 @@
             statusMessageElement.textContent = 'Camera initialization failed.';
             startRecordingButton.disabled = true;
             flipButton.disabled = true;
+            rotateButton.disabled = true;
             codecPreferencesElement.disabled = true;
         }
     }
@@ -299,19 +304,17 @@
         startRecordingButton.disabled = true;
         stopRecordingButton.disabled = false;
         flipButton.disabled = true; 
+        rotateButton.disabled = true;
         codecPreferencesElement.disabled = true;
 
         recordedBlobs = [];
         const selectedMimeType = codecPreferencesElement.value;
         console.log('Selected MIME type for recording:', selectedMimeType);
 
-        // Determine if videoBitsPerSecond should be applied
         let currentMediaRecorderOptions = { mimeType: selectedMimeType };
         if (selectedMimeType.includes('mp4') || selectedMimeType.includes('avc1') || selectedMimeType.includes('h264')) {
-             // Apply VBR only for codecs where it makes sense / is typically configured
             currentMediaRecorderOptions.videoBitsPerSecond = initialMediaRecorderOptions.videoBitsPerSecond;
         }
-
 
         try {
             mediaRecorder = new MediaRecorder(processedLiveStream, currentMediaRecorderOptions);
@@ -322,6 +325,7 @@
             startRecordingButton.disabled = false; 
             stopRecordingButton.disabled = true;
             flipButton.disabled = false; 
+            rotateButton.disabled = false;
             codecPreferencesElement.disabled = false;
             return;
         }
@@ -335,7 +339,7 @@
             a.href = url;
             
             const fileExtension = selectedMimeType.includes('mp4') ? 'mp4' : 'webm';
-            a.download = `video_hFlip_${hFlip ? 'ON' : 'OFF'}.${fileExtension}`;
+            a.download = `video_hFlip_${hFlip ? 'ON' : 'OFF'}_rot_${currentRotation}.${fileExtension}`;
             document.body.appendChild(a);
             a.click();
             setTimeout(() => {
@@ -363,6 +367,7 @@
         startRecordingButton.disabled = false;
         stopRecordingButton.disabled = true;
         flipButton.disabled = false; 
+        rotateButton.disabled = false;
         codecPreferencesElement.disabled = false;
         console.log('Recording stop command issued.');
     }
@@ -373,11 +378,17 @@
         flipButton.textContent = hFlip ? 'Disable Flip Effect' : 'Enable Flip Effect';
     }
 
+    function rotateCamera() {
+        currentRotation = (currentRotation + 90) % 360;
+        console.log('Camera rotation for VideoFrames set to:', currentRotation, 'degrees');
+    }
+
     window.addEventListener('load', initCamera);
 
     startRecordingButton.addEventListener('click', startRecording);
     stopRecordingButton.addEventListener('click', stopRecording);
     flipButton.addEventListener('click', toggleFlip);
+    rotateButton.addEventListener('click', rotateCamera); // Add event listener for rotate button
 
 </script>
 </body>
