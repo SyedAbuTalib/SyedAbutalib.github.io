@@ -1,0 +1,379 @@
+@import url('https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700&display=swap');
+
+:root {
+    --md-sys-color-primary: #6750A4;
+    --md-sys-color-on-primary: #FFFFFF;
+    --md-sys-color-primary-container: #EADDFF;
+    --md-sys-color-on-primary-container: #21005D;
+    --md-sys-color-primary-container-rgb: 234, 221, 255; /* For rgba usage */
+
+    --md-sys-color-surface: #FEF7FF; 
+    --md-sys-color-on-surface: #1D1B20;
+    --md-sys-color-on-surface-variant: #49454F;
+
+    --md-sys-color-background: #FFFBFE;
+    --md-sys-color-on-background: #1D1B20;
+
+    --md-sys-color-outline: #79747E;
+    --md-sys-color-error: #B3261E;
+    --md-sys-color-on-error: #FFFFFF;
+
+    --md-ref-typeface-plain: 'Roboto', 'Helvetica Neue', Arial, sans-serif;
+    --md-ref-typeface-brand: 'Roboto', 'Helvetica Neue', Arial, sans-serif;
+}
+
+body {
+    font-family: var(--md-ref-typeface-plain);
+    background-color: var(--md-sys-color-background);
+    color: var(--md-sys-color-on-background);
+    margin: 0;
+    padding: 20px;
+    line-height: 1.6;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    min-height: 100vh;
+}
+
+header {
+    width: 100%;
+    max-width: 600px;
+    text-align: center;
+    margin-bottom: 20px;
+}
+
+header h1 {
+    font-size: 2.5rem;
+    margin-bottom: 1rem;
+    color: var(--md-sys-color-primary);
+    margin-top: 0;
+}
+
+main {
+    width: 100%;
+    max-width: 600px;
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+}
+
+h1, h2, h3 {
+    color: var(--md-sys-color-primary);
+    margin-top: 0; /* Adjusted in .card section h2 specifically */
+}
+
+h1 {
+    font-size: 2.5rem; 
+    margin-bottom: 1rem;
+    text-align: center; 
+}
+
+h2 {
+    font-size: 1.75rem;
+    margin-bottom: 0.75rem;
+}
+
+h3 {
+    font-size: 1.25rem;
+    margin-bottom: 0.5rem;
+}
+
+p {
+    margin-bottom: 1rem; /* Default p margin */
+    color: var(--md-sys-color-on-surface-variant);
+}
+
+/* Card Styling */
+.card {
+    background-color: var(--md-sys-color-surface);
+    color: var(--md-sys-color-on-surface);
+    border-radius: 12px;
+    padding: 24px;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.12), 0 1px 2px rgba(0,0,0,0.24);
+    width: 100%;
+    box-sizing: border-box;
+}
+
+/* Ensure sections inside cards don't add extra conflicting margins or padding */
+.card section {
+    padding: 0;
+    margin: 0;
+    border-bottom: none; /* Remove any borders from sections within cards */
+}
+.card section:last-child{
+    margin-bottom: 0;
+    padding-bottom: 0;
+}
+
+
+.card section h2 {
+    margin-top: 0; /* First element in section, no top margin */
+    margin-bottom: 12px; /* Spacing below h2 in card */
+    font-size: 1.5rem; /* Slightly smaller h2 for cards */
+}
+
+
+/* Button Styling */
+button, input[type="button"] {
+    font-family: var(--md-ref-typeface-brand);
+    font-weight: 500;
+    font-size: 0.95rem;
+    letter-spacing: 0.01rem;
+    text-transform: none;
+    padding: 10px 24px;
+    border-radius: 20px;
+    border: none;
+    cursor: pointer;
+    transition: background-color 0.3s ease, box-shadow 0.3s ease;
+    text-align: center;
+    min-height: 40px;
+    box-sizing: border-box;
+    margin: 5px; /* Retain some margin for spacing between adjacent buttons */
+}
+
+/* Filled Button Style (Default for most buttons) */
+button {
+    background-color: var(--md-sys-color-primary);
+    color: var(--md-sys-color-on-primary);
+    box-shadow: 0 1px 2px rgba(0,0,0,0.15), 0 1px 3px rgba(0,0,0,0.1);
+}
+
+button:hover {
+    background-color: var(--md-sys-color-primary-container);
+    color: var(--md-sys-color-on-primary-container);
+    box-shadow: 0 2px 4px rgba(0,0,0,0.2), 0 2px 5px rgba(0,0,0,0.15);
+}
+
+button:disabled {
+    background-color: rgba(0, 0, 0, 0.12);
+    color: rgba(0, 0, 0, 0.38);
+    box-shadow: none;
+    cursor: not-allowed;
+}
+
+#login-button { /* Specific prominent button */
+    font-size: 1rem;
+    padding: 12px 28px;
+}
+
+#skip-button {
+    background-color: var(--md-sys-color-surface);
+    color: var(--md-sys-color-primary);
+}
+
+#skip-button:hover {
+    background-color: var(--md-sys-color-primary-container);
+    color: var(--md-sys-color-on-primary-container);
+}
+
+/* Input Field Styling */
+input[type="text"], select {
+    font-family: var(--md-ref-typeface-plain);
+    font-size: 1rem;
+    color: var(--md-sys-color-on-surface);
+    background-color: #F3EDF7; /* A light, slightly purplish tone */
+    padding: 12px 16px;
+    border: 1px solid var(--md-sys-color-outline);
+    border-radius: 8px;
+    box-sizing: border-box;
+    width: 100%;
+    margin-bottom: 16px;
+    transition: border-color 0.3s ease, box-shadow 0.3s ease;
+    min-height: 40px;
+}
+
+input[type="text"]:focus, select:focus {
+    border-color: var(--md-sys-color-primary);
+    box-shadow: 0 0 0 2px var(--md-sys-color-primary-container);
+    outline: none;
+}
+
+input[type="text"]::placeholder {
+    color: var(--md-sys-color-on-surface-variant);
+}
+
+select {
+    -webkit-appearance: none;
+    -moz-appearance: none;
+    appearance: none;
+    background-image: url('data:image/svg+xml;charset=US-ASCII,%3Csvg%20width%3D%2224%22%20height%3D%2224%22%20viewBox%3D%220%200%2024%2024%22%20fill%3D%22none%22%20xmlns%3D%22http%3A//www.w3.org/2000/svg%22%3E%3Cpath%20d%3D%22M7%2010l5%205%205-5H7z%22%20fill%3D%22%231D1B20%22/%3E%3C/svg%3E');
+    background-repeat: no-repeat;
+    background-position: right 12px center;
+    background-size: 20px;
+    padding-right: 40px;
+}
+
+select:disabled {
+    background-color: rgba(0, 0, 0, 0.05);
+    color: rgba(0, 0, 0, 0.38);
+    cursor: not-allowed;
+}
+
+/* Specific widths for select and input if they were in original CSS and needed */
+select#playlist-select {
+    /* width: 70%; Let new global style of 100% take precedence or uncomment if really needed */
+    /* max-width: 300px; */
+}
+
+input#guess-input {
+    /* width: 60%; Let new global style of 100% take precedence or uncomment if really needed */
+    /* max-width: 250px; */
+}
+
+
+/* UI Adjustments */
+#game-controls,
+#guess-area,
+#skip-area {
+    margin-bottom: 16px; /* Standardized margin */
+    display: flex; 
+    align-items: center;
+    flex-wrap: wrap; 
+    gap: 10px; 
+}
+
+#feedback-message {
+    margin-top: 16px;
+    margin-bottom: 16px;
+    font-size: 0.9rem;
+    color: var(--md-sys-color-on-surface-variant);
+    min-height: 1.2em;
+}
+
+#guesses-remaining-display {
+    margin-top: 16px; /* Standardized margin from previous styles */
+    margin-bottom: 10px; /* Keep or standardize */
+    font-size: 0.9rem;
+    color: var(--md-sys-color-on-surface-variant);
+}
+
+#results-section h3 {
+    color: var(--md-sys-color-primary);
+    font-size: 1.5rem;
+    margin-bottom: 1rem;
+}
+
+#results-section p {
+    margin-bottom: 0.5rem;
+    color: var(--md-sys-color-on-surface-variant); /* Ensure text color consistency */
+}
+
+#results-section #spotify-link {
+    color: var(--md-sys-color-primary);
+    text-decoration: none;
+    font-weight: 500;
+    display: inline-block; /* Ensure it behaves like a block for margin purposes */
+    margin-top: 10px; /* Spacing from text above */
+}
+
+#results-section #spotify-link:hover {
+    text-decoration: underline;
+}
+
+footer {
+    margin-top: auto;
+    padding: 20px;
+    text-align: center;
+    color: var(--md-sys-color-on-surface-variant);
+    font-size: 0.9rem;
+    width: 100%;
+}
+
+/* Cleanup old section rules if not already handled by .card section */
+section {
+    margin-bottom: 0; /* Handled by card gap or specific margins like #feedback-message */
+    padding-bottom: 0;
+    border-bottom: none;
+}
+section:last-child {
+    border-bottom: none;
+    margin-bottom: 0;
+    padding-bottom: 0;
+}
+#playlist-section h2 { /* Ensure card specific h2 style takes precedence */
+    margin-top: 0;
+}
+#results-section { /* Padding is handled by .card now */
+    padding:0;
+}
+#results-section h3 { /* Already styled above */
+    margin-top: 0;
+}
+#results-section p { /* Already styled above */
+    margin: 8px 0; /* Re-evaluate if this is needed after global p and card styles */
+    margin-bottom: 0.5rem; /* Consistent with above */
+}
+
+/* Retain original #spotify-link if it's not a button, but text link. Updated above. */
+#spotify-link {
+    /* display: inline-block; (now in #results-section #spotify-link) */
+    /* margin-top: 10px; (now in #results-section #spotify-link) */
+    /* background-color: #555; (removed for text-style link) */
+    /* color: white; (removed for text-style link) */
+    /* text-decoration: none; (now in #results-section #spotify-link) */
+    /* border-radius: 15px; (removed for text-style link) */
+}
+#spotify-link:hover {
+    /* background-color: #333; (removed for text-style link) */
+}
+/* Initial hide rules for sections are not needed here as JS handles display logic. */
+/* Any #id[style*="display:none"] rules are redundant. */
+
+/* Failed Guesses Display Area */
+#failed-guesses-container {
+    margin-top: 20px; /* Space above the container */
+    padding: 16px; /* Padding inside the container */
+    background-color: #F5F0FA; /* A very light, slightly muted purple, distinct from main cards */
+    border-radius: 8px;
+    color: var(--md-sys-color-on-surface-variant); /* Text color for this area */
+}
+
+#failed-guesses-container h4 {
+    margin-top: 0; /* Remove top margin for the heading inside the container */
+    margin-bottom: 12px; /* Space below the heading */
+    font-size: 1rem; /* Adjust size as needed */
+    font-weight: 500; /* Medium weight */
+    color: var(--md-sys-color-on-surface); /* Or primary color if you want it to stand out more */
+}
+
+#failed-guesses-list {
+    list-style-type: none; /* Remove default list bullets */
+    padding-left: 0; /* Remove default padding */
+    margin-bottom: 0; /* Remove bottom margin from the list itself */
+}
+
+#failed-guesses-list li {
+    padding: 6px 0; /* Padding for each list item */
+    font-size: 0.9rem;
+    color: var(--md-sys-color-on-surface-variant); /* Match container text or make slightly less prominent */
+    border-bottom: 1px solid var(--md-sys-color-outline, #CAC4D0); /* Separator line */
+    /* Opacity for a more "ghosted" look for failed guesses:
+    opacity: 0.85; */
+}
+
+#failed-guesses-list li:last-child {
+    border-bottom: none; /* No border for the last item */
+}
+
+/* Snippet Progress Display */
+#snippet-progress-display {
+    margin-top: 12px; /* Space above the progress display, adjust as needed */
+    padding: 8px 0;   /* Some vertical padding, no horizontal needed if text-aligned */
+    text-align: center; /* Center the time text */
+    font-family: var(--md-ref-typeface-plain); /* Ensure consistent font */
+    color: var(--md-sys-color-on-surface-variant); /* Use a secondary text color */
+    font-size: 0.9rem; /* Slightly smaller than body text, but readable */
+}
+
+#snippet-progress-display span {
+    /* Individual styling for the time elements if needed, e.g., font-weight */
+    /* For now, inheriting from parent is fine */
+}
+
+/* Example: Make current time slightly more prominent if desired */
+/*
+#current-snippet-time {
+    font-weight: 500; 
+    color: var(--md-sys-color-on-surface);
+}
+*/
