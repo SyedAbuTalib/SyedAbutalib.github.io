@@ -1,0 +1,99 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Spotify HeardleWordle</title>
+    <link rel="stylesheet" href="style.css" />
+  </head>
+  <body>
+    <header>
+      <h1>Spotify HeardleWordle</h1>
+    </header>
+
+    <main>
+      <div class="card" id="auth-card">
+        <section id="auth-section">
+          <button id="login-button">Login with Spotify</button>
+        </section>
+      </div>
+
+      <div class="card" id="playlist-card">
+        <section id="playlist-section" style="display: none">
+          <h2>Choose a Playlist</h2>
+          <select id="playlist-select" disabled></select>
+          <button id="start-game-button" disabled>
+            Start Game with this Playlist
+          </button>
+        </section>
+      </div>
+
+      <div class="card" id="game-card">
+        <section id="game-section" style="display: none">
+          <div id="game-controls">
+            <button id="play-snippet-button" disabled>Play Snippet</button>
+            <audio id="audio-player" style="display: none"></audio>
+            <div id="snippet-progress-display" style="display: none">
+              <span id="current-snippet-time">0:00</span> /
+              <span id="total-snippet-time">0:00</span>
+            </div>
+          </div>
+
+          <div id="guess-area">
+            <input
+              type="text"
+              id="guess-input"
+              placeholder="Guess song or artist..."
+              disabled
+              list="song-suggestions"
+            />
+            <datalist id="song-suggestions">
+              <!-- Options will be populated by JavaScript -->
+            </datalist>
+            <button id="submit-guess-button" disabled>Guess</button>
+          </div>
+
+          <div id="skip-area">
+            <button id="skip-button" disabled>Skip (Counts as a guess)</button>
+          </div>
+
+          <div id="guesses-remaining-display">
+            Guesses remaining: <span id="guesses-count">6</span>
+            <!-- Visual representation (e.g., boxes) can be added later with CSS/JS -->
+          </div>
+
+          <div id="feedback-message" aria-live="polite">
+            <!-- Feedback like "Correct!", "Incorrect!" will appear here -->
+          </div>
+
+          <div id="failed-guesses-container" style="display: none">
+            <h4>Previous Guesses:</h4>
+            <ul id="failed-guesses-list">
+              <!-- Failed guesses will be listed here by JavaScript -->
+            </ul>
+          </div>
+
+          <div id="results-section" style="display: none">
+            <h3 id="result-message"></h3>
+            <!-- e.g., "You got it!" or "Better luck next time!" -->
+            <p>The song was: <strong id="correct-song-title"></strong></p>
+            <p>By: <strong id="correct-artist-name"></strong></p>
+            <a id="spotify-link" href="#" target="_blank">Listen on Spotify</a>
+            <br /><br />
+            <button id="play-again-button">
+              Play Again with this Playlist
+            </button>
+          </div>
+        </section>
+      </div>
+    </main>
+
+    <footer>
+      <p>Powered by Spotify</p>
+    </footer>
+
+    <!-- Just before app.js -->
+    <script src="https://sdk.scdn.co/spotify-player.js"></script>
+    <script src="app.js"></script>
+  </body>
+</html>
