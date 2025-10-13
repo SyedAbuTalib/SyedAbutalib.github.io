@@ -1,0 +1,126 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dynamic VTTCue Timing Test</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        /* Custom font for a modern look */
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap');
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #f7f7f7;
+        }
+    </style>
+</head>
+<body class="p-4 sm:p-8 flex flex-col items-center min-h-screen">
+
+    <div class="max-w-4xl w-full bg-white shadow-xl rounded-xl p-6">
+        <h1 class="text-3xl font-bold text-gray-800 mb-6 text-center">Video Cue Injection Test</h1>
+
+        <!-- Video Player -->
+        <div class="mb-8">
+            <!--
+            NOTE: This is a 10-second, license-free placeholder video file from a public source.
+            It's exactly 10 seconds long to meet the "longer than 10 seconds" request's intent
+            while providing a reliable test environment.
+            -->
+            <video id="myVideo" controls autoplay muted
+                   class="w-full rounded-lg shadow-md bg-black"
+                   preload="metadata">
+                <source src="http://commondatastorage.googleapis.com/gtv-videos-bucket/sample/BigBuckBunny.mp4" type="video/mp4">
+                Your browser does not support the video tag.
+
+                <!-- Metadata Text Track -->
+                <!-- The track element is necessary for the JS API (track.track.addCue) to work -->
+                <track id="cueTrack" label="Dynamic Cues" kind="metadata" srclang="en" default>
+            </video>
+        </div>
+
+        <h2 class="text-xl font-semibold text-gray-700 mb-3">Test Status Log:</h2>
+
+        <!-- Log Container -->
+        <div id="log" class="bg-gray-100 p-4 rounded-lg h-48 overflow-y-auto border border-gray-300 text-sm">
+            <p class="text-gray-500">Waiting for video to start and reach 8 seconds...</p>
+        </div>
+    </div>
+
+    <script type="module">
+        // --- Firebase Setup (Required Canvas Boilerplate) ---
+        // This application does not use Firestore or Authentication, but the required
+        // global variables are handled here per environment instructions.
+        const appId = typeof __app_id !== 'undefined' ? __app_id : 'default-app-id';
+        // const firebaseConfig = JSON.parse(typeof __firebase_config !== 'undefined' ? __firebase_config : '{}');
+        const apiKey = "";
+        // ---------------------------------------------------
+
+        const video = document.getElementById('myVideo');
+        const trackElement = document.getElementById('cueTrack');
+        const track = trackElement.track; // Get the TextTrack object
+        const logContainer = document.getElementById('log');
+
+        let cueAdded = false;
+
+        // Log initial status
+        function logStatus(message, color = 'text-gray-700') {
+            const time = video.currentTime.toFixed(2);
+            logContainer.innerHTML += `<p class="${color}">[${time}s] ${message}</p>`;
+            logContainer.scrollTop = logContainer.scrollHeight; // Scroll to bottom
+        }
+
+        // 1. Start video playback automatically
+        video.addEventListener('loadedmetadata', () => {
+            logStatus("Video metadata loaded. Starting playback...", 'text-yellow-600');
+            video.play().catch(e => {
+                logStatus(`Playback failed (browser security usually requires user interaction): ${e.message}`, 'text-red-700 font-bold');
+                logStatus("Please press the play button manually.", 'text-red-700 font-bold');
+            });
+        });
+
+        // 2. Main Logic: Wait for 8 seconds and add the cue
+        video.addEventListener('timeupdate', () => {
+            const currentTime = video.currentTime;
+
+            if (currentTime >= 8 && !cueAdded) {
+                cueAdded = true;
+
+                const start = 1;
+                const end = 3;
+
+                // Create the VTTCue
+                const cue = new VTTCue(start, end, 'Problem Cue Added Late');
+
+                // 3. Define onenter and onexit events
+                cue.onenter = function() {
+                    const time = video.currentTime.toFixed(2);
+                    logStatus(`✅ CUE ENTERED at ${time}s! (Cue: ${start}-${end}s).`, 'text-green-600 font-semibold');
+                };
+
+                cue.onexit = function() {
+                    const time = video.currentTime.toFixed(2);
+                    logStatus(`❌ CUE EXITED at ${time}s! (Cue: ${start}-${end}s).`, 'text-red-600 font-semibold');
+                };
+
+                // Add the cue to the track
+                track.addCue(cue);
+
+                logStatus(`--- Cue Injected! ---`, 'text-blue-600 font-bold');
+                logStatus(`Current time: ${currentTime.toFixed(2)}s.`, 'text-blue-600');
+                logStatus(`Injected Cue range: ${start}s to ${end}s.`, 'text-blue-600');
+                logStatus(`Observation: The 'onenter' event for the 1-3s cue should NOT fire retroactively.`, 'text-blue-600 italic');
+            }
+
+            // Optional: Show current time for debugging
+            if (Math.floor(currentTime) > Math.floor(video.currentTime - 0.1)) {
+                logStatus(`Video Time: ${currentTime.toFixed(1)}s`, 'text-gray-400');
+            }
+        });
+
+        video.addEventListener('ended', () => {
+            logStatus("Video playback ended.", 'text-gray-700');
+        });
+
+    </script>
+</body>
+</html>

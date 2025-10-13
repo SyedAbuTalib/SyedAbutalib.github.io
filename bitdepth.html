@@ -1,0 +1,284 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Audio Capture Playback Test</title>
+    <style>
+      body {
+        font-family: sans-serif;
+        background-color: #f0f0f0;
+        color: #333;
+        max-width: 800px;
+        margin: 0 auto;
+        padding: 20px;
+      }
+      h1 {
+        color: #111;
+      }
+      #status {
+        padding: 10px;
+        border-radius: 5px;
+        margin: 10px 0;
+        font-weight: bold;
+      }
+      .success {
+        background-color: #d4edda;
+        color: #155724;
+      }
+      .error {
+        background-color: #f8d7da;
+        color: #721c24;
+      }
+      .info {
+        background-color: #e2e3e5;
+        color: #383d41;
+      }
+      button {
+        font-size: 1em;
+        padding: 10px 15px;
+        margin-right: 10px;
+        border-radius: 5px;
+        border: 1px solid #ccc;
+      }
+      button:disabled {
+        cursor: not-allowed;
+        opacity: 0.6;
+      }
+      #controls,
+      #results {
+        margin-top: 20px;
+      }
+      a {
+        color: #007bff;
+      }
+    </style>
+  </head>
+  <body>
+    <h1>Audio Capture Playback Test</h1>
+    <p>
+      This page tests audio capture from your microphone. It records a 5-second
+      clip and plays it back for you to verify that the audio sounds correct and
+      is not scrambled or distorted.
+    </p>
+
+    <div id="controls">
+      <button id="startButton">1. Start Audio Test</button>
+      <button id="recordButton" disabled>2. Record 5s Clip</button>
+    </div>
+
+    <div id="status" class="info">Awaiting test start...</div>
+
+    <div id="results" style="display: none">
+      <h2>Recording Complete</h2>
+      <audio id="audioPlayback" controls></audio>
+      <br />
+      <a id="downloadLink">Download WAV file</a>
+      <p>You can optionally download the recorded clip to analyze it further.</p>
+    </div>
+
+    <script>
+      const startButton = document.getElementById("startButton");
+      const recordButton = document.getElementById("recordButton");
+      const statusDiv = document.getElementById("status");
+      const resultsDiv = document.getElementById("results");
+      const audioPlayback = document.getElementById("audioPlayback");
+      const downloadLink = document.getElementById("downloadLink");
+
+      let audioStream;
+      let audioContext;
+      let scriptNode;
+      let audioBuffers = [];
+
+      startButton.onclick = async () => {
+        statusDiv.textContent = "Requesting audio stream...";
+        statusDiv.className = "info";
+        resultsDiv.style.display = "none";
+        recordButton.disabled = true;
+
+        const constraints = {
+          audio: true,
+          video: false,
+        };
+
+        try {
+          audioStream = await navigator.mediaDevices.getUserMedia(constraints);
+          const audioTracks = audioStream.getAudioTracks();
+          if (audioTracks.length > 0) {
+            const settings = audioTracks[0].getSettings();
+            console.log("Audio stream settings:", settings);
+
+            let message = `Success! Stream obtained. Browser reports sampleRate: ${settings.sampleRate}, sampleSize: ${settings.sampleSize}`;
+            statusDiv.className = "success";
+            statusDiv.textContent = message;
+            recordButton.disabled = false;
+          } else {
+            throw new Error("No audio tracks found in the stream.");
+          }
+        } catch (err) {
+          console.error("getUserMedia error:", err);
+          statusDiv.textContent = `Error: ${err.name}. Could not get audio stream.`;
+          statusDiv.className = "error";
+        }
+      };
+
+      recordButton.onclick = () => {
+        if (!audioStream) {
+          alert("Audio stream not started.");
+          return;
+        }
+
+        recordButton.disabled = true;
+        startButton.disabled = true;
+        statusDiv.textContent = "Recording for 5 seconds...";
+        statusDiv.className = "info";
+        audioBuffers = [];
+
+        audioContext = new (window.AudioContext || window.webkitAudioContext)();
+        const source = audioContext.createMediaStreamSource(audioStream);
+
+        scriptNode = audioContext.createScriptProcessor(4096, 1, 1);
+
+        scriptNode.onaudioprocess = (audioProcessingEvent) => {
+          const inputData =
+            audioProcessingEvent.inputBuffer.getChannelData(0);
+          audioBuffers.push(new Float32Array(inputData));
+        };
+
+        source.connect(scriptNode);
+        scriptNode.connect(audioContext.destination);
+
+        setTimeout(() => {
+          stopRecordingAndGenerateWav();
+        }, 5000); // Record for 5 seconds
+      };
+
+      function stopRecordingAndGenerateWav() {
+        scriptNode.disconnect();
+
+        statusDiv.textContent = "Recording finished. Generating WAV file...";
+
+        const fullBuffer = mergeBuffers(
+          audioBuffers,
+          audioBuffers.reduce((acc, buf) => acc + buf.length, 0)
+        );
+        // Encode as 32-bit float WAV for highest fidelity playback
+        const wavBlob = encodeWAV(fullBuffer, audioContext.sampleRate, 32);
+
+        if (audioContext.state !== "closed") {
+          audioContext.close();
+        }
+
+        const audioUrl = URL.createObjectURL(wavBlob);
+        audioPlayback.src = audioUrl;
+        downloadLink.href = audioUrl;
+        downloadLink.download = "recording.wav";
+
+        resultsDiv.style.display = "block";
+        startButton.disabled = false;
+        recordButton.disabled = false;
+        statusDiv.textContent = "Test complete. Check results below.";
+        statusDiv.className = "success";
+      }
+
+      function mergeBuffers(bufferArray, totalLength) {
+        const result = new Float32Array(totalLength);
+        let offset = 0;
+        for (const buffer of bufferArray) {
+          result.set(buffer, offset);
+          offset += buffer.length;
+        }
+        return result;
+      }
+
+      // --- WAV Encoding Functions ---
+
+      function encodeWAV(samples, sampleRate, bitsPerSample) {
+        const isFloat = bitsPerSample === 32;
+        const bytesPerSample = bitsPerSample / 8;
+        const numChannels = 1;
+
+        // Correctly calculate header size based on format
+        const headerSize = isFloat ? 46 : 44;
+
+        const buffer = new ArrayBuffer(headerSize + samples.length * bytesPerSample);
+        const view = new DataView(buffer);
+
+        const blockAlign = numChannels * bytesPerSample;
+        const byteRate = sampleRate * blockAlign;
+
+        // RIFF header
+        writeString(view, 0, "RIFF");
+        view.setUint32(4, (headerSize - 8) + samples.length * bytesPerSample, true); // File size - 8
+        writeString(view, 8, "WAVE");
+
+        // fmt sub-chunk
+        writeString(view, 12, "fmt ");
+        if (isFloat) {
+            view.setUint32(16, 18, true); // Sub-chunk size for float
+            view.setUint16(20, 3, true); // Audio format (3 = IEEE float)
+        } else {
+            view.setUint32(16, 16, true); // Sub-chunk size for PCM
+            view.setUint16(20, 1, true); // Audio format (1 = PCM)
+        }
+        
+        view.setUint16(22, numChannels, true);
+        view.setUint32(24, sampleRate, true);
+        view.setUint32(28, byteRate, true);
+        view.setUint16(32, blockAlign, true);
+        view.setUint16(34, bitsPerSample, true);
+        if (isFloat) {
+            view.setUint16(36, 0, true); // Extra size
+        }
+
+        // data sub-chunk
+        writeString(view, isFloat ? 38 : 36, "data");
+        view.setUint32(isFloat ? 42 : 40, samples.length * bytesPerSample, true);
+
+        // Write samples
+        if (isFloat) {
+            floatTo32BitPCM(view, headerSize, samples);
+        } else if (bitsPerSample === 16) {
+            floatTo16BitPCM(view, headerSize, samples);
+        } else if (bitsPerSample === 24) {
+            floatTo24BitPCM(view, headerSize, samples);
+        }
+
+        return new Blob([view], { type: "audio/wav" });
+      }
+
+      function floatTo16BitPCM(output, offset, input) {
+        for (let i = 0; i < input.length; i++, offset += 2) {
+          const s = Math.max(-1, Math.min(1, input[i]));
+          const val = s < 0 ? s * 0x8000 : s * 0x7fff;
+          output.setInt16(offset, val, true);
+        }
+      }
+
+      function floatTo24BitPCM(output, offset, input) {
+        for (let i = 0; i < input.length; i++, offset += 3) {
+          const s = Math.max(-1, Math.min(1, input[i]));
+          let val = s < 0 ? s * 0x800000 : s * 0x7fffff;
+          val = parseInt(val);
+
+          output.setInt8(offset, val & 0xff);
+          output.setInt8(offset + 1, (val >> 8) & 0xff);
+          output.setInt8(offset + 2, (val >> 16) & 0xff);
+        }
+      }
+
+      function floatTo32BitPCM(output, offset, input) {
+        for (let i = 0; i < input.length; i++, offset += 4) {
+          const s = Math.max(-1, Math.min(1, input[i]));
+          output.setFloat32(offset, s, true);
+        }
+      }
+
+      function writeString(view, offset, string) {
+        for (let i = 0; i < string.length; i++) {
+          view.setUint8(offset + i, string.charCodeAt(i));
+        }
+      }
+    </script>
+  </body>
+</html>
