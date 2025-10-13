@@ -13,6 +13,18 @@ WebRTC and advanced media features tested here.
   - **Description:** Features live camera preview, video recording with selectable MIME types (MP4, WebM), a conceptual video flip effect via MediaStreamTrack Insertable Streams, and a user interface styled after WebRTC samples.
   - **Link:** [Go to Video flip Test](./flip.html)
 
+- ### [WebCodecs Opus Test](./opus.html)
+  - **Description:** Tests the WebCodecs AudioEncoder and AudioDecoder with the Opus codec and a user-defined frame duration.
+  - **Link:** [Go to WebCodecs Opus Test](./opus.html)
+
+- ### [VTTCue Timing Test](./vtt.html)
+  - **Description:** A test page for dynamically injecting a VTTCue into a video track to observe its timing and event behavior.
+  - **Link:** [Go to VTTCue Timing Test](./vtt.html)
+
+- ### [Audio Playback Test](./bitdepth.html)
+  - **Description:** A simple tool to record a 5-second audio clip from a microphone and play it back to verify capture quality.
+  - **Link:** [Go to Audio Playback Test](./bitdepth.html)
+
 ---
 
 ## Personal Pages:
