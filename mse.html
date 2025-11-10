@@ -1,0 +1,123 @@
+<html>
+  <meta charset="UTF-8">
+  <video controls></video>
+  <br/><br/>
+</html>
+
+<style>
+table, th, td {
+  border: 1px solid black;
+  border-collapse: collapse;
+}
+
+video {
+  width: 1280;
+  height: 720;
+}
+</style>
+
+<script>
+  var QueryString = function() {
+    // Allows access to query parameters on the URL; e.g., given a URL like:
+    //    http://<server>/my.html?test=123&bob=123
+    // Parameters can then be accessed via QueryString.test or QueryString.bob.
+    var params = {};
+    // RegEx to split out values by & || ;.
+    var r = /([^&;=]+)=?([^&;]*)/g;
+    // Lambda function for decoding extracted match values. Replaces '+' with
+    // space so decodeURIComponent functions properly.
+    function d(s) { return decodeURIComponent(s.replace(/\+/g, ' ')); }
+    var match;
+    while (match = r.exec(window.location.search.substring(1)))
+      params[d(match[1])] = d(match[2]);
+    return params;
+  }();
+
+
+  var TYPE_MAP = {
+    'mp4' : 'video/mp4; codecs="avc1.4D4041,mp4a.40.2"',
+    'webm' : 'video/webm; codecs="opus,vp9"',
+    'mp3': 'audio/mpeg',
+    'mp4a' : 'audio/mp4; codecs="mp4a.40.2',
+    'mp4v' : 'video/mp4; codecs="avc1.4D4041',
+    'mp4_av1' : 'video/mp4; codecs="av01.0.04M.08',
+    'webm_av1' : 'video/webm; codecs="av1',
+    'webm_vp8' : 'video/webm; codecs="vp8, vorbis"',
+    'webm_vp9' : 'video/webm; codecs="vp9"',
+    'opus': 'audio/webm; codecs="opus"',
+    'mp4_opus':  'audio/mp4; codecs="opus"',
+    'wav': 'audio/wav',
+    'adts': 'audio/aac',
+    'mp4_iamf': 'video/mp4; codecs="iamf.00.00"'
+  };
+
+  var log = document.querySelector('textarea');
+  var video, sourceBuffer, mediaSource;
+
+  function updatePromise() {
+    return new Promise(function(resolve, reject) {
+      sourceBuffer.addEventListener('updateend', function(e) {
+        resolve();
+      }, true);
+    });
+  }
+
+  async function processFetch(stream) {
+    const reader = stream.getReader();
+    while (true) {
+      const { done, value } = await reader.read();
+      if (value && value.length > 0) {
+        if (QueryString.gc && video.currentTime > 1) {
+          let updateend = updatePromise();
+          sourceBuffer.remove(0, video.currentTime - 1);
+          await updateend;
+        }
+
+        // In practice a very large fetch still needs to be broken up into
+        // smaller chunks and appending as time goes by to avoid overflowing
+        // the sourceBuffer.
+        let updateend = updatePromise();
+        sourceBuffer.appendBuffer(value);
+        await updateend;
+      }
+
+      if (done) {
+        mediaSource.endOfStream();
+        break;
+      }
+    }
+  }
+
+  document.addEventListener('DOMContentLoaded', function(event) {
+    video = document.querySelector('video');
+    mediaSource = new MediaSource();
+
+    var typeHtml = '';
+    for (var key in TYPE_MAP) {
+      typeHtml += '<tr><td>' + key + '</td><td>' + TYPE_MAP[key] + '</td></tr>';
+    }
+    var types = document.querySelector('table');
+    types.innerHTML = typeHtml;
+
+    mediaSource.addEventListener('sourceopen', async function() {
+      if (!QueryString.type || !QueryString.type in TYPE_MAP) {
+        console.log('Error: No type specified.');
+        return;
+      }
+
+      sourceBuffer =  mediaSource.addSourceBuffer(TYPE_MAP[QueryString.type]);
+      fetch(QueryString.src)
+        .then(response => response.body)
+        .then(rs => { processFetch(rs); })
+        .catch(e => { console.log(e); });
+    }, false);
+
+    video.src = window.URL.createObjectURL(mediaSource);
+  }, false);
+</script>
+
+
+<div>
+<h1>MSE Test Page Types:</h1><br/>
+<table id="typeList"></table>
+</div>
