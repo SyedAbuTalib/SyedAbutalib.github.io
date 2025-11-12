@@ -25,9 +25,10 @@ WebRTC and advanced media features tested here.
   - **Description:** A simple tool to record a 5-second audio clip from a microphone and play it back to verify capture quality.
   - **Link:** [Go to Audio Playback Test](./bitdepth.html)
 
-- ### [IAMF Player](./iamf_player.html)
-  - **Description:** A page for testing IAMF video playback. It includes a player for a video with an IAMF track and a regular audio track for comparison.
-  - **Link:** [Go to IAMF Player](./iamf_player.html)
+
+- ### [MSE Test Page](./mse.html)
+  - **Description:** A test page for Media Source Extensions (MSE). It allows for testing of various media types by specifying the source URL and type as query parameters.
+  - **Link:** [Go to MSE Test Page](./mse.html)
 
 ---
 
@@ -42,4 +43,4 @@ These are pages also hosted on this Github site.
 ---
 
 _This site is built with Markdown and hosted on GitHub Pages._
-_Last updated: May 2025_
+_Last updated: November 2025_
