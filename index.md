@@ -1,4 +1,4 @@
-# Syed's Test Site
+# Web Technology Demos
 
 WebRTC and advanced media features tested here.
 
