@@ -2,17 +2,19 @@
   <meta charset="UTF-8">
   <video controls></video>
   <br>
-  <a href="https://syedabutalib.github.io/mse.html?src=iamf.mp4&type=mp4_iamf">https://syedabutalib.github.io/mse.html?src=iamf.mp4&type=mp4_iamf</a>
+  <a href="mse.html?src=iamf.mp4&type=mp4_iamf">iamf.mp4</a>
   <br>
-  <a href="https://syedabutalib.github.io/mse.html?src=iamf2.mp4&type=mp4_iamf">https://syedabutalib.github.io/mse.html?src=iamf2.mp4&type=mp4_iamf</a>
+  <a href="mse.html?src=iamf2.mp4&type=mp4_iamf">iamf2.mp4</a>
   <br>
-  <a href="https://syedabutalib.github.io/mse.html?src=iamf3.mp4&type=mp4_iamf">iamf3</a>
+  <a href="mse.html?src=iamf3.mp4&type=mp4_iamf">iamf3.mp4</a>
   <br>
-  <a href="https://syedabutalib.github.io/mse.html?src=iamf4.mp4&type=mp4_iamf">iamf4</a>
+  <a href="mse.html?src=iamf4.mp4&type=mp4_iamf">iamf4.mp4</a>
   <br>
-  <a href="https://syedabutalib.github.io/mse.html?src=iamf5.mp4&type=mp4_iamf">iamf5</a>
+  <a href="mse.html?src=iamf5.mp4&type=mp4_iamf">iamf5.mp4</a>
   <br>
-  <a href="https://syedabutalib.github.io/mse.html?src=iamf5output.mp4&type=mp4_iamf">iamf5output</a>
+  <a href="mse.html?src=iamf5output.mp4&type=mp4_iamf">iamf5output.mp4 (Fragmented)</a>
+  <br>
+  <a href="mse.html?src=Eclipsa_fragmented.mp4&type=mp4_iamf">Eclipsa_fragmented.mp4 (Fragmented)</a>
 
 </html>
 
@@ -36,9 +38,9 @@ video {
     var params = {};
     // RegEx to split out values by & || ;.
     var r = /([^&;=]+)=?([^&;]*)/g;
-    // Lambda function for decoding extracted match values. Replaces '+' with
+    // Lambda function for decoding extracted match values. Replaces "+" with
     // space so decodeURIComponent functions properly.
-    function d(s) { return decodeURIComponent(s.replace(/\+/g, ' ')); }
+    function d(s) { return decodeURIComponent(s.replace(/\+/g, " ")); }
     var match;
     while (match = r.exec(window.location.search.substring(1)))
       params[d(match[1])] = d(match[2]);
@@ -47,28 +49,28 @@ video {
 
 
   var TYPE_MAP = {
-    'mp4' : 'video/mp4; codecs="avc1.4D4041,mp4a.40.2"',
-    'webm' : 'video/webm; codecs="opus,vp9"',
-    'mp3': 'audio/mpeg',
-    'mp4a' : 'audio/mp4; codecs="mp4a.40.2',
-    'mp4v' : 'video/mp4; codecs="avc1.4D4041',
-    'mp4_av1' : 'video/mp4; codecs="av01.0.04M.08',
-    'webm_av1' : 'video/webm; codecs="av1',
-    'webm_vp8' : 'video/webm; codecs="vp8, vorbis"',
-    'webm_vp9' : 'video/webm; codecs="vp9"',
-    'opus': 'audio/webm; codecs="opus"',
-    'mp4_opus':  'audio/mp4; codecs="opus"',
-    'wav': 'audio/wav',
-    'adts': 'audio/aac',
-    'mp4_iamf': 'video/mp4; codecs="iamf.001.001.Opus"'
+    "mp4" : "video/mp4; codecs=\"avc1.4D4041,mp4a.40.2\"",
+    "webm" : "video/webm; codecs=\"opus,vp9\"",
+    "mp3": "audio/mpeg",
+    "mp4a" : "audio/mp4; codecs=\"mp4a.40.2\"",
+    "mp4v" : "video/mp4; codecs=\"avc1.4D4041\"",
+    "mp4_av1" : "video/mp4; codecs=\"av01.0.04M.08\"",
+    "webm_av1" : "video/webm; codecs=\"av1\"",
+    "webm_vp8" : "video/webm; codecs=\"vp8, vorbis\"",
+    "webm_vp9" : "video/webm; codecs=\"vp9\"",
+    "opus": "audio/webm; codecs=\"opus\"",
+    "mp4_opus":  "audio/mp4; codecs=\"opus\"",
+    "wav": "audio/wav",
+    "adts": "audio/aac",
+    "mp4_iamf": "video/mp4; codecs=\"avc1.42E01E, iamf.001.001.Opus\""
   };
 
-  var log = document.querySelector('textarea');
+  var log = document.querySelector("textarea");
   var video, sourceBuffer, mediaSource;
 
   function updatePromise() {
     return new Promise(function(resolve, reject) {
-      sourceBuffer.addEventListener('updateend', function(e) {
+      sourceBuffer.addEventListener("updateend", function(e) {
         resolve();
       }, true);
     });
@@ -100,20 +102,20 @@ video {
     }
   }
 
-  document.addEventListener('DOMContentLoaded', function(event) {
-    video = document.querySelector('video');
+  document.addEventListener("DOMContentLoaded", function(event) {
+    video = document.querySelector("video");
     mediaSource = new MediaSource();
 
-    var typeHtml = '';
+    var typeHtml = "";
     for (var key in TYPE_MAP) {
-      typeHtml += '<tr><td>' + key + '</td><td>' + TYPE_MAP[key] + '</td></tr>';
+      typeHtml += "<tr><td>" + key + "</td><td>" + TYPE_MAP[key] + "</td></tr>";
     }
-    var types = document.querySelector('table');
+    var types = document.querySelector("table");
     types.innerHTML = typeHtml;
 
-    mediaSource.addEventListener('sourceopen', async function() {
+    mediaSource.addEventListener("sourceopen", async function() {
       if (!QueryString.type || !QueryString.type in TYPE_MAP) {
-        console.log('Error: No type specified.');
+        console.log("Error: No type specified.");
         return;
       }
 
