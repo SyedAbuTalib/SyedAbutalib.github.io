@@ -2,19 +2,7 @@
   <meta charset="UTF-8">
   <video controls></video>
   <br>
-  <a href="mse.html?src=iamf.mp4&type=mp4_iamf">iamf.mp4</a>
-  <br>
-  <a href="mse.html?src=iamf2.mp4&type=mp4_iamf">iamf2.mp4</a>
-  <br>
-  <a href="mse.html?src=iamf3.mp4&type=mp4_iamf">iamf3.mp4</a>
-  <br>
-  <a href="mse.html?src=iamf4.mp4&type=mp4_iamf">iamf4.mp4</a>
-  <br>
-  <a href="mse.html?src=iamf5.mp4&type=mp4_iamf">iamf5.mp4</a>
-  <br>
-  <a href="mse.html?src=iamf5output.mp4&type=mp4_iamf">iamf5output.mp4 (Fragmented)</a>
-  <br>
-  <a href="mse.html?src=Eclipsa_fragmented.mp4&type=mp4_iamf">Eclipsa_fragmented.mp4 (Fragmented)</a>
+  <div id="links"></div>
 
 </html>
 
@@ -62,8 +50,23 @@ video {
     "mp4_opus":  "audio/mp4; codecs=\"opus\"",
     "wav": "audio/wav",
     "adts": "audio/aac",
-    "mp4_iamf": "video/mp4; codecs=\"avc1.42E01E, iamf.001.001.Opus\""
+    "audio_iamf_opus": "audio/mp4; codecs=\"iamf.001.001.Opus\"",
+    "mp4_iamf_avc_baseline_l50": "video/mp4; codecs=\"avc1.42E032, iamf.001.001.Opus\"",
+    "mp4_iamf_avc_high_l40": "video/mp4; codecs=\"avc1.640028, iamf.001.001.Opus\"",
+    "mp4_iamf_avc_high444_l31": "video/mp4; codecs=\"avc1.F4001F, iamf.001.001.Opus\"",
+    "mp4_iamf_av1_l50": "video/mp4; codecs=\"av01.0.12M.08, iamf.001.001.Opus\"",
+    "mp4_hevc_rext_pcm": "video/mp4; codecs=\"hvc1.4.10.L150.B0, pcm_s24le\"",
+    "mp4_avc_high_l40": "video/mp4; codecs=\"avc1.640028\"",
+    "mp4_avc_main_l41_aac": "video/mp4; codecs=\"avc1.4D4029, mp4a.40.2\""
   };
+
+  var FILES = [
+    { name: "iamf_sine_500ms.mp4", type: "audio_iamf_opus" },
+    { name: "iamf_stereo_syed_voice.mp4", type: "audio_iamf_opus" },
+    { name: "iamf_syed_video_stereo.mp4", type: "mp4_iamf_avc_baseline_l50", label: "iamf_video_avc_frag.mp4 (Fragmented AVC Baseline L5.0)" },
+    { name: "714_frag.mp4", type: "mp4_iamf_avc_high_l40", label: "714_frag.mp4 (AVC High L4.0, IAMF)" },
+    { name: "eclipsa_3oa_stereo_frag.mp4", type: "mp4_iamf_av1_l50", label: "eclipsa_3oa_stereo_frag.mp4 (AV1 Main L5.0, IAMF)" },
+  ];
 
   var log = document.querySelector("textarea");
   var video, sourceBuffer, mediaSource;
@@ -113,12 +116,21 @@ video {
     var types = document.querySelector("table");
     types.innerHTML = typeHtml;
 
+    // Generate Links
+    var linksHtml = "";
+    FILES.forEach(function(file) {
+      var label = file.label || file.name;
+      linksHtml += '<a href="mse.html?src=' + file.name + '&type=' + file.type + '">' + label + '</a><br>';
+    });
+    document.getElementById("links").innerHTML = linksHtml;
+
     mediaSource.addEventListener("sourceopen", async function() {
       if (!QueryString.type || !QueryString.type in TYPE_MAP) {
         console.log("Error: No type specified.");
         return;
       }
 
+      console.log("Using type:", TYPE_MAP[QueryString.type]);
       sourceBuffer =  mediaSource.addSourceBuffer(TYPE_MAP[QueryString.type]);
       fetch(QueryString.src)
         .then(response => response.body)
@@ -129,6 +141,7 @@ video {
     video.src = window.URL.createObjectURL(mediaSource);
   }, false);
 </script>
+
 
 
 <div>
