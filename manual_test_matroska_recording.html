@@ -1,0 +1,224 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Matroska Recording Test</title>
+    <style>
+        body { font-family: sans-serif; padding: 20px; max-width: 800px; margin: 0 auto; }
+        .controls { margin-bottom: 20px; border: 1px solid #ccc; padding: 15px; border-radius: 5px; background: #f9f9f9; }
+        canvas { border: 1px solid black; background: #fff; margin-bottom: 10px; }
+        .recording-log { margin-top: 10px; font-weight: bold; }
+        h3 { margin-top: 0; }
+        .result-item { border-bottom: 1px solid #eee; padding-bottom: 15px; margin-bottom: 15px; }
+    </style>
+</head>
+<body>
+    <h1>Matroska Recording Verification</h1>
+    <p>This test verifies that <code>video/matroska</code> and <code>audio/matroska</code> actually produce valid, playable files, not just empty containers.</p>
+    
+    <div class="controls">
+        <h3>1. Start Content Source</h3>
+        <p>This generates a red bouncing box (video) and a 440Hz sine wave (audio).</p>
+        <canvas id="canvas" width="320" height="240"></canvas>
+        <br>
+        <button id="btnStartSource">Start Animation & Audio</button>
+    </div>
+
+    <div class="controls">
+        <h3>2. Record</h3>
+        <label><b>Format:</b> 
+            <select id="mimeSelect">
+                <option value="video/matroska;codecs=vp9">video/matroska (VP9)</option>
+                <option value="video/x-matroska;codecs=vp9">video/x-matroska (VP9)</option>
+                <option value="audio/matroska;codecs=opus">audio/matroska (Opus)</option>
+                <option value="audio/x-matroska;codecs=opus">audio/x-matroska (Opus)</option>
+            </select>
+        </label>
+        <br><br>
+        <button id="btnStartRecord" disabled>Start Recording</button>
+        <button id="btnStopRecord" disabled>Stop & Verify</button>
+        <div id="status" class="recording-log">Status: Waiting for source...</div>
+    </div>
+
+    <div class="controls">
+        <h3>3. Verification (Playback & Download)</h3>
+        <div id="playbackArea">
+            <i>Recorded clips will appear here...</i>
+        </div>
+    </div>
+
+    <script>
+        const canvas = document.getElementById('canvas');
+        const ctx = canvas.getContext('2d');
+        const btnStartSource = document.getElementById('btnStartSource');
+        const btnStartRecord = document.getElementById('btnStartRecord');
+        const btnStopRecord = document.getElementById('btnStopRecord');
+        const mimeSelect = document.getElementById('mimeSelect');
+        const statusDiv = document.getElementById('status');
+        const playbackArea = document.getElementById('playbackArea');
+
+        let audioCtx;
+        let dest;
+        let oscillator;
+        let mediaStream;
+        let recorder;
+        let chunks = [];
+        let animationId;
+        
+        // --- 1. Animation & Audio Generation ---
+        let x = 0;
+        let speed = 2;
+        function draw() {
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            
+            // Background
+            ctx.fillStyle = '#f0f0f0';
+            ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+            // Time stamp (proves video is moving/live)
+            ctx.fillStyle = 'black';
+            ctx.font = '16px monospace';
+            ctx.fillText("Time: " + new Date().toLocaleTimeString(), 10, 30);
+            ctx.fillText("Frame: " + requestAnimationFrame(() => {}), 10, 50);
+
+            // Moving box
+            ctx.fillStyle = '#D32F2F';
+            ctx.fillRect(x, 100, 50, 50);
+            
+            x += speed;
+            if (x > canvas.width - 50 || x < 0) speed = -speed;
+            
+            animationId = requestAnimationFrame(draw);
+        }
+
+        btnStartSource.onclick = async () => {
+            // Start Audio (Oscillator)
+            if (!audioCtx) {
+                audioCtx = new AudioContext();
+                dest = audioCtx.createMediaStreamDestination();
+                oscillator = audioCtx.createOscillator();
+                oscillator.type = 'sine';
+                oscillator.frequency.setValueAtTime(440, audioCtx.currentTime); // A4 tone
+                oscillator.connect(dest);
+                oscillator.start();
+            }
+
+            // Start Video Animation
+            if (!animationId) draw();
+
+            // Combine canvas video + web audio into one MediaStream
+            const canvasStream = canvas.captureStream(30); // 30 FPS
+            const audioTrack = dest.stream.getAudioTracks()[0];
+            
+            mediaStream = new MediaStream();
+            canvasStream.getVideoTracks().forEach(track => mediaStream.addTrack(track));
+            mediaStream.addTrack(audioTrack);
+
+            btnStartSource.disabled = true;
+            btnStartSource.textContent = "Source Running";
+            btnStartRecord.disabled = false;
+            statusDiv.textContent = 'Status: Source active. Ready to record.';
+            statusDiv.style.color = 'green';
+        };
+
+        // --- 2. Recording Logic ---
+        btnStartRecord.onclick = () => {
+            const mimeType = mimeSelect.value;
+            chunks = [];
+            
+            try {
+                // Determine which tracks to use based on requested type
+                let streamToRecord;
+                if (mimeType.startsWith('audio/')) {
+                    // Create a new stream with ONLY the audio track
+                    streamToRecord = new MediaStream([mediaStream.getAudioTracks()[0]]);
+                } else {
+                    streamToRecord = mediaStream;
+                }
+
+                if (!MediaRecorder.isTypeSupported(mimeType)) {
+                    statusDiv.textContent = `Error: ${mimeType} is NOT supported by this browser.`;
+                    statusDiv.style.color = 'red';
+                    return;
+                }
+
+                recorder = new MediaRecorder(streamToRecord, { mimeType });
+                
+                recorder.ondataavailable = e => {
+                    if (e.data.size > 0) chunks.push(e.data);
+                };
+
+                recorder.onstop = () => {
+                    const blob = new Blob(chunks, { type: mimeType });
+                    const url = URL.createObjectURL(blob);
+                    const sizeKB = (blob.size / 1024).toFixed(2);
+                    
+                    statusDiv.textContent = `Status: Finished. Last file size: ${sizeKB} KB.`;
+                    statusDiv.style.color = 'black';
+
+                    // Create playback UI
+                    if (playbackArea.querySelector('i')) playbackArea.innerHTML = ''; // Clear placeholder
+
+                    const container = document.createElement('div');
+                    container.className = 'result-item';
+                    
+                    const title = document.createElement('strong');
+                    title.textContent = `Format: ${mimeType} (${sizeKB} KB)`;
+                    container.appendChild(title);
+                    container.appendChild(document.createElement('br'));
+                    
+                    const mediaEl = mimeType.startsWith('video') ? document.createElement('video') : document.createElement('audio');
+                    mediaEl.controls = true;
+                    mediaEl.src = url;
+                    mediaEl.style.maxWidth = '100%';
+                    mediaEl.style.display = 'block';
+                    mediaEl.style.marginTop = '10px';
+                    
+                    // Extension logic
+                    let ext = 'mkv'; // Default for matroska
+                    if (mimeType.startsWith('audio/')) ext = 'mka';
+                    if (mimeType.includes('webm')) ext = 'webm';
+                    if (mimeType.includes('mp4')) ext = 'mp4';
+
+                    const downloadLink = document.createElement('a');
+                    downloadLink.href = url;
+                    downloadLink.download = `test_recording_${Date.now()}.${ext}`;
+                    downloadLink.textContent = `Download .${ext} file`;
+                    downloadLink.style.display = 'inline-block';
+                    downloadLink.style.marginTop = '10px';
+                    downloadLink.style.padding = '5px 10px';
+                    downloadLink.style.background = '#007bff';
+                    downloadLink.style.color = 'white';
+                    downloadLink.style.textDecoration = 'none';
+                    downloadLink.style.borderRadius = '3px';
+
+                    container.appendChild(mediaEl);
+                    container.appendChild(downloadLink);
+                    playbackArea.prepend(container);
+                };
+
+                recorder.start();
+                statusDiv.textContent = `Status: Recording... (${mimeType})`;
+                statusDiv.style.color = 'red';
+                
+                btnStartRecord.disabled = true;
+                btnStopRecord.disabled = false;
+                mimeSelect.disabled = true;
+
+            } catch (e) {
+                console.error(e);
+                statusDiv.textContent = `Exception: ${e.message}`;
+                statusDiv.style.color = 'red';
+            }
+        };
+
+        btnStopRecord.onclick = () => {
+            recorder.stop();
+            btnStartRecord.disabled = false;
+            btnStopRecord.disabled = true;
+            mimeSelect.disabled = false;
+        };
+
+    </script>
+</body>
+</html>
