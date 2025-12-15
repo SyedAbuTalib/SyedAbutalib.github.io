@@ -30,6 +30,10 @@ WebRTC and advanced media features tested here.
   - **Description:** A test page for Media Source Extensions (MSE). It allows for testing of various media types by specifying the source URL and type as query parameters.
   - **Link:** [Go to MSE Test Page](./mse.html)
 
+- ### [Matroska Recording Test](./manual_test_matroska_recording.html)
+  - **Description:** Verifies that `video/matroska` and `audio/matroska` MIME types produce valid, playable files using a generated content source.
+  - **Link:** [Go to Matroska Recording Test](./manual_test_matroska_recording.html)
+
 ---
 
 ## Personal Pages:
