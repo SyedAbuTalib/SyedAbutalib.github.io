@@ -34,6 +34,10 @@ WebRTC and advanced media features tested here.
   - **Description:** Verifies that `video/matroska` and `audio/matroska` MIME types produce valid, playable files using a generated content source.
   - **Link:** [Go to Matroska Recording Test](./manual_test_matroska_recording.html)
 
+- ### [Autoplay Test Page](./autoplay.html)
+  - **Description:** Tests the browser's autoplay permissions for audio playback.
+  - **Link:** [Go to Autoplay Test](./autoplay.html)
+
 ---
 
 ## Personal Pages:
