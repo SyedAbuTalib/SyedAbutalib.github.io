@@ -100,7 +100,7 @@
     var linksHtml = "";
     FILES.forEach(function(file) {
       var label = file.label || file.name;
-      linksHtml += '<a href="mse.html?src=' + file.name + '&type=' + file.type + '">' + label + '</a><br>';
+      linksHtml += '<a href="mse.html?src=assets/media/' + file.name + '&type=' + file.type + '">' + label + '</a><br>';
     });
     document.getElementById("links").innerHTML = linksHtml;
 
