@@ -2,12 +2,13 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <title>Matroska Recording Test</title>
+    <title>Media Formats Compatibility Test</title>
     <link rel="stylesheet" href="styles.css">
 </head>
 <body>
-    <h1>Matroska Recording Verification</h1>
-    <p>This test verifies that <code>video/matroska</code> and <code>audio/matroska</code> actually produce valid, playable files, not just empty containers.</p>
+    <h1>Media Formats Compatibility Test</h1>
+    <p>This test verifies that the browser can successfully record and natively play back specific media formats (like
+        <code>video/matroska</code> or <code>video/quicktime</code>).</p>
     
     <div class="controls">
         <h3>1. Start Content Source</h3>
@@ -25,6 +26,7 @@
                 <option value="video/x-matroska;codecs=vp9">video/x-matroska (VP9)</option>
                 <option value="audio/matroska;codecs=opus">audio/matroska (Opus)</option>
                 <option value="audio/x-matroska;codecs=opus">audio/x-matroska (Opus)</option>
+                <option value="video/quicktime;codecs=h264">video/quicktime (MOV / H264)</option>
             </select>
         </label>
         <br><br>
@@ -160,6 +162,7 @@
                     if (mimeType.startsWith('audio/')) ext = 'mka';
                     if (mimeType.includes('webm')) ext = 'webm';
                     if (mimeType.includes('mp4')) ext = 'mp4';
+                    if (mimeType.includes('quicktime') || mimeType.includes('mov')) ext = 'mov';
 
                     const downloadLink = document.createElement('a');
                     downloadLink.href = url;
