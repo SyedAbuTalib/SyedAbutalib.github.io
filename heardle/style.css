@@ -5,7 +5,7 @@
     --md-sys-color-on-primary: #FFFFFF;
     --md-sys-color-primary-container: #EADDFF;
     --md-sys-color-on-primary-container: #21005D;
-    --md-sys-color-primary-container-rgb: 234, 221, 255; /* For rgba usage */
+    --md-sys-color-primary-container-rgb: 234, 221, 255; 
 
     --md-sys-color-surface: #FEF7FF; 
     --md-sys-color-on-surface: #1D1B20;
@@ -59,7 +59,7 @@ main {
 
 h1, h2, h3 {
     color: var(--md-sys-color-primary);
-    margin-top: 0; /* Adjusted in .card section h2 specifically */
+    margin-top: 0; 
 }
 
 h1 {
@@ -79,11 +79,11 @@ h3 {
 }
 
 p {
-    margin-bottom: 1rem; /* Default p margin */
+    margin-bottom: 1rem; 
     color: var(--md-sys-color-on-surface-variant);
 }
 
-/* Card Styling */
+
 .card {
     background-color: var(--md-sys-color-surface);
     color: var(--md-sys-color-on-surface);
@@ -94,11 +94,11 @@ p {
     box-sizing: border-box;
 }
 
-/* Ensure sections inside cards don't add extra conflicting margins or padding */
+
 .card section {
     padding: 0;
     margin: 0;
-    border-bottom: none; /* Remove any borders from sections within cards */
+    border-bottom: none; 
 }
 .card section:last-child{
     margin-bottom: 0;
@@ -107,13 +107,13 @@ p {
 
 
 .card section h2 {
-    margin-top: 0; /* First element in section, no top margin */
-    margin-bottom: 12px; /* Spacing below h2 in card */
-    font-size: 1.5rem; /* Slightly smaller h2 for cards */
+    margin-top: 0; 
+    margin-bottom: 12px; 
+    font-size: 1.5rem; 
 }
 
 
-/* Button Styling */
+
 button, input[type="button"] {
     font-family: var(--md-ref-typeface-brand);
     font-weight: 500;
@@ -128,10 +128,10 @@ button, input[type="button"] {
     text-align: center;
     min-height: 40px;
     box-sizing: border-box;
-    margin: 5px; /* Retain some margin for spacing between adjacent buttons */
+    margin: 5px; 
 }
 
-/* Filled Button Style (Default for most buttons) */
+
 button {
     background-color: var(--md-sys-color-primary);
     color: var(--md-sys-color-on-primary);
@@ -151,7 +151,7 @@ button:disabled {
     cursor: not-allowed;
 }
 
-#login-button { /* Specific prominent button */
+#login-button { 
     font-size: 1rem;
     padding: 12px 28px;
 }
@@ -166,12 +166,12 @@ button:disabled {
     color: var(--md-sys-color-on-primary-container);
 }
 
-/* Input Field Styling */
+
 input[type="text"], select {
     font-family: var(--md-ref-typeface-plain);
     font-size: 1rem;
     color: var(--md-sys-color-on-surface);
-    background-color: #F3EDF7; /* A light, slightly purplish tone */
+    background-color: #F3EDF7; 
     padding: 12px 16px;
     border: 1px solid var(--md-sys-color-outline);
     border-radius: 8px;
@@ -209,23 +209,23 @@ select:disabled {
     cursor: not-allowed;
 }
 
-/* Specific widths for select and input if they were in original CSS and needed */
+
 select#playlist-select {
-    /* width: 70%; Let new global style of 100% take precedence or uncomment if really needed */
-    /* max-width: 300px; */
+    
+    
 }
 
 input#guess-input {
-    /* width: 60%; Let new global style of 100% take precedence or uncomment if really needed */
-    /* max-width: 250px; */
+    
+    
 }
 
 
-/* UI Adjustments */
+
 #game-controls,
 #guess-area,
 #skip-area {
-    margin-bottom: 16px; /* Standardized margin */
+    margin-bottom: 16px; 
     display: flex; 
     align-items: center;
     flex-wrap: wrap; 
@@ -241,8 +241,8 @@ input#guess-input {
 }
 
 #guesses-remaining-display {
-    margin-top: 16px; /* Standardized margin from previous styles */
-    margin-bottom: 10px; /* Keep or standardize */
+    margin-top: 16px; 
+    margin-bottom: 10px; 
     font-size: 0.9rem;
     color: var(--md-sys-color-on-surface-variant);
 }
@@ -255,15 +255,15 @@ input#guess-input {
 
 #results-section p {
     margin-bottom: 0.5rem;
-    color: var(--md-sys-color-on-surface-variant); /* Ensure text color consistency */
+    color: var(--md-sys-color-on-surface-variant); 
 }
 
 #results-section #spotify-link {
     color: var(--md-sys-color-primary);
     text-decoration: none;
     font-weight: 500;
-    display: inline-block; /* Ensure it behaves like a block for margin purposes */
-    margin-top: 10px; /* Spacing from text above */
+    display: inline-block; 
+    margin-top: 10px; 
 }
 
 #results-section #spotify-link:hover {
@@ -279,9 +279,9 @@ footer {
     width: 100%;
 }
 
-/* Cleanup old section rules if not already handled by .card section */
+
 section {
-    margin-bottom: 0; /* Handled by card gap or specific margins like #feedback-message */
+    margin-bottom: 0; 
     padding-bottom: 0;
     border-bottom: none;
 }
@@ -290,90 +290,84 @@ section:last-child {
     margin-bottom: 0;
     padding-bottom: 0;
 }
-#playlist-section h2 { /* Ensure card specific h2 style takes precedence */
+#playlist-section h2 { 
     margin-top: 0;
 }
-#results-section { /* Padding is handled by .card now */
+#results-section { 
     padding:0;
 }
-#results-section h3 { /* Already styled above */
+#results-section h3 { 
     margin-top: 0;
 }
-#results-section p { /* Already styled above */
-    margin: 8px 0; /* Re-evaluate if this is needed after global p and card styles */
-    margin-bottom: 0.5rem; /* Consistent with above */
+#results-section p { 
+    margin: 8px 0; 
+    margin-bottom: 0.5rem; 
 }
 
-/* Retain original #spotify-link if it's not a button, but text link. Updated above. */
+
 #spotify-link {
-    /* display: inline-block; (now in #results-section #spotify-link) */
-    /* margin-top: 10px; (now in #results-section #spotify-link) */
-    /* background-color: #555; (removed for text-style link) */
-    /* color: white; (removed for text-style link) */
-    /* text-decoration: none; (now in #results-section #spotify-link) */
-    /* border-radius: 15px; (removed for text-style link) */
+    
+    
+    
+    
+    
+    
 }
 #spotify-link:hover {
-    /* background-color: #333; (removed for text-style link) */
+    
 }
-/* Initial hide rules for sections are not needed here as JS handles display logic. */
-/* Any #id[style*="display:none"] rules are redundant. */
 
-/* Failed Guesses Display Area */
+
+
+
 #failed-guesses-container {
-    margin-top: 20px; /* Space above the container */
-    padding: 16px; /* Padding inside the container */
-    background-color: #F5F0FA; /* A very light, slightly muted purple, distinct from main cards */
+    margin-top: 20px; 
+    padding: 16px; 
+    background-color: #F5F0FA; 
     border-radius: 8px;
-    color: var(--md-sys-color-on-surface-variant); /* Text color for this area */
+    color: var(--md-sys-color-on-surface-variant); 
 }
 
 #failed-guesses-container h4 {
-    margin-top: 0; /* Remove top margin for the heading inside the container */
-    margin-bottom: 12px; /* Space below the heading */
-    font-size: 1rem; /* Adjust size as needed */
-    font-weight: 500; /* Medium weight */
-    color: var(--md-sys-color-on-surface); /* Or primary color if you want it to stand out more */
+    margin-top: 0; 
+    margin-bottom: 12px; 
+    font-size: 1rem; 
+    font-weight: 500; 
+    color: var(--md-sys-color-on-surface); 
 }
 
 #failed-guesses-list {
-    list-style-type: none; /* Remove default list bullets */
-    padding-left: 0; /* Remove default padding */
-    margin-bottom: 0; /* Remove bottom margin from the list itself */
+    list-style-type: none; 
+    padding-left: 0; 
+    margin-bottom: 0; 
 }
 
 #failed-guesses-list li {
-    padding: 6px 0; /* Padding for each list item */
+    padding: 6px 0; 
     font-size: 0.9rem;
-    color: var(--md-sys-color-on-surface-variant); /* Match container text or make slightly less prominent */
-    border-bottom: 1px solid var(--md-sys-color-outline, #CAC4D0); /* Separator line */
-    /* Opacity for a more "ghosted" look for failed guesses:
-    opacity: 0.85; */
+    color: var(--md-sys-color-on-surface-variant); 
+    border-bottom: 1px solid var(--md-sys-color-outline, #CAC4D0); 
+    
 }
 
 #failed-guesses-list li:last-child {
-    border-bottom: none; /* No border for the last item */
+    border-bottom: none; 
 }
 
-/* Snippet Progress Display */
+
 #snippet-progress-display {
-    margin-top: 12px; /* Space above the progress display, adjust as needed */
-    padding: 8px 0;   /* Some vertical padding, no horizontal needed if text-aligned */
-    text-align: center; /* Center the time text */
-    font-family: var(--md-ref-typeface-plain); /* Ensure consistent font */
-    color: var(--md-sys-color-on-surface-variant); /* Use a secondary text color */
-    font-size: 0.9rem; /* Slightly smaller than body text, but readable */
+    margin-top: 12px; 
+    padding: 8px 0;   
+    text-align: center; 
+    font-family: var(--md-ref-typeface-plain); 
+    color: var(--md-sys-color-on-surface-variant); 
+    font-size: 0.9rem; 
 }
 
 #snippet-progress-display span {
-    /* Individual styling for the time elements if needed, e.g., font-weight */
-    /* For now, inheriting from parent is fine */
+    
+    
 }
 
-/* Example: Make current time slightly more prominent if desired */
-/*
-#current-snippet-time {
-    font-weight: 500; 
-    color: var(--md-sys-color-on-surface);
-}
-*/
+
+

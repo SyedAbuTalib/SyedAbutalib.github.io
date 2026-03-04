@@ -1,45 +1,35 @@
-// --- Constants and Configuration ---
-const SPOTIFY_CLIENT_ID = "503fde2f0eee4cf69dea8b4c3e030896"; // IMPORTANT: Replace with your actual Spotify Client ID
-// For local development, this might be 'http://127.0.0.1:5500/index.html' or similar.
-// For GitHub Pages, it would be 'https://<username>.github.io/<repo-name>/index.html'
-// IMPORTANT: This exact URI MUST be whitelisted in your Spotify App settings on the Developer Dashboard.
+const SPOTIFY_CLIENT_ID = "503fde2f0eee4cf69dea8b4c3e030896"; 
 const REDIRECT_URI = window.location.origin + window.location.pathname;
 
 const SPOTIFY_AUTH_URL = "https://accounts.spotify.com/authorize";
 const API_BASE_URL = "https://api.spotify.com/v1";
 
-// Scopes for the permissions we need
 const SCOPES = [
-  "streaming", // Required for Web Playback SDK
-  "user-read-email", // Recommended by Spotify for SDK context
-  "user-read-private", // Recommended by Spotify for SDK context
+  "streaming", 
+  "user-read-email", 
+  "user-read-private", 
   "playlist-read-private",
   "playlist-read-collaborative",
 ];
 
-const SNIPPET_DURATIONS = [1000, 2000, 4000, 8000, 16000, 30000]; // Durations in ms for each guess attempt
+const SNIPPET_DURATIONS = [1000, 2000, 4000, 8000, 16000, 30000]; 
 
-// --- Global State ---
 let accessToken = null;
 let tokenExpiryTime = null;
 let currentPlaylistTracks = [];
-let spotifyPlayer = null; // For the Spotify Player instance
-let webPlaybackDeviceId = null; // For the Device ID from the SDK
+let spotifyPlayer = null; 
+let webPlaybackDeviceId = null; 
 let failedGuessesArray = [];
 let snippetTimerInterval = null;
 let currentSnippetPlaybackPosition = 0;
 
-// --- DOM Elements ---
-// Auth Section
 const loginButton = document.getElementById("login-button");
 const authSection = document.getElementById("auth-section");
 
-// Playlist Section
 const playlistSection = document.getElementById("playlist-section");
 const playlistSelect = document.getElementById("playlist-select");
 const startGameButton = document.getElementById("start-game-button");
 
-// Game Section
 const gameSection = document.getElementById("game-section");
 const playSnippetButton = document.getElementById("play-snippet-button");
 const audioPlayer = document.getElementById("audio-player");
@@ -55,11 +45,8 @@ const correctArtistNameSpan = document.getElementById("correct-artist-name");
 const spotifyLinkAnchor = document.getElementById("spotify-link");
 const playAgainButton = document.getElementById("play-again-button");
 
-// --- Authentication Functions ---
 
-/**
- * Redirects the user to Spotify's authorization page.
- */
+
 function redirectToSpotifyLogin() {
   if (SPOTIFY_CLIENT_ID === "YOUR_SPOTIFY_CLIENT_ID") {
     alert(
@@ -67,7 +54,7 @@ function redirectToSpotifyLogin() {
     );
     return;
   }
-  const state = generateRandomString(16); // For CSRF protection
+  const state = generateRandomString(16); 
   localStorage.setItem("spotify_auth_state", state);
 
   let url = SPOTIFY_AUTH_URL;
@@ -80,9 +67,7 @@ function redirectToSpotifyLogin() {
   window.location.href = url;
 }
 
-/**
- * Parses the access token from the URL hash fragment after Spotify redirects back.
- */
+
 function handleAuthCallback() {
   const hash = window.location.hash.substring(1);
   const params = new URLSearchParams(hash);
@@ -106,7 +91,7 @@ function handleAuthCallback() {
     return;
   }
 
-  localStorage.removeItem("spotify_auth_state"); // Clean up state
+  localStorage.removeItem("spotify_auth_state"); 
 
   if (token) {
     accessToken = token;
@@ -114,12 +99,9 @@ function handleAuthCallback() {
     console.log("Spotify Access Token obtained:", accessToken);
     console.log("Token expires at:", new Date(tokenExpiryTime));
 
-    // Clean the URL
     window.location.hash = "";
 
-    // Update UI
     authSection.style.display = "none";
-    // playlistSection.style.display = 'block'; // Playlist section shown by SDK 'ready' or fetchUserPlaylists
     feedbackMessageDiv.textContent =
       "Login successful! Initializing Spotify Player...";
 
@@ -129,17 +111,13 @@ function handleAuthCallback() {
       !spotifyPlayer
     ) {
       initializeSpotifyPlayer(accessToken);
-    } // else onSpotifyWebPlaybackSDKReady will call it when SDK loads.
+    } 
 
-    fetchUserPlaylists(); // This will also attempt to show playlistSection if playlists are found
+    fetchUserPlaylists(); 
   }
 }
 
-/**
- * Generates a random string for the 'state' parameter in OAuth.
- * @param {number} length The length of the string to generate.
- * @returns {string} A random string.
- */
+
 function generateRandomString(length) {
   let text = "";
   const possible =
@@ -150,11 +128,7 @@ function generateRandomString(length) {
   return text;
 }
 
-/**
- * Formats milliseconds into m:ss string.
- * @param {number} milliseconds The time in milliseconds.
- * @returns {string} Formatted time string like "m:ss".
- */
+
 function formatTime(milliseconds) {
   if (isNaN(milliseconds) || milliseconds < 0) {
     milliseconds = 0;
@@ -165,14 +139,12 @@ function formatTime(milliseconds) {
   return `${minutes}:${seconds < 10 ? "0" : ""}${seconds}`;
 }
 
-// --- Web Playback SDK Initialization ---
 window.onSpotifyWebPlaybackSDKReady = () => {
   console.log("Spotify Web Playback SDK is ready.");
   if (!accessToken) {
     console.warn(
       "SDK ready, but no access token found yet. Will initialize player once token is available."
     );
-    // Player will be initialized in handleAuthCallback or if token is already present on load
     return;
   }
   initializeSpotifyPlayer(accessToken);
@@ -180,52 +152,41 @@ window.onSpotifyWebPlaybackSDKReady = () => {
 
 function initializeSpotifyPlayer(token) {
   if (spotifyPlayer) {
-    // If player already exists, disconnect it first
     spotifyPlayer.disconnect();
   }
 
   spotifyPlayer = new Spotify.Player({
     name: "Spotify HeardleWordle Player",
     getOAuthToken: (cb) => {
-      // Note: Directly using the accessToken here.
-      // If the token could expire and you had a refresh mechanism, you'd use it here.
-      // For Implicit Grant, if it expires, the user has to re-authenticate.
       if (tokenExpiryTime && new Date().getTime() > tokenExpiryTime) {
         console.warn("Access token expired. Needs re-login for SDK token.");
-        // Trigger re-login, then the SDK will re-attempt getOAuthToken upon next action or connect.
         redirectToSpotifyLogin();
-        // It might be better to prevent player initialization if token is known to be expired.
-        // However, getOAuthToken is called by the SDK when it needs a token.
-        cb(null); // Indicate no token available right now
+        cb(null); 
         return;
       }
       cb(token);
     },
-    volume: 0.5, // Default volume
+    volume: 0.5, 
   });
 
-  // Error handling
   spotifyPlayer.addListener("initialization_error", ({ message }) => {
     console.error("Failed to initialize Spotify Player:", message);
     alert(
       `Failed to initialize Spotify Player: ${message}. Ensure pop-ups are not blocked and you are using a supported browser.`
     );
-    // Potentially disable game UI elements here
   });
   spotifyPlayer.addListener("authentication_error", ({ message }) => {
     console.error("Failed to authenticate Spotify Player:", message);
     alert(
       `Failed to authenticate Spotify Player: ${message}. Please try logging in again.`
     );
-    redirectToSpotifyLogin(); // Force re-login
+    redirectToSpotifyLogin(); 
   });
   spotifyPlayer.addListener("account_error", ({ message }) => {
     console.error("Spotify Player account error:", message);
-    // This error typically means the user does not have Spotify Premium.
     alert(
       `Spotify Player Error: ${message}. A Spotify Premium account is required to use this feature.`
     );
-    // Disable game functionality or guide user
     disableGameFeaturesDueToSDKError();
   });
   spotifyPlayer.addListener("playback_error", ({ message }) => {
@@ -233,17 +194,12 @@ function initializeSpotifyPlayer(token) {
     alert(`Spotify Player Playback Error: ${message}.`);
   });
 
-  // Playback status updates
   spotifyPlayer.addListener("player_state_changed", (state) => {
     if (!state) {
-      // If state is null, it might mean playback stopped or player is inactive.
-      // Consider if currentSnippetPlaybackPosition should be reset or handled here.
-      // For now, we only update on valid state with a track.
       return;
     }
     console.log("Player state changed:", state);
 
-    // Check if the state change is for the currently playing snippet song
     if (
       currentSong &&
       state.track_window &&
@@ -252,30 +208,22 @@ function initializeSpotifyPlayer(token) {
     ) {
       currentSnippetPlaybackPosition = state.position;
     }
-    // If the track URI doesn't match, it means a different song is playing (e.g., user changed song in Spotify app)
-    // or no song is active that matches our snippet. In this case, currentSnippetPlaybackPosition should not be updated
-    // or might need to be reset if we want to be very strict.
-    // For now, only updating if URIs match is a good first step.
   });
 
-  // Ready
   spotifyPlayer.addListener("ready", ({ device_id }) => {
     console.log("Spotify Player is ready with Device ID:", device_id);
     webPlaybackDeviceId = device_id;
-    playlistSection.style.display = "block"; // Show playlist selection
+    playlistSection.style.display = "block"; 
     if (playlistSelect) playlistSelect.disabled = false;
-    // Disable start game button until a playlist is chosen
     if (startGameButton)
       startGameButton.disabled =
         playlistSelect.value === "" || !playlistSelect.value;
     feedbackMessageDiv.textContent = "Spotify Player ready. Select a playlist!";
   });
 
-  // Not Ready
   spotifyPlayer.addListener("not_ready", ({ device_id }) => {
     console.log("Device ID has gone offline:", device_id);
     webPlaybackDeviceId = null;
-    // Disable UI elements that depend on the player
     if (playlistSelect) playlistSelect.disabled = true;
     if (startGameButton) startGameButton.disabled = true;
     if (playSnippetButton) playSnippetButton.disabled = true;
@@ -283,7 +231,6 @@ function initializeSpotifyPlayer(token) {
       "Spotify Player is offline. Please ensure Spotify is active.";
   });
 
-  // Connect to the player!
   spotifyPlayer
     .connect()
     .then((success) => {
@@ -291,28 +238,24 @@ function initializeSpotifyPlayer(token) {
         console.log("The Web Playback SDK successfully connected to Spotify!");
       } else {
         console.warn("The Web Playback SDK failed to connect to Spotify.");
-        // This might happen if the browser blocks connection, or other issues.
       }
     })
     .catch((err) => console.error("Error connecting player:", err));
 }
 
 function disableGameFeaturesDueToSDKError() {
-  // Call this function when SDK errors (like account_error) occur
   if (playlistSelect) playlistSelect.disabled = true;
   if (startGameButton) startGameButton.disabled = true;
   if (playSnippetButton) playSnippetButton.disabled = true;
   if (guessInput) guessInput.disabled = true;
   if (submitGuessButton) submitGuessButton.disabled = true;
   if (skipButton) skipButton.disabled = true;
-  // Keep login button active or provide a way to re-initiate
 }
 
-// --- API Call Functions ---
 async function fetchWebApi(endpoint, method, body) {
   if (!accessToken) {
     console.warn("Access token is missing. Redirecting to login.");
-    authSection.style.display = "block"; // Show login section
+    authSection.style.display = "block"; 
     playlistSection.style.display = "none";
     gameSection.style.display = "none";
     resultsSection.style.display = "none";
@@ -320,12 +263,11 @@ async function fetchWebApi(endpoint, method, body) {
     return null;
   }
 
-  // Simple check for token expiry (client-side only)
   if (tokenExpiryTime && new Date().getTime() > tokenExpiryTime) {
     console.warn(
       "Access token likely expired based on client-side timer. Redirecting to login."
     );
-    accessToken = null; // Clear potentially stale token
+    accessToken = null; 
     authSection.style.display = "block";
     playlistSection.style.display = "none";
     gameSection.style.display = "none";
@@ -344,17 +286,16 @@ async function fetchWebApi(endpoint, method, body) {
     });
 
     if (res.status === 401) {
-      // Unauthorized - token invalid or expired
       console.warn(
         "Spotify API Error 401: Unauthorized. Access token may be invalid or expired. Redirecting to login."
       );
-      accessToken = null; // Clear invalid token
+      accessToken = null; 
       tokenExpiryTime = null;
       authSection.style.display = "block";
       playlistSection.style.display = "none";
       gameSection.style.display = "none";
       resultsSection.style.display = "none";
-      redirectToSpotifyLogin(); // Re-authenticate
+      redirectToSpotifyLogin(); 
       return null;
     }
 
@@ -369,8 +310,6 @@ async function fetchWebApi(endpoint, method, body) {
       alert(
         `An error occurred while communicating with Spotify: ${errorMsg}. Please try again or re-login.`
       );
-      // For specific errors like 403 (Forbidden), you might guide the user to check permissions or re-login.
-      // For 429 (Rate Limiting), inform the user to wait.
       if (res.status === 429) {
         alert(
           "You're making too many requests to Spotify. Please wait a moment and try again."
@@ -379,9 +318,8 @@ async function fetchWebApi(endpoint, method, body) {
       return null;
     }
 
-    // Handle cases where response is OK but content might be empty (e.g., 204 No Content)
     if (res.status === 204) {
-      return null; // Or appropriate representation for no content
+      return null; 
     }
 
     return await res.json();
@@ -396,10 +334,9 @@ async function fetchWebApi(endpoint, method, body) {
 
 async function fetchUserPlaylists() {
   console.log("Fetching user playlists...");
-  const data = await fetchWebApi("/me/playlists?limit=50", "GET"); // Get up to 50 playlists
+  const data = await fetchWebApi("/me/playlists?limit=50", "GET"); 
 
   if (data && Array.isArray(data.items)) {
-    // Check if items is an array
     playlistSelect.innerHTML =
       '<option value="">-- Select a Playlist --</option>';
     if (data.items.length === 0) {
@@ -411,40 +348,34 @@ async function fetchUserPlaylists() {
 
     data.items.forEach((playlist) => {
       if (playlist.tracks.total > 0) {
-        // Only add playlists that have tracks
         const option = document.createElement("option");
         option.value = playlist.id;
         option.textContent = `${playlist.name} (${playlist.tracks.total} tracks)`;
         playlistSelect.appendChild(option);
       }
     });
-    // startGameButton.disabled = false; // This was true in instructions, but should be false if playlists are found
-    // Corrected logic: button should be disabled initially as "-- Select a Playlist --" will be chosen.
     startGameButton.disabled = true;
-    playlistSection.style.display = "block"; // Ensure it's visible
-    gameSection.style.display = "none"; // Hide game section until playlist is chosen
-    resultsSection.style.display = "none"; // Hide results section
+    playlistSection.style.display = "block"; 
+    gameSection.style.display = "none"; 
+    resultsSection.style.display = "none"; 
   } else {
     console.error("Could not fetch user playlists or no items found.");
     playlistSelect.innerHTML =
       '<option value="" disabled>Could not load playlists.</option>';
     startGameButton.disabled = true;
-    // Optionally, inform the user more directly
   }
 }
 
 async function fetchPlaylistTracks(playlistId) {
   console.log(`Fetching tracks for playlist ID: ${playlistId}`);
   currentPlaylistTracks = [];
-  feedbackMessageDiv.textContent = "Loading tracks from playlist..."; // Loading message
-  playSnippetButton.disabled = true; // Disable while loading new tracks
-  startGameButton.disabled = true; // Also disable start game button during loading
+  feedbackMessageDiv.textContent = "Loading tracks from playlist..."; 
+  playSnippetButton.disabled = true; 
+  startGameButton.disabled = true; 
   const songSuggestionsDatalist = document.getElementById("song-suggestions");
 
-  // Request specific fields: name, artists (just name), id, uri, external_urls.spotify
   const fields =
     "items(track(name,artists(name),id,uri,external_urls(spotify)))";
-  // Fetching up to 50 tracks, consistent with previous version. Consider pagination for very large playlists in future.
   const data = await fetchWebApi(
     `/playlists/${playlistId}/tracks?fields=${fields}&limit=50`,
     "GET"
@@ -452,8 +383,7 @@ async function fetchPlaylistTracks(playlistId) {
 
   if (data && Array.isArray(data.items)) {
     const validTracks = data.items
-      .map((item) => item.track) // Get the track object
-      // Filter for tracks that have a URI, name, and at least one artist.
+      .map((item) => item.track) 
       .filter(
         (track) =>
           track &&
@@ -465,30 +395,28 @@ async function fetchPlaylistTracks(playlistId) {
       );
 
     if (validTracks.length === 0) {
-      // This case means data.items was an array, but it was either empty OR tracks were filtered out
       alert(
         "This playlist doesn't have any tracks that can be played with the SDK, or they are unsuitable (e.g. missing URI). Please select another playlist."
       );
       console.warn(
         "No playable tracks (with URIs) after filtering in the selected playlist."
       );
-      playlistSection.style.display = "block"; // Show playlist selection again
+      playlistSection.style.display = "block"; 
       gameSection.style.display = "none";
       feedbackMessageDiv.textContent =
-        "No playable tracks in this playlist. Please select another."; // Updated feedback
+        "No playable tracks in this playlist. Please select another."; 
       if (playlistSelect) playlistSelect.disabled = false;
       if (startGameButton) startGameButton.disabled = true;
       if (songSuggestionsDatalist) {
-        songSuggestionsDatalist.innerHTML = ""; // Clear suggestions
+        songSuggestionsDatalist.innerHTML = ""; 
       }
       return;
     }
     currentPlaylistTracks = validTracks;
     console.log("Playable tracks (with URIs) loaded:", currentPlaylistTracks);
 
-    // Populate datalist
     if (songSuggestionsDatalist) {
-      songSuggestionsDatalist.innerHTML = ""; // Clear previous
+      songSuggestionsDatalist.innerHTML = ""; 
       currentPlaylistTracks.forEach((track) => {
         const option = document.createElement("option");
         option.value = track.name;
@@ -499,29 +427,27 @@ async function fetchPlaylistTracks(playlistId) {
     playlistSection.style.display = "none";
     gameSection.style.display = "block";
     resultsSection.style.display = "none";
-    feedbackMessageDiv.textContent = "Tracks loaded! Starting new round..."; // Updated message
+    feedbackMessageDiv.textContent = "Tracks loaded! Starting new round..."; 
 
-    startGame(); // Automatically start the first round.
+    startGame(); 
   } else if (data && data.items && data.items.length === 0) {
-    // Specifically handle case where items array is empty
     alert(
       "This playlist doesn't have any tracks that can be played with the SDK, or it's empty. Please select another playlist."
     );
     console.warn(
       "No playable tracks (with URIs) found in the selected playlist."
     );
-    playlistSection.style.display = "block"; // Show playlist selection again
+    playlistSection.style.display = "block"; 
     gameSection.style.display = "none";
     feedbackMessageDiv.textContent =
-      "No playable tracks in this playlist. Please select another."; // Updated feedback
+      "No playable tracks in this playlist. Please select another."; 
     if (playlistSelect) playlistSelect.disabled = false;
     if (startGameButton) startGameButton.disabled = true;
     if (songSuggestionsDatalist) {
-      songSuggestionsDatalist.innerHTML = ""; // Clear suggestions
+      songSuggestionsDatalist.innerHTML = ""; 
     }
-    return; // Return here as we've handled this specific "empty valid tracks" case
+    return; 
   } else {
-    // General failure to fetch tracks or other error
     alert(
       "Could not fetch tracks for this playlist. Please try again or select a different playlist."
     );
@@ -536,15 +462,13 @@ async function fetchPlaylistTracks(playlistId) {
     if (playlistSelect) playlistSelect.disabled = false;
     if (startGameButton) startGameButton.disabled = true;
     if (songSuggestionsDatalist) {
-      songSuggestionsDatalist.innerHTML = ""; // Clear suggestions
+      songSuggestionsDatalist.innerHTML = ""; 
     }
   }
 }
 
-// --- Game Logic Functions ---
 let currentSong = null;
 let remainingGuesses = 0;
-// let currentSnippetDuration = 1000; // 1 second initial duration - Now managed by SNIPPET_DURATIONS
 let currentSnippetDuration = SNIPPET_DURATIONS[0];
 
 function startGame() {
@@ -552,8 +476,8 @@ function startGame() {
     alert(
       "No tracks available to start the game. Please select another playlist."
     );
-    playlistSection.style.display = "block"; // Show playlist selection again
-    gameSection.style.display = "none"; // Hide game section
+    playlistSection.style.display = "block"; 
+    gameSection.style.display = "none"; 
     return;
   }
   if (!webPlaybackDeviceId) {
@@ -561,7 +485,6 @@ function startGame() {
       "Spotify Player not ready. Please ensure Spotify is active and allow a moment for connection, or try re-logging in."
     );
     playSnippetButton.disabled = true;
-    // Potentially show login button or a "connect player" button
     return;
   }
 
@@ -571,7 +494,7 @@ function startGame() {
     ];
   remainingGuesses = SNIPPET_DURATIONS.length;
   currentSnippetDuration = SNIPPET_DURATIONS[0];
-  failedGuessesArray = []; // Reset failed guesses
+  failedGuessesArray = []; 
 
   console.log(
     "New game started. Current song:",
@@ -580,7 +503,6 @@ function startGame() {
     currentSong.uri
   );
 
-  // Reset Snippet Progress Display
   const snippetProgressDisplay = document.getElementById(
     "snippet-progress-display"
   );
@@ -595,7 +517,6 @@ function startGame() {
   feedbackMessageDiv.textContent = 'New round! Click "Play Snippet" to start.';
   resultsSection.style.display = "none";
 
-  // Clear and hide failed guesses display
   const failedGuessesContainer = document.getElementById(
     "failed-guesses-container"
   );
@@ -613,7 +534,6 @@ function startGame() {
   skipButton.disabled = false;
   guessesCountSpan.textContent = remainingGuesses;
 
-  // Stop player if it was playing from a previous round/reveal (e.g. after results were shown)
   if (spotifyPlayer && resultsSection.style.display === "block") {
     spotifyPlayer
       .pause()
@@ -626,7 +546,7 @@ function startGame() {
   }
 }
 
-let snippetPlayTimeout = null; // To manage stopping the snippet
+let snippetPlayTimeout = null; 
 
 async function playTrackSnippetWithSDK() {
   const snippetProgressDisplay = document.getElementById(
@@ -636,7 +556,6 @@ async function playTrackSnippetWithSDK() {
   const totalSnippetTimeEl = document.getElementById("total-snippet-time");
 
   if (!currentSong || !currentSong.uri) {
-    // Check for URI now
     console.error("No current song or URI to play with SDK.");
     feedbackMessageDiv.textContent = "Error: No song loaded to play.";
     return;
@@ -645,7 +564,6 @@ async function playTrackSnippetWithSDK() {
     console.error("Spotify Player not ready or no Device ID.");
     feedbackMessageDiv.textContent =
       "Spotify Player is not ready. Please wait or try re-login.";
-    // Potentially try to reconnect or re-initialize player if appropriate
     if (!spotifyPlayer && accessToken) initializeSpotifyPlayer(accessToken);
     return;
   }
@@ -659,7 +577,6 @@ async function playTrackSnippetWithSDK() {
   feedbackMessageDiv.textContent = `Loading snippet...`;
 
   try {
-    // Tell Spotify to play the track on our SDK player device
     const playResponse = await fetchWebApi(
       `/me/player/play?device_id=${webPlaybackDeviceId}`,
       "PUT",
@@ -667,41 +584,31 @@ async function playTrackSnippetWithSDK() {
     );
 
     if (playResponse === null) {
-      // fetchWebApi returns null on error (e.g. network or API error)
       feedbackMessageDiv.textContent =
         "Failed to start track playback. Check connection or try again.";
-      playSnippetButton.disabled = false; // Re-enable button
+      playSnippetButton.disabled = false; 
       return;
     }
 
-    // Spotify API's play command can take a moment to start.
-    // There's no direct callback for when playback *actually* starts on the SDK
-    // after this API call. We rely on player_state_changed or a timeout.
-    // For simplicity here, we'll use a short timeout before attempting to control the snippet.
-    // A more robust solution would listen to 'player_state_changed' to confirm the track is playing.
 
-    // Clear any existing snippet timeout
     if (snippetPlayTimeout) {
       clearTimeout(snippetPlayTimeout);
     }
 
-    // Give Spotify a moment to start playing the track after the API call
     setTimeout(async () => {
       try {
-        // Assuming playback has started, now try to control it for the snippet
         await spotifyPlayer.pause();
         await spotifyPlayer.seek(0);
 
-        // ---- NEW DISPLAY LOGIC ----
         if (totalSnippetTimeEl)
           totalSnippetTimeEl.textContent = formatTime(currentSnippetDuration);
         if (currentSnippetTimeEl)
           currentSnippetTimeEl.textContent = formatTime(0);
         if (snippetProgressDisplay)
           snippetProgressDisplay.style.display = "block";
-        currentSnippetPlaybackPosition = 0; // Reset position tracker
+        currentSnippetPlaybackPosition = 0; 
 
-        if (snippetTimerInterval) clearInterval(snippetTimerInterval); // Clear previous just in case
+        if (snippetTimerInterval) clearInterval(snippetTimerInterval); 
         snippetTimerInterval = setInterval(() => {
           if (currentSnippetTimeEl) {
             const displayPosition = Math.min(
@@ -710,42 +617,37 @@ async function playTrackSnippetWithSDK() {
             );
             currentSnippetTimeEl.textContent = formatTime(displayPosition);
           }
-        }, 500); // Update display every 500ms
-        // ---- END NEW DISPLAY LOGIC ----
+        }, 500); 
 
-        await spotifyPlayer.resume(); // Start playing the snippet
+        await spotifyPlayer.resume(); 
         feedbackMessageDiv.textContent = `Playing snippet... (${
           currentSnippetDuration / 1000
         }s)`;
 
         snippetPlayTimeout = setTimeout(async () => {
-          // This is the existing timeout to stop the snippet
           if (spotifyPlayer) {
             await spotifyPlayer.pause();
             feedbackMessageDiv.textContent =
               "Snippet finished. Make your guess!";
           }
-          // ---- NEW: Clear interval and finalize display ----
           if (snippetTimerInterval) clearInterval(snippetTimerInterval);
           if (currentSnippetTimeEl)
             currentSnippetTimeEl.textContent = formatTime(
               currentSnippetDuration
             );
-          // ---- END NEW ----
           playSnippetButton.disabled = false;
         }, currentSnippetDuration);
       } catch (sdkError) {
         console.error("Error controlling SDK for snippet:", sdkError);
         feedbackMessageDiv.textContent =
           "Error playing snippet. Is Spotify active?";
-        if (snippetTimerInterval) clearInterval(snippetTimerInterval); // Also clear on error
+        if (snippetTimerInterval) clearInterval(snippetTimerInterval); 
         if (snippetProgressDisplay)
-          snippetProgressDisplay.style.display = "none"; // Hide on error
+          snippetProgressDisplay.style.display = "none"; 
         playSnippetButton.disabled = false;
       }
-    }, 1000); // 1-second delay
+    }, 1000); 
   } catch (apiError) {
-    // This catch is for fetchWebApi itself if it throws, though it's designed to return null on error
     console.error("API error starting playback:", apiError);
     feedbackMessageDiv.textContent = "Error telling Spotify to play the track.";
     playSnippetButton.disabled = false;
@@ -753,7 +655,7 @@ async function playTrackSnippetWithSDK() {
 }
 
 function submitGuess() {
-  if (!currentSong || guessInput.disabled) return; // Game not active or already ended
+  if (!currentSong || guessInput.disabled) return; 
 
   const userGuess = guessInput.value.trim().toLowerCase();
   if (!userGuess) {
@@ -762,9 +664,8 @@ function submitGuess() {
   }
 
   const songTitle = currentSong.name.toLowerCase();
-  const artistName = currentSong.artists[0].name.toLowerCase(); // Assuming primary artist
+  const artistName = currentSong.artists[0].name.toLowerCase(); 
 
-  // Normalize titles for comparison (remove common parenthetical additions like "(Remastered)")
   const normalize = (str) => str.replace(/\s*\([^)]*\)\s*/g, "").trim();
 
   const isCorrect =
@@ -776,12 +677,11 @@ function submitGuess() {
     revealSong(true);
   } else {
     feedbackMessageDiv.textContent = "Incorrect guess. Try again!";
-    // userGuess is already defined and normalized (lowercase, trimmed)
     failedGuessesArray.push(userGuess);
     displayFailedGuesses();
     handleIncorrectGuess();
   }
-  guessInput.value = ""; // Clear input after guess
+  guessInput.value = ""; 
 }
 
 function displayFailedGuesses() {
@@ -790,12 +690,12 @@ function displayFailedGuesses() {
   );
   const failedGuessesList = document.getElementById("failed-guesses-list");
 
-  if (!failedGuessesList || !failedGuessesContainer) return; // Safety check
+  if (!failedGuessesList || !failedGuessesContainer) return; 
 
-  failedGuessesList.innerHTML = ""; // Clear current list items
+  failedGuessesList.innerHTML = ""; 
 
   if (failedGuessesArray.length === 0) {
-    failedGuessesContainer.style.display = "none"; // Hide if no failed guesses
+    failedGuessesContainer.style.display = "none"; 
     return;
   }
 
@@ -805,7 +705,7 @@ function displayFailedGuesses() {
     failedGuessesList.appendChild(listItem);
   });
 
-  failedGuessesContainer.style.display = "block"; // Show the container
+  failedGuessesContainer.style.display = "block"; 
 }
 
 function handleIncorrectGuess() {
@@ -815,26 +715,21 @@ function handleIncorrectGuess() {
   if (remainingGuesses <= 0) {
     revealSong(false);
   } else {
-    // Determine the index for the next snippet duration
-    // SNIPPET_DURATIONS has N items. If 6 guesses, index is 6 - remainingGuesses.
-    // e.g., 5 guesses left -> index 1 (second duration)
-    //       1 guess left -> index 5 (last duration)
     const durationIndex = SNIPPET_DURATIONS.length - remainingGuesses;
     if (durationIndex < SNIPPET_DURATIONS.length) {
       currentSnippetDuration = SNIPPET_DURATIONS[durationIndex];
     } else {
-      // Should not happen if remainingGuesses logic is correct with SNIPPET_DURATIONS.length
       currentSnippetDuration = SNIPPET_DURATIONS[SNIPPET_DURATIONS.length - 1];
     }
     console.log(
       `Incorrect. Next snippet duration: ${currentSnippetDuration / 1000}s`
     );
-    playSnippetButton.disabled = false; // Ensure play button is enabled for next snippet
+    playSnippetButton.disabled = false; 
   }
 }
 
 function skipTurn() {
-  if (guessInput.disabled || remainingGuesses <= 0) return; // Game not active or already ended / no guesses left
+  if (guessInput.disabled || remainingGuesses <= 0) return; 
 
   feedbackMessageDiv.textContent = "Skipped! More of the song will play next.";
   handleIncorrectGuess();
@@ -850,7 +745,6 @@ function revealSong(isCorrect) {
       .catch((e) => console.warn("Error pausing on revealSong:", e));
   }
 
-  // Hide and clear snippet progress display
   const snippetProgressDisplay = document.getElementById(
     "snippet-progress-display"
   );
@@ -874,28 +768,21 @@ function revealSong(isCorrect) {
   skipButton.disabled = true;
 }
 
-// --- Event Listeners ---
 if (loginButton) {
   loginButton.addEventListener("click", redirectToSpotifyLogin);
 }
 
-// --- Initialization ---
-/**
- * Runs when the page loads. Checks for auth callback.
- */
+
 window.onload = () => {
   if (window.location.hash.includes("access_token")) {
     handleAuthCallback();
   } else if (accessToken && !spotifyPlayer) {
-    // This path is less common with implicit grant unless token was somehow persisted
     initializeSpotifyPlayer(accessToken);
   } else if (!accessToken) {
-    // Not logged in, ensure game controls are disabled and provide login guidance
     feedbackMessageDiv.textContent = "Please log in with Spotify to start.";
-    disableGameControlsPreLogin(); // Explicitly disable controls
+    disableGameControlsPreLogin(); 
   }
 
-  // Initial check for startGameButton, even if logged in, might need SDK.
   if (
     startGameButton &&
     (!webPlaybackDeviceId || (playlistSelect && playlistSelect.value === ""))
@@ -907,10 +794,8 @@ window.onload = () => {
 window.onbeforeunload = () => {
   if (spotifyPlayer) {
     console.log("Disconnecting Spotify Player before page unload.");
-    spotifyPlayer.disconnect(); // Disconnect the player
+    spotifyPlayer.disconnect(); 
   }
-  // Note: You cannot reliably perform asynchronous operations in onbeforeunload,
-  // but player.disconnect() is generally a synchronous cleanup call for the SDK instance.
 };
 
 function disableGameControlsPreLogin() {
@@ -922,17 +807,10 @@ function disableGameControlsPreLogin() {
   if (skipButton) skipButton.disabled = true;
   if (resultsSection) resultsSection.style.display = "none";
   if (gameSection) gameSection.style.display = "none";
-  if (playlistSection) playlistSection.style.display = "none"; // Hide until logged in and SDK ready
-  if (authSection) authSection.style.display = "block"; // Ensure login is visible
+  if (playlistSection) playlistSection.style.display = "none"; 
+  if (authSection) authSection.style.display = "block"; 
 }
 
-// Placeholder for later functions (will be filled in subsequent steps)
-// function fetchPlaylistTracks(playlistId) { console.log(`TODO: Fetch tracks for ${playlistId}`); }
-// function startGame(tracks) { console.log("TODO: Start game with tracks:", tracks); }
-// function playTrackSnippet() { console.log("TODO: Play snippet"); }
-// function submitGuess() { console.log("TODO: Submit guess"); }
-// function skipTrack() { console.log("TODO: Skip track"); }
-// function playAgain() { console.log("TODO: Play again"); }
 
 if (startGameButton) {
   startGameButton.addEventListener("click", () => {
@@ -946,7 +824,6 @@ if (startGameButton) {
   });
 }
 
-// Disable start game button if no playlist is selected
 if (playlistSelect) {
   playlistSelect.addEventListener("change", () => {
     if (playlistSelect.value) {
@@ -955,7 +832,6 @@ if (playlistSelect) {
       startGameButton.disabled = true;
     }
   });
-  // Initial check
   startGameButton.disabled = !playlistSelect.value;
 }
 
@@ -967,11 +843,10 @@ if (submitGuessButton) {
   submitGuessButton.addEventListener("click", submitGuess);
 }
 
-// Allow submitting guess with Enter key in the input field
 if (guessInput) {
   guessInput.addEventListener("keypress", (event) => {
     if (event.key === "Enter") {
-      event.preventDefault(); // Prevent default form submission if it were in a form
+      event.preventDefault(); 
       submitGuess();
     }
   });
@@ -983,16 +858,10 @@ if (skipButton) {
 
 if (playAgainButton) {
   playAgainButton.addEventListener("click", () => {
-    // Stop any currently playing audio from the reveal
-    // audioPlayer.pause(); // Old player
-    // audioPlayer.currentTime = 0; // Old player
     if (snippetPlayTimeout) {
-      // Clear any pending snippet timeout
       clearTimeout(snippetPlayTimeout);
     }
 
-    // Simply call startGame to reset and pick a new song from the same playlist
-    // spotifyPlayer.pause() is now called at the start of startGame()
     startGame();
   });
 }

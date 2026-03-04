@@ -1,0 +1,222 @@
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
+
+/* --- Base Styles --- */
+body {
+  font-family: 'Inter', 'Roboto', 'Helvetica', 'Arial', sans-serif;
+  background-color: #f0f0f0;
+  color: #333;
+  margin: 0 auto;
+  padding: 20px;
+  line-height: 1.6;
+}
+
+h1 {
+  color: #111;
+}
+
+h2,
+h3 {
+  color: #1a1a1a;
+}
+
+a {
+  color: #007bff;
+  text-decoration: none;
+}
+
+a:hover {
+  text-decoration: underline;
+}
+
+/* --- Lists --- */
+ul {
+  list-style-type: none;
+  padding: 0;
+}
+
+li {
+  margin-bottom: 10px;
+}
+
+/* --- Tables --- */
+table,
+th,
+td {
+  border: 1px solid black;
+  border-collapse: collapse;
+}
+
+/* --- Buttons & Inputs --- */
+button,
+select {
+  font-family: inherit;
+  font-size: 16px;
+  font-weight: 500;
+  padding: 10px 15px;
+  margin-right: 10px;
+  border-radius: 5px;
+  border: 1px solid #ccc;
+  cursor: pointer;
+  background-color: #007bff;
+  color: white;
+  transition: background-color 0.3s ease;
+}
+
+button:hover {
+  background-color: #0056b3;
+}
+
+button:active {
+  background-color: #004085;
+}
+
+button:disabled,
+select:disabled {
+  background-color: #ccc;
+  color: rgba(0, 0, 0, 0.5);
+  cursor: not-allowed;
+  border-color: #ccc;
+  box-shadow: none;
+}
+
+select {
+  background-color: #f8f9fa;
+  color: #333;
+}
+
+select:hover {
+  border-color: #888;
+}
+
+/* --- Layout Containers --- */
+.container,
+#container,
+.controls {
+  max-width: 800px;
+  margin: 20px auto;
+  padding: 20px;
+  background-color: #fff;
+  box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+  border-radius: 8px;
+}
+
+.controls {
+  border: 1px solid #ccc;
+  background: #f9f9f9;
+  margin-bottom: 20px;
+}
+
+/* --- Media --- */
+video {
+  width: 100%;
+  max-width: 720px;
+  height: auto;
+  display: block;
+  margin: 10px auto;
+  background-color: #000;
+}
+
+canvas {
+  border: 1px solid black;
+  background: #fff;
+  margin-bottom: 10px;
+}
+
+/* --- Utilities & Status --- */
+#status,
+.recording-log {
+  padding: 10px;
+  border-radius: 5px;
+  margin: 10px 0;
+  font-weight: bold;
+}
+
+.success {
+  background-color: #d4edda;
+  color: #155724;
+}
+
+.error,
+#errorMessage {
+  background-color: #f8d7da;
+  color: #721c24;
+}
+
+.info {
+  background-color: #e2e3e5;
+  color: #383d41;
+}
+
+#errorMessage {
+  text-align: center;
+}
+
+pre {
+  background-color: #eee;
+  padding: 10px;
+  border-radius: 4px;
+  overflow-x: auto;
+}
+
+.info-text {
+  font-size: 0.9em;
+  color: #555;
+}
+
+.result-item {
+  border-bottom: 1px solid #eee;
+  padding-bottom: 15px;
+  margin-bottom: 15px;
+}
+
+#controlsContainer,
+#buttonsContainer {
+  display: flex;
+  justify-content: center;
+  gap: 10px;
+  margin-bottom: 20px;
+  flex-wrap: wrap;
+  align-items: center;
+}
+
+label {
+  margin-right: 5px;
+  font-weight: 500;
+}
+
+p.status-text {
+  text-align: center;
+  color: #666;
+  font-size: 0.9em;
+}
+
+/* Responsive UI */
+@media (max-width: 600px) {
+  h1 {
+    font-size: 1.5em;
+  }
+
+  button,
+  select {
+    padding: 8px 15px;
+    font-size: 0.85em;
+    width: calc(50% - 5px);
+    box-sizing: border-box;
+  }
+
+  #controlsContainer,
+  #buttonsContainer {
+    flex-direction: row;
+  }
+
+  label {
+    width: 100%;
+    text-align: center;
+    margin-bottom: 5px;
+    margin-right: 0;
+  }
+
+  select {
+    width: 100%;
+  }
+}

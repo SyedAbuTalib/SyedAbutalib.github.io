@@ -12,137 +12,7 @@
 
     <title>Live Video Preview, Recording with Flip, Rotation & Format Selection</title>
 
-    <style>
-        body {
-            font-family: 'Roboto', 'Helvetica', 'Arial', sans-serif;
-            margin: 0;
-            padding: 0;
-            background-color: #f0f0f0;
-            color: #333;
-        }
-
-        #container {
-            max-width: 800px;
-            margin: 20px auto;
-            padding: 20px;
-            background-color: #fff;
-            box-shadow: 0 0 10px rgba(0,0,0,0.1);
-            border-radius: 8px;
-        }
-
-        h1 {
-            font-size: 1.8em;
-            font-weight: 500;
-            color: #000;
-            margin-bottom: 20px;
-            text-align: center;
-        }
-
-        video {
-            width: 100%;
-            max-width: 720px; 
-            height: auto;
-            display: block;
-            margin: 0 auto 20px auto;
-            border: 1px solid #ccc;
-            background-color: #000;
-        }
-        
-        #controlsContainer, #buttonsContainer {
-            display: flex;
-            justify-content: center;
-            gap: 10px; 
-            margin-bottom: 20px;
-            flex-wrap: wrap; 
-            align-items: center;
-        }
-
-        button, select {
-            font-family: 'Roboto', 'Helvetica', 'Arial', sans-serif;
-            font-size: 0.9em; 
-            font-weight: 500;
-            color: #333; /* Default text color for select */
-            background-color: #f8f9fa; /* Lighter background for select */
-            border: 1px solid #ccc;
-            border-radius: 4px; 
-            padding: 10px 15px; /* Consistent padding */
-            cursor: pointer;
-            transition: background-color 0.3s ease;
-        }
-        
-        select {
-             color: #333; /* Ensure select text is visible */
-        }
-
-        button {
-            text-transform: uppercase;
-            color: #fff;
-            background-color: #4285f4; 
-            border: none; /* Buttons don't need border if they have strong bg */
-            box-shadow: 0 2px 2px 0 rgba(0,0,0,0.14), 0 3px 1px -2px rgba(0,0,0,0.12), 0 1px 5px 0 rgba(0,0,0,0.2);
-            padding: 10px 20px; /* Buttons can have slightly different padding */
-        }
-
-
-        button:hover {
-            background-color: #3367d6; 
-        }
-        select:hover {
-            border-color: #888;
-        }
-
-        button:active {
-            background-color: #2a56c6; 
-        }
-
-        button:disabled, select:disabled {
-            color: rgba(0,0,0,0.26);
-            background-color: rgba(0,0,0,0.12);
-            cursor: not-allowed;
-            box-shadow: none;
-            border-color: rgba(0,0,0,0.12);
-        }
-        
-        label {
-            margin-right: 5px;
-            font-weight: 500;
-        }
-
-        p {
-            text-align: center;
-            color: #666;
-            font-size: 0.9em;
-        }
-        #errorMessage {
-            color: red;
-            text-align: center;
-            margin-top: 10px;
-        }
-
-        @media (max-width: 600px) {
-            h1 {
-                font-size: 1.5em;
-            }
-            button, select {
-                padding: 8px 15px;
-                font-size: 0.85em;
-                width: calc(50% - 5px); /* Two controls per row */
-                box-sizing: border-box;
-            }
-            #controlsContainer, #buttonsContainer {
-                flex-direction: row; /* Keep as row, wrap will handle stacking */
-            }
-            label {
-                 width: 100%; /* Full width for label on small screens */
-                 text-align: center;
-                 margin-bottom: 5px;
-                 margin-right: 0;
-            }
-            select {
-                width: 100%; /* Make select take full width if label is above */
-            }
-        }
-    </style>
+    <link rel="stylesheet" href="styles.css">
 </head>
 
 <body>
@@ -388,7 +258,7 @@
     startRecordingButton.addEventListener('click', startRecording);
     stopRecordingButton.addEventListener('click', stopRecording);
     flipButton.addEventListener('click', toggleFlip);
-    rotateButton.addEventListener('click', rotateCamera); // Add event listener for rotate button
+        rotateButton.addEventListener('click', rotateCamera);
 
 </script>
 </body>

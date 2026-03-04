@@ -4,15 +4,8 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>WebCodecs Opus Audio Test</title>
-    <!-- 1. Load Tailwind CSS -->
     <script src="https://cdn.tailwindcss.com"></script>
-    <style>
-        /* 2. Use Inter font */
-        body {
-            font-family: 'Inter', sans-serif;
-        }
-        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;700&display=swap');
-    </style>
+    <link rel="stylesheet" href="styles.css">
 </head>
 <body class="bg-gray-100 text-gray-900 flex items-center justify-center min-h-screen">
 
@@ -20,7 +13,6 @@
         <h1 class="text-3xl font-bold text-center text-blue-600">WebCodecs AudioEncoder/Decoder Test</h1>
         <p class="text-center text-gray-600">Test Opus encoding with a custom frame duration.</p>
 
-        <!-- 3. Controls -->
         <div class="flex flex-col sm:flex-row gap-4 items-center justify-center">
             <div class="flex-1 w-full">
                 <label for="frameDuration" class="block text-sm font-medium text-gray-700 mb-1">Opus Frame Duration (μs)</label>
@@ -31,12 +23,10 @@
             <button id="stopButton" class="w-full sm:w-auto px-6 py-3 bg-red-600 text-white font-medium rounded-lg shadow-md hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-red-500 focus:ring-offset-2 transition-all duration-150" disabled>Stop Test</button>
         </div>
 
-        <!-- 4. Status -->
         <div id="status" class="text-center font-medium text-gray-700 bg-gray-100 p-4 rounded-lg">
             Click "Start Test" to begin.
         </div>
 
-        <!-- 5. Audio Players -->
         <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
             <div class="bg-gray-50 p-4 rounded-lg shadow-inner">
                 <h3 class="text-lg font-semibold mb-2">Original Audio (Live Mic)</h3>
@@ -50,7 +40,6 @@
     </div>
 
     <script>
-        // --- Globals ---
         let mediaStream = null;
         let audioContext = null;
         let scriptNode = null;
@@ -59,10 +48,9 @@
         let audioDecoder = null;
 
         let decodedFrames = [];
-        let encoderSampleRate = 48000; // Default, will be updated
-        let encoderChannelCount = 1; // Default, will be updated
+                let encoderSampleRate = 48000;
+                let encoderChannelCount = 1;
 
-        // --- DOM Elements ---
         const startButton = document.getElementById('startButton');
         const stopButton = document.getElementById('stopButton');
         const durationInput = document.getElementById('frameDuration');
@@ -70,11 +58,8 @@
         const originalPlayer = document.getElementById('originalPlayer');
         const decodedPlayer = document.getElementById('decodedPlayer');
 
-        // --- Event Listeners ---
         startButton.addEventListener('click', startTest);
         stopButton.addEventListener('click', stopTest);
-
-        // --- Core Functions ---
 
         async function startTest() {
             if (!window.AudioEncoder || !window.AudioDecoder) {
@@ -89,34 +74,28 @@
             updateStatus('Requesting microphone permission...');
 
             try {
-                // 1. Get Microphone Stream
                 mediaStream = await navigator.mediaDevices.getUserMedia({
                     audio: {
-                        sampleRate: 48000, // Request a common rate for Opus
+                        sampleRate: 48000,
                         channelCount: 1,
                     }
                 });
-                
-                // 2. Play Original Audio
+
                 originalPlayer.srcObject = mediaStream;
                 originalPlayer.play();
-                originalPlayer.muted = true; // Mute the <audio> element, we will play via Web Audio
+                originalPlayer.muted = true;
 
                 updateStatus('Microphone connected. Initializing codecs...');
 
-                // 3. Setup Web Audio Context
                 audioContext = new AudioContext();
                 encoderSampleRate = audioContext.sampleRate;
                 mediaStreamSource = audioContext.createMediaStreamSource(mediaStream);
-                
-                // We use 1 input channel, 1 output channel
+
                 encoderChannelCount = 1; 
-                
-                // Buffer size for ScriptProcessorNode (must be power of 2)
+
                 const bufferSize = 4096; 
                 scriptNode = audioContext.createScriptProcessor(bufferSize, encoderChannelCount, encoderChannelCount);
-                
-                // 4. Setup Codecs
+
                 const frameDuration = parseInt(durationInput.value, 10);
                 if (isNaN(frameDuration) || frameDuration <= 0) {
                     updateStatus('Invalid frame duration.', true);
@@ -126,18 +105,17 @@
 
                 initEncoder(frameDuration);
                 initDecoder();
-                
-                // 5. Connect Audio Graph
+
                 scriptNode.onaudioprocess = handleAudioProcess;
                 mediaStreamSource.connect(scriptNode);
-                scriptNode.connect(audioContext.destination); // Play original audio live
+                scriptNode.connect(audioContext.destination);
 
                 updateStatus(`Test started. Encoding with Opus frame duration: ${frameDuration}μs`, false);
 
             } catch (err) {
                 console.error('Error starting test:', err);
                 updateStatus(`Error: ${err.message}`, true);
-                stopButton.click(); // Run cleanup
+                stopButton.click();
             }
         }
 
@@ -199,8 +177,6 @@
                 numberOfChannels: encoderChannelCount,
                 opus: {
                     frameDuration: frameDuration, 
-                    // complexity: 10, // Optional: 0-10, 10 is highest quality/complexity
-                    // bitrate: 64000, // Optional: e.g., 64000 (64kbps)
                 }
             });
         }
@@ -224,33 +200,29 @@
             const inputBuffer = event.inputBuffer;
             const outputBuffer = event.outputBuffer;
 
-            // Pass audio through for live playback
             for (let channel = 0; channel < outputBuffer.numberOfChannels; channel++) {
                 const inputData = inputBuffer.getChannelData(channel);
                 const outputData = outputBuffer.getChannelData(channel);
                 outputData.set(inputData);
             }
 
-            // --- Create AudioData ---
-            // We must clone the data buffer because the ScriptProcessor reuses it
             const inputData = inputBuffer.getChannelData(0);
             const dataClone = inputData.buffer.slice(0);
 
             const audioData = new AudioData({
-                format: 'f32-planar', // 'f32-planar' is standard for Web Audio
+                format: 'f32-planar',
                 sampleRate: inputBuffer.sampleRate,
                 numberOfFrames: inputBuffer.length,
                 numberOfChannels: inputBuffer.numberOfChannels,
-                timestamp: event.playbackTime * 1_000_000, // timestamp in microseconds
+                timestamp: event.playbackTime * 1_000_000,
                 data: dataClone
             });
 
             try {
                 audioEncoder.encode(audioData);
-                // audioData is now owned by the encoder, no need to close
             } catch (err) {
                 console.error('Encoding error:', err);
-                audioData.close(); // Close it if encoding failed
+                audioData.close();
             }
         }
         
@@ -264,8 +236,7 @@
             }
         }
 
-        function handleDecodedFrame(frame) {
-            // We must clone the frame's data because the frame will be recycled
+                function handleDecodedFrame(frame) {
             const buffer = new ArrayBuffer(frame.allocationSize({planeIndex: 0}));
             frame.copyTo(buffer, {planeIndex: 0});
             
@@ -278,9 +249,7 @@
             });
             
             frame.close();
-        }
-        
-        // --- UI & Helpers ---
+            }
 
         function updateStatus(message, isError = false) {
             statusEl.textContent = message;
@@ -333,18 +302,11 @@
                 console.error('Error building WAV:', err);
                 updateStatus(`Error building decoded audio: ${err.message}`, true);
             }
-            
-            // Clear buffer
+
             decodedFrames = [];
         }
 
 
-        /**
-         * Converts an AudioBuffer to a WAV file (Blob).
-         * @param {AudioBuffer} abuffer The AudioBuffer to convert.
-         * @param {boolean} [asFloat=false] Whether to use 32-bit float (true) or 16-bit int (false).
-         * @returns {Blob} A Blob representing the WAV file.
-         */
         function bufferToWave(abuffer, asFloat = false) {
             let numOfChan = abuffer.numberOfChannels;
             let length = abuffer.length * numOfChan * (asFloat ? 4 : 2) + 44;
@@ -354,7 +316,6 @@
             let offset = 0;
             let pos = 0;
 
-            // Helper function
             let writeString = (s) => {
                 for (i = 0; i < s.length; i++) {
                     view.setUint8(pos++, s.charCodeAt(i));
@@ -374,34 +335,29 @@
                 }
             };
 
-            // RIFF chunk descriptor
             writeString('RIFF');
             view.setUint32(pos, 36 + abuffer.length * numOfChan * (asFloat ? 4 : 2), true); pos += 4;
             writeString('WAVE');
 
-            // FMT sub-chunk
             writeString('fmt ');
-            view.setUint32(pos, 16, true); pos += 4; // Subchunk1Size
-            view.setUint16(pos, asFloat ? 3 : 1, true); pos += 2; // AudioFormat
-            view.setUint16(pos, numOfChan, true); pos += 2; // NumChannels
-            view.setUint32(pos, abuffer.sampleRate, true); pos += 4; // SampleRate
-            view.setUint32(pos, abuffer.sampleRate * numOfChan * (asFloat ? 4 : 2), true); pos += 4; // ByteRate
-            view.setUint16(pos, numOfChan * (asFloat ? 4 : 2), true); pos += 2; // BlockAlign
-            view.setUint16(pos, (asFloat ? 32 : 16), true); pos += 2; // BitsPerSample
+            view.setUint32(pos, 16, true); pos += 4;
+            view.setUint16(pos, asFloat ? 3 : 1, true); pos += 2;
+            view.setUint16(pos, numOfChan, true); pos += 2;
+            view.setUint32(pos, abuffer.sampleRate, true); pos += 4;
+            view.setUint32(pos, abuffer.sampleRate * numOfChan * (asFloat ? 4 : 2), true); pos += 4;
+            view.setUint16(pos, numOfChan * (asFloat ? 4 : 2), true); pos += 2;
+            view.setUint16(pos, (asFloat ? 32 : 16), true); pos += 2;
 
-            // DATA sub-chunk
             writeString('data');
-            view.setUint32(pos, abuffer.length * numOfChan * (asFloat ? 4 : 2), true); pos += 4; // Subchunk2Size
+            view.setUint32(pos, abuffer.length * numOfChan * (asFloat ? 4 : 2), true); pos += 4;
 
-            // Write audio data
             for (i = 0; i < abuffer.numberOfChannels; i++) {
                 channels.push(abuffer.getChannelData(i));
             }
 
             let dataWriter = asFloat ? writeFloat32 : floatTo16BitPCM;
             offset = pos;
-            
-            // Interleave channels
+
             for(i = 0; i < abuffer.length; i++) {
                 for(let chan = 0; chan < numOfChan; chan++) {
                     let sample = channels[chan][i];
@@ -409,7 +365,6 @@
                         view.setFloat32(offset, sample, true);
                         offset += 4;
                     } else {
-                        // 16-bit PCM
                         sample = Math.max(-1, Math.min(1, sample));
                         view.setInt16(offset, sample < 0 ? sample * 0x8000 : sample * 0x7FFF, true);
                         offset += 2;

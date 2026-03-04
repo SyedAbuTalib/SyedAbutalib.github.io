@@ -1,0 +1,2405 @@
+diff --git a/.gitattributes b/.gitattributes
+index fa393916..fe234a76 100644
+--- a/.gitattributes
++++ b/.gitattributes
+@@ -1,3 +1,4 @@
+ Eclipsa_V5_WithLogo_dialogue_loudness.mp4 filter=lfs diff=lfs merge=lfs -text
+ *.mp4 filter=lfs diff=lfs merge=lfs -text
+ *.wav filter=lfs diff=lfs merge=lfs -text
++autoplay.wav -filter -diff -merge -text
+diff --git a/.gitignore b/.gitignore
+index 031d8444..1f1af6f6 100644
+--- a/.gitignore
++++ b/.gitignore
+@@ -1,4 +1,7 @@
+ /node_modules
+ package-lock.json
+ .DS_Store
+-/src/.DS_Store
+\ No newline at end of file
++/src/.DS_Store
++/_site
++.jekyll-metadata
++.jekyll-cache/
+diff --git a/404.html b/404.html
+index e7cbe1dc..6b735c29 100644
+--- a/404.html
++++ b/404.html
+@@ -4,30 +4,7 @@
+     <meta charset="UTF-8">
+     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+     <title>404 Not Found</title>
+-    <style>
+-        body {
+-            font-family: sans-serif;
+-            background-color: #f0f0f0;
+-            color: #333;
+-            max-width: 800px;
+-            margin: 0 auto;
+-            padding: 20px;
+-            text-align: center;
+-        }
+-        h1 {
+-            color: #111;
+-        }
+-        a {
+-            color: #007bff;
+-        }
+-        ul {
+-            list-style-type: none;
+-            padding: 0;
+-        }
+-        li {
+-            margin-bottom: 10px;
+-        }
+-    </style>
++    <link rel="stylesheet" href="styles.css">
+ </head>
+ <body>
+     <h1>404 - Page Not Found</h1>
+diff --git a/README.md b/README.md
+index f6f2124d..3156d160 100644
+--- a/README.md
++++ b/README.md
+@@ -1,35 +1,52 @@
++---
++layout: default
++title: Web Technology Demos
++permalink: /
++---
++
+ # Web Technology Demos
+ 
+ This repository contains the source code for my personal website and a collection of web technology demos.
+ 
+ [**Visit the live website**](https://syedabutalib.github.io/)
+ 
+-## About This Site
++## Available Test Pages:
++
++- ### [Spatial Audio Test Page](./spatial_audio.html)
++  - **Description:** Demonstrates playback of potentially spatialized MP4 video/audio files and includes a Web Audio API example for 3D positional audio.
++
++- ### [Video Flip Test Page](./flip.html)
++  - **Description:** Features live camera preview, video recording with selectable MIME types, a conceptual video flip effect.
+ 
+-This repository contains a collection of web technology demos. It is built using Jekyll and hosted on GitHub Pages.
++- ### [WebCodecs Opus Test](./opus.html)
++  - **Description:** Tests the WebCodecs AudioEncoder and AudioDecoder with the Opus codec and a user-defined frame duration.
+ 
+-## Demos
++- ### [VTTCue Timing Test](./vtt.html)
++  - **Description:** Dynamically injecting a VTTCue into a video track to observe its timing and event behavior.
+ 
+-This site includes the following technical demonstrations:
++- ### [Audio Playback Test](./bitdepth.html)
++  - **Description:** Record a 5-second audio clip from a microphone and play it back to verify capture quality.
+ 
+-*   **Media Source Extensions (MSE):** Demos for playing back various video and audio formats using MSE. See [`mse.html`](https://syedabutalib.github.io/mse.html).
+-*   **WebRTC:** A demo showcasing live video preview, recording, flipping, and rotation using WebRTC. See [`flip.html`](https://syedabutalib.github.io/flip.html).
+-*   **Audio Bit Depth Test:** A page to test audio capture and playback at different bit depths. See [`bitdepth.html`](https://syedabutalib.github.io/bitdepth.html).
+-*   **Spatial Audio:** A demo of spatial audio using Web Audio API. See [`spatial_audio.html`](https://syedabutalib.github.io/spatial_audio.html).
+-*   **Opus Audio:** A demo for playing Opus audio. See [`opus.html`](https://syedabutalib.github.io/opus.html).
+-*   **VTT:** A demo for WebVTT subtitles. See [`vtt.html`](https://syedabutalib.github.io/vtt.html).
++- ### [MSE Test Page](./mse.html)
++  - **Description:** Media Source Extensions (MSE) test page for various media types using source URL and type as query parameters.
++
++- ### [Matroska Recording Test](./manual_test_matroska_recording.html)
++  - **Description:** Verifies that `video/matroska` and `audio/matroska` MIME types produce valid files.
++
++- ### [Autoplay Test Page](./autoplay.html)
++  - **Description:** Tests the browser's autoplay permissions for audio playback.
+ 
+ ## Personal Projects
+ 
+-*   **Heardle Game:** A simple music guessing game. See [`heardle/index.html`](https://syedabutalib.github.io/heardle/).
++- ### [Spotify Heardle](./heardle/index.html)
++  - **Description:** Game where a Premium Spotify User can log in and play a song guessing game based on their playlists.
+ 
+ ## Technologies Used
+ 
+-*   HTML5
+-*   CSS3
+-*   JavaScript
+-*   WebRTC
+-*   Web Audio API
+-*   Media Source Extensions
+-*   Jekyll
+-*   GitHub Pages
+\ No newline at end of file
++* HTML5 / CSS3 / JavaScript
++* WebRTC & Web Audio API
++* Media Source Extensions & WebCodecs
++* Jekyll & GitHub Pages
++
++---
++_This site is built with Markdown and hosted on GitHub Pages._
+diff --git a/_config.yml b/_config.yml
+index cfe49150..f07755be 100644
+--- a/_config.yml
++++ b/_config.yml
+@@ -1,5 +1,6 @@
+ title: Syed AbuTalib
+ description: A collection of web technology demos. Please report any issues on the GitHub repository.
+-permalink: /404.html
++theme: jekyll-theme-minimal
+ plugins:
+   - jekyll-sitemap
++  - jekyll-readme-index
+diff --git a/autoplay.html b/autoplay.html
+index 35eb03a2..e57f17f3 100644
+--- a/autoplay.html
++++ b/autoplay.html
+@@ -4,7 +4,7 @@
+ <body>
+   <h1>Autoplay Permission Test</h1>
+   <audio controls autoplay>
+-    <source src="autoplay.wav" type="audio/ogg">
++    <source src="autoplay.wav" type="audio/wav">
+   </audio>
+ 
+ 
+diff --git a/autoplay.wav b/autoplay.wav
+index cbbbc5cc..2e898e59 100644
+Binary files a/autoplay.wav and b/autoplay.wav differ
+diff --git a/bitdepth.html b/bitdepth.html
+index b43147b7..02d97f5c 100644
+--- a/bitdepth.html
++++ b/bitdepth.html
+@@ -4,55 +4,7 @@
+     <meta charset="UTF-8" />
+     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+     <title>Audio Capture Playback Test</title>
+-    <style>
+-      body {
+-        font-family: sans-serif;
+-        background-color: #f0f0f0;
+-        color: #333;
+-        max-width: 800px;
+-        margin: 0 auto;
+-        padding: 20px;
+-      }
+-      h1 {
+-        color: #111;
+-      }
+-      #status {
+-        padding: 10px;
+-        border-radius: 5px;
+-        margin: 10px 0;
+-        font-weight: bold;
+-      }
+-      .success {
+-        background-color: #d4edda;
+-        color: #155724;
+-      }
+-      .error {
+-        background-color: #f8d7da;
+-        color: #721c24;
+-      }
+-      .info {
+-        background-color: #e2e3e5;
+-        color: #383d41;
+-      }
+-      button {
+-        font-size: 1em;
+-        padding: 10px 15px;
+-        margin-right: 10px;
+-        border-radius: 5px;
+-        border: 1px solid #ccc;
+-      }
+-      button:disabled {
+-        cursor: not-allowed;
+-        opacity: 0.6;
+-      }
+-      #controls,
+-      #results {
+-        margin-top: 20px;
+-      }
+-      a {
+-        color: #007bff;
+-      }
+-    </style>
++    <link rel="stylesheet" href="styles.css">
+   </head>
+   <body>
+     <h1>Audio Capture Playback Test</h1>
+@@ -150,7 +102,7 @@
+ 
+         setTimeout(() => {
+           stopRecordingAndGenerateWav();
+-        }, 5000); // Record for 5 seconds
++        }, 5000);
+       };
+ 
+       function stopRecordingAndGenerateWav() {
+@@ -162,7 +114,6 @@
+           audioBuffers,
+           audioBuffers.reduce((acc, buf) => acc + buf.length, 0)
+         );
+-        // Encode as 32-bit float WAV for highest fidelity playback
+         const wavBlob = encodeWAV(fullBuffer, audioContext.sampleRate, 32);
+ 
+         if (audioContext.state !== "closed") {
+@@ -191,14 +142,11 @@
+         return result;
+       }
+ 
+-      // --- WAV Encoding Functions ---
+-
+       function encodeWAV(samples, sampleRate, bitsPerSample) {
+         const isFloat = bitsPerSample === 32;
+         const bytesPerSample = bitsPerSample / 8;
+         const numChannels = 1;
+ 
+-        // Correctly calculate header size based on format
+         const headerSize = isFloat ? 46 : 44;
+ 
+         const buffer = new ArrayBuffer(headerSize + samples.length * bytesPerSample);
+@@ -207,19 +155,17 @@
+         const blockAlign = numChannels * bytesPerSample;
+         const byteRate = sampleRate * blockAlign;
+ 
+-        // RIFF header
+         writeString(view, 0, "RIFF");
+-        view.setUint32(4, (headerSize - 8) + samples.length * bytesPerSample, true); // File size - 8
++        view.setUint32(4, (headerSize - 8) + samples.length * bytesPerSample, true);
+         writeString(view, 8, "WAVE");
+ 
+-        // fmt sub-chunk
+         writeString(view, 12, "fmt ");
+         if (isFloat) {
+-            view.setUint32(16, 18, true); // Sub-chunk size for float
+-            view.setUint16(20, 3, true); // Audio format (3 = IEEE float)
++          view.setUint32(16, 18, true);
++          view.setUint16(20, 3, true);
+         } else {
+-            view.setUint32(16, 16, true); // Sub-chunk size for PCM
+-            view.setUint16(20, 1, true); // Audio format (1 = PCM)
++          view.setUint32(16, 16, true);
++          view.setUint16(20, 1, true);
+         }
+         
+         view.setUint16(22, numChannels, true);
+@@ -228,14 +174,12 @@
+         view.setUint16(32, blockAlign, true);
+         view.setUint16(34, bitsPerSample, true);
+         if (isFloat) {
+-            view.setUint16(36, 0, true); // Extra size
++          view.setUint16(36, 0, true);
+         }
+ 
+-        // data sub-chunk
+         writeString(view, isFloat ? 38 : 36, "data");
+         view.setUint32(isFloat ? 42 : 40, samples.length * bytesPerSample, true);
+ 
+-        // Write samples
+         if (isFloat) {
+             floatTo32BitPCM(view, headerSize, samples);
+         } else if (bitsPerSample === 16) {
+diff --git a/flip.html b/flip.html
+index ed72d0f8..543cfed4 100644
+--- a/flip.html
++++ b/flip.html
+@@ -12,137 +12,7 @@
+ 
+     <title>Live Video Preview, Recording with Flip, Rotation & Format Selection</title>
+ 
+-    <style>
+-        body {
+-            font-family: 'Roboto', 'Helvetica', 'Arial', sans-serif;
+-            margin: 0;
+-            padding: 0;
+-            background-color: #f0f0f0;
+-            color: #333;
+-        }
+-
+-        #container {
+-            max-width: 800px;
+-            margin: 20px auto;
+-            padding: 20px;
+-            background-color: #fff;
+-            box-shadow: 0 0 10px rgba(0,0,0,0.1);
+-            border-radius: 8px;
+-        }
+-
+-        h1 {
+-            font-size: 1.8em;
+-            font-weight: 500;
+-            color: #000;
+-            margin-bottom: 20px;
+-            text-align: center;
+-        }
+-
+-        video {
+-            width: 100%;
+-            max-width: 720px; 
+-            height: auto;
+-            display: block;
+-            margin: 0 auto 20px auto;
+-            border: 1px solid #ccc;
+-            background-color: #000;
+-        }
+-        
+-        #controlsContainer, #buttonsContainer {
+-            display: flex;
+-            justify-content: center;
+-            gap: 10px; 
+-            margin-bottom: 20px;
+-            flex-wrap: wrap; 
+-            align-items: center;
+-        }
+-
+-        button, select {
+-            font-family: 'Roboto', 'Helvetica', 'Arial', sans-serif;
+-            font-size: 0.9em; 
+-            font-weight: 500;
+-            color: #333; /* Default text color for select */
+-            background-color: #f8f9fa; /* Lighter background for select */
+-            border: 1px solid #ccc;
+-            border-radius: 4px; 
+-            padding: 10px 15px; /* Consistent padding */
+-            cursor: pointer;
+-            transition: background-color 0.3s ease;
+-        }
+-        
+-        select {
+-             color: #333; /* Ensure select text is visible */
+-        }
+-
+-        button {
+-            text-transform: uppercase;
+-            color: #fff;
+-            background-color: #4285f4; 
+-            border: none; /* Buttons don't need border if they have strong bg */
+-            box-shadow: 0 2px 2px 0 rgba(0,0,0,0.14), 0 3px 1px -2px rgba(0,0,0,0.12), 0 1px 5px 0 rgba(0,0,0,0.2);
+-            padding: 10px 20px; /* Buttons can have slightly different padding */
+-        }
+-
+-
+-        button:hover {
+-            background-color: #3367d6; 
+-        }
+-        select:hover {
+-            border-color: #888;
+-        }
+-
+-        button:active {
+-            background-color: #2a56c6; 
+-        }
+-
+-        button:disabled, select:disabled {
+-            color: rgba(0,0,0,0.26);
+-            background-color: rgba(0,0,0,0.12);
+-            cursor: not-allowed;
+-            box-shadow: none;
+-            border-color: rgba(0,0,0,0.12);
+-        }
+-        
+-        label {
+-            margin-right: 5px;
+-            font-weight: 500;
+-        }
+-
+-        p {
+-            text-align: center;
+-            color: #666;
+-            font-size: 0.9em;
+-        }
+-        #errorMessage {
+-            color: red;
+-            text-align: center;
+-            margin-top: 10px;
+-        }
+-
+-        @media (max-width: 600px) {
+-            h1 {
+-                font-size: 1.5em;
+-            }
+-            button, select {
+-                padding: 8px 15px;
+-                font-size: 0.85em;
+-                width: calc(50% - 5px); /* Two controls per row */
+-                box-sizing: border-box;
+-            }
+-            #controlsContainer, #buttonsContainer {
+-                flex-direction: row; /* Keep as row, wrap will handle stacking */
+-            }
+-            label {
+-                 width: 100%; /* Full width for label on small screens */
+-                 text-align: center;
+-                 margin-bottom: 5px;
+-                 margin-right: 0;
+-            }
+-            select {
+-                width: 100%; /* Make select take full width if label is above */
+-            }
+-        }
+-    </style>
++    <link rel="stylesheet" href="styles.css">
+ </head>
+ 
+ <body>
+@@ -388,7 +258,7 @@
+     startRecordingButton.addEventListener('click', startRecording);
+     stopRecordingButton.addEventListener('click', stopRecording);
+     flipButton.addEventListener('click', toggleFlip);
+-    rotateButton.addEventListener('click', rotateCamera); // Add event listener for rotate button
++        rotateButton.addEventListener('click', rotateCamera);
+ 
+ </script>
+ </body>
+diff --git a/heardle/app.js b/heardle/app.js
+index b06483e7..2a05684a 100644
+--- a/heardle/app.js
++++ b/heardle/app.js
+@@ -1,45 +1,35 @@
+-// --- Constants and Configuration ---
+-const SPOTIFY_CLIENT_ID = "503fde2f0eee4cf69dea8b4c3e030896"; // IMPORTANT: Replace with your actual Spotify Client ID
+-// For local development, this might be 'http://127.0.0.1:5500/index.html' or similar.
+-// For GitHub Pages, it would be 'https://<username>.github.io/<repo-name>/index.html'
+-// IMPORTANT: This exact URI MUST be whitelisted in your Spotify App settings on the Developer Dashboard.
++const SPOTIFY_CLIENT_ID = "503fde2f0eee4cf69dea8b4c3e030896"; 
+ const REDIRECT_URI = window.location.origin + window.location.pathname;
+ 
+ const SPOTIFY_AUTH_URL = "https://accounts.spotify.com/authorize";
+ const API_BASE_URL = "https://api.spotify.com/v1";
+ 
+-// Scopes for the permissions we need
+ const SCOPES = [
+-  "streaming", // Required for Web Playback SDK
+-  "user-read-email", // Recommended by Spotify for SDK context
+-  "user-read-private", // Recommended by Spotify for SDK context
++  "streaming", 
++  "user-read-email", 
++  "user-read-private", 
+   "playlist-read-private",
+   "playlist-read-collaborative",
+ ];
+ 
+-const SNIPPET_DURATIONS = [1000, 2000, 4000, 8000, 16000, 30000]; // Durations in ms for each guess attempt
++const SNIPPET_DURATIONS = [1000, 2000, 4000, 8000, 16000, 30000]; 
+ 
+-// --- Global State ---
+ let accessToken = null;
+ let tokenExpiryTime = null;
+ let currentPlaylistTracks = [];
+-let spotifyPlayer = null; // For the Spotify Player instance
+-let webPlaybackDeviceId = null; // For the Device ID from the SDK
++let spotifyPlayer = null; 
++let webPlaybackDeviceId = null; 
+ let failedGuessesArray = [];
+ let snippetTimerInterval = null;
+ let currentSnippetPlaybackPosition = 0;
+ 
+-// --- DOM Elements ---
+-// Auth Section
+ const loginButton = document.getElementById("login-button");
+ const authSection = document.getElementById("auth-section");
+ 
+-// Playlist Section
+ const playlistSection = document.getElementById("playlist-section");
+ const playlistSelect = document.getElementById("playlist-select");
+ const startGameButton = document.getElementById("start-game-button");
+ 
+-// Game Section
+ const gameSection = document.getElementById("game-section");
+ const playSnippetButton = document.getElementById("play-snippet-button");
+ const audioPlayer = document.getElementById("audio-player");
+@@ -55,11 +45,8 @@ const correctArtistNameSpan = document.getElementById("correct-artist-name");
+ const spotifyLinkAnchor = document.getElementById("spotify-link");
+ const playAgainButton = document.getElementById("play-again-button");
+ 
+-// --- Authentication Functions ---
+ 
+-/**
+- * Redirects the user to Spotify's authorization page.
+- */
++
+ function redirectToSpotifyLogin() {
+   if (SPOTIFY_CLIENT_ID === "YOUR_SPOTIFY_CLIENT_ID") {
+     alert(
+@@ -67,7 +54,7 @@ function redirectToSpotifyLogin() {
+     );
+     return;
+   }
+-  const state = generateRandomString(16); // For CSRF protection
++  const state = generateRandomString(16); 
+   localStorage.setItem("spotify_auth_state", state);
+ 
+   let url = SPOTIFY_AUTH_URL;
+@@ -80,9 +67,7 @@ function redirectToSpotifyLogin() {
+   window.location.href = url;
+ }
+ 
+-/**
+- * Parses the access token from the URL hash fragment after Spotify redirects back.
+- */
++
+ function handleAuthCallback() {
+   const hash = window.location.hash.substring(1);
+   const params = new URLSearchParams(hash);
+@@ -106,7 +91,7 @@ function handleAuthCallback() {
+     return;
+   }
+ 
+-  localStorage.removeItem("spotify_auth_state"); // Clean up state
++  localStorage.removeItem("spotify_auth_state"); 
+ 
+   if (token) {
+     accessToken = token;
+@@ -114,12 +99,9 @@ function handleAuthCallback() {
+     console.log("Spotify Access Token obtained:", accessToken);
+     console.log("Token expires at:", new Date(tokenExpiryTime));
+ 
+-    // Clean the URL
+     window.location.hash = "";
+ 
+-    // Update UI
+     authSection.style.display = "none";
+-    // playlistSection.style.display = 'block'; // Playlist section shown by SDK 'ready' or fetchUserPlaylists
+     feedbackMessageDiv.textContent =
+       "Login successful! Initializing Spotify Player...";
+ 
+@@ -129,17 +111,13 @@ function handleAuthCallback() {
+       !spotifyPlayer
+     ) {
+       initializeSpotifyPlayer(accessToken);
+-    } // else onSpotifyWebPlaybackSDKReady will call it when SDK loads.
++    } 
+ 
+-    fetchUserPlaylists(); // This will also attempt to show playlistSection if playlists are found
++    fetchUserPlaylists(); 
+   }
+ }
+ 
+-/**
+- * Generates a random string for the 'state' parameter in OAuth.
+- * @param {number} length The length of the string to generate.
+- * @returns {string} A random string.
+- */
++
+ function generateRandomString(length) {
+   let text = "";
+   const possible =
+@@ -150,11 +128,7 @@ function generateRandomString(length) {
+   return text;
+ }
+ 
+-/**
+- * Formats milliseconds into m:ss string.
+- * @param {number} milliseconds The time in milliseconds.
+- * @returns {string} Formatted time string like "m:ss".
+- */
++
+ function formatTime(milliseconds) {
+   if (isNaN(milliseconds) || milliseconds < 0) {
+     milliseconds = 0;
+@@ -165,14 +139,12 @@ function formatTime(milliseconds) {
+   return `${minutes}:${seconds < 10 ? "0" : ""}${seconds}`;
+ }
+ 
+-// --- Web Playback SDK Initialization ---
+ window.onSpotifyWebPlaybackSDKReady = () => {
+   console.log("Spotify Web Playback SDK is ready.");
+   if (!accessToken) {
+     console.warn(
+       "SDK ready, but no access token found yet. Will initialize player once token is available."
+     );
+-    // Player will be initialized in handleAuthCallback or if token is already present on load
+     return;
+   }
+   initializeSpotifyPlayer(accessToken);
+@@ -180,52 +152,41 @@ window.onSpotifyWebPlaybackSDKReady = () => {
+ 
+ function initializeSpotifyPlayer(token) {
+   if (spotifyPlayer) {
+-    // If player already exists, disconnect it first
+     spotifyPlayer.disconnect();
+   }
+ 
+   spotifyPlayer = new Spotify.Player({
+     name: "Spotify HeardleWordle Player",
+     getOAuthToken: (cb) => {
+-      // Note: Directly using the accessToken here.
+-      // If the token could expire and you had a refresh mechanism, you'd use it here.
+-      // For Implicit Grant, if it expires, the user has to re-authenticate.
+       if (tokenExpiryTime && new Date().getTime() > tokenExpiryTime) {
+         console.warn("Access token expired. Needs re-login for SDK token.");
+-        // Trigger re-login, then the SDK will re-attempt getOAuthToken upon next action or connect.
+         redirectToSpotifyLogin();
+-        // It might be better to prevent player initialization if token is known to be expired.
+-        // However, getOAuthToken is called by the SDK when it needs a token.
+-        cb(null); // Indicate no token available right now
++        cb(null); 
+         return;
+       }
+       cb(token);
+     },
+-    volume: 0.5, // Default volume
++    volume: 0.5, 
+   });
+ 
+-  // Error handling
+   spotifyPlayer.addListener("initialization_error", ({ message }) => {
+     console.error("Failed to initialize Spotify Player:", message);
+     alert(
+       `Failed to initialize Spotify Player: ${message}. Ensure pop-ups are not blocked and you are using a supported browser.`
+     );
+-    // Potentially disable game UI elements here
+   });
+   spotifyPlayer.addListener("authentication_error", ({ message }) => {
+     console.error("Failed to authenticate Spotify Player:", message);
+     alert(
+       `Failed to authenticate Spotify Player: ${message}. Please try logging in again.`
+     );
+-    redirectToSpotifyLogin(); // Force re-login
++    redirectToSpotifyLogin(); 
+   });
+   spotifyPlayer.addListener("account_error", ({ message }) => {
+     console.error("Spotify Player account error:", message);
+-    // This error typically means the user does not have Spotify Premium.
+     alert(
+       `Spotify Player Error: ${message}. A Spotify Premium account is required to use this feature.`
+     );
+-    // Disable game functionality or guide user
+     disableGameFeaturesDueToSDKError();
+   });
+   spotifyPlayer.addListener("playback_error", ({ message }) => {
+@@ -233,17 +194,12 @@ function initializeSpotifyPlayer(token) {
+     alert(`Spotify Player Playback Error: ${message}.`);
+   });
+ 
+-  // Playback status updates
+   spotifyPlayer.addListener("player_state_changed", (state) => {
+     if (!state) {
+-      // If state is null, it might mean playback stopped or player is inactive.
+-      // Consider if currentSnippetPlaybackPosition should be reset or handled here.
+-      // For now, we only update on valid state with a track.
+       return;
+     }
+     console.log("Player state changed:", state);
+ 
+-    // Check if the state change is for the currently playing snippet song
+     if (
+       currentSong &&
+       state.track_window &&
+@@ -252,30 +208,22 @@ function initializeSpotifyPlayer(token) {
+     ) {
+       currentSnippetPlaybackPosition = state.position;
+     }
+-    // If the track URI doesn't match, it means a different song is playing (e.g., user changed song in Spotify app)
+-    // or no song is active that matches our snippet. In this case, currentSnippetPlaybackPosition should not be updated
+-    // or might need to be reset if we want to be very strict.
+-    // For now, only updating if URIs match is a good first step.
+   });
+ 
+-  // Ready
+   spotifyPlayer.addListener("ready", ({ device_id }) => {
+     console.log("Spotify Player is ready with Device ID:", device_id);
+     webPlaybackDeviceId = device_id;
+-    playlistSection.style.display = "block"; // Show playlist selection
++    playlistSection.style.display = "block"; 
+     if (playlistSelect) playlistSelect.disabled = false;
+-    // Disable start game button until a playlist is chosen
+     if (startGameButton)
+       startGameButton.disabled =
+         playlistSelect.value === "" || !playlistSelect.value;
+     feedbackMessageDiv.textContent = "Spotify Player ready. Select a playlist!";
+   });
+ 
+-  // Not Ready
+   spotifyPlayer.addListener("not_ready", ({ device_id }) => {
+     console.log("Device ID has gone offline:", device_id);
+     webPlaybackDeviceId = null;
+-    // Disable UI elements that depend on the player
+     if (playlistSelect) playlistSelect.disabled = true;
+     if (startGameButton) startGameButton.disabled = true;
+     if (playSnippetButton) playSnippetButton.disabled = true;
+@@ -283,7 +231,6 @@ function initializeSpotifyPlayer(token) {
+       "Spotify Player is offline. Please ensure Spotify is active.";
+   });
+ 
+-  // Connect to the player!
+   spotifyPlayer
+     .connect()
+     .then((success) => {
+@@ -291,28 +238,24 @@ function initializeSpotifyPlayer(token) {
+         console.log("The Web Playback SDK successfully connected to Spotify!");
+       } else {
+         console.warn("The Web Playback SDK failed to connect to Spotify.");
+-        // This might happen if the browser blocks connection, or other issues.
+       }
+     })
+     .catch((err) => console.error("Error connecting player:", err));
+ }
+ 
+ function disableGameFeaturesDueToSDKError() {
+-  // Call this function when SDK errors (like account_error) occur
+   if (playlistSelect) playlistSelect.disabled = true;
+   if (startGameButton) startGameButton.disabled = true;
+   if (playSnippetButton) playSnippetButton.disabled = true;
+   if (guessInput) guessInput.disabled = true;
+   if (submitGuessButton) submitGuessButton.disabled = true;
+   if (skipButton) skipButton.disabled = true;
+-  // Keep login button active or provide a way to re-initiate
+ }
+ 
+-// --- API Call Functions ---
+ async function fetchWebApi(endpoint, method, body) {
+   if (!accessToken) {
+     console.warn("Access token is missing. Redirecting to login.");
+-    authSection.style.display = "block"; // Show login section
++    authSection.style.display = "block"; 
+     playlistSection.style.display = "none";
+     gameSection.style.display = "none";
+     resultsSection.style.display = "none";
+@@ -320,12 +263,11 @@ async function fetchWebApi(endpoint, method, body) {
+     return null;
+   }
+ 
+-  // Simple check for token expiry (client-side only)
+   if (tokenExpiryTime && new Date().getTime() > tokenExpiryTime) {
+     console.warn(
+       "Access token likely expired based on client-side timer. Redirecting to login."
+     );
+-    accessToken = null; // Clear potentially stale token
++    accessToken = null; 
+     authSection.style.display = "block";
+     playlistSection.style.display = "none";
+     gameSection.style.display = "none";
+@@ -344,17 +286,16 @@ async function fetchWebApi(endpoint, method, body) {
+     });
+ 
+     if (res.status === 401) {
+-      // Unauthorized - token invalid or expired
+       console.warn(
+         "Spotify API Error 401: Unauthorized. Access token may be invalid or expired. Redirecting to login."
+       );
+-      accessToken = null; // Clear invalid token
++      accessToken = null; 
+       tokenExpiryTime = null;
+       authSection.style.display = "block";
+       playlistSection.style.display = "none";
+       gameSection.style.display = "none";
+       resultsSection.style.display = "none";
+-      redirectToSpotifyLogin(); // Re-authenticate
++      redirectToSpotifyLogin(); 
+       return null;
+     }
+ 
+@@ -369,8 +310,6 @@ async function fetchWebApi(endpoint, method, body) {
+       alert(
+         `An error occurred while communicating with Spotify: ${errorMsg}. Please try again or re-login.`
+       );
+-      // For specific errors like 403 (Forbidden), you might guide the user to check permissions or re-login.
+-      // For 429 (Rate Limiting), inform the user to wait.
+       if (res.status === 429) {
+         alert(
+           "You're making too many requests to Spotify. Please wait a moment and try again."
+@@ -379,9 +318,8 @@ async function fetchWebApi(endpoint, method, body) {
+       return null;
+     }
+ 
+-    // Handle cases where response is OK but content might be empty (e.g., 204 No Content)
+     if (res.status === 204) {
+-      return null; // Or appropriate representation for no content
++      return null; 
+     }
+ 
+     return await res.json();
+@@ -396,10 +334,9 @@ async function fetchWebApi(endpoint, method, body) {
+ 
+ async function fetchUserPlaylists() {
+   console.log("Fetching user playlists...");
+-  const data = await fetchWebApi("/me/playlists?limit=50", "GET"); // Get up to 50 playlists
++  const data = await fetchWebApi("/me/playlists?limit=50", "GET"); 
+ 
+   if (data && Array.isArray(data.items)) {
+-    // Check if items is an array
+     playlistSelect.innerHTML =
+       '<option value="">-- Select a Playlist --</option>';
+     if (data.items.length === 0) {
+@@ -411,40 +348,34 @@ async function fetchUserPlaylists() {
+ 
+     data.items.forEach((playlist) => {
+       if (playlist.tracks.total > 0) {
+-        // Only add playlists that have tracks
+         const option = document.createElement("option");
+         option.value = playlist.id;
+         option.textContent = `${playlist.name} (${playlist.tracks.total} tracks)`;
+         playlistSelect.appendChild(option);
+       }
+     });
+-    // startGameButton.disabled = false; // This was true in instructions, but should be false if playlists are found
+-    // Corrected logic: button should be disabled initially as "-- Select a Playlist --" will be chosen.
+     startGameButton.disabled = true;
+-    playlistSection.style.display = "block"; // Ensure it's visible
+-    gameSection.style.display = "none"; // Hide game section until playlist is chosen
+-    resultsSection.style.display = "none"; // Hide results section
++    playlistSection.style.display = "block"; 
++    gameSection.style.display = "none"; 
++    resultsSection.style.display = "none"; 
+   } else {
+     console.error("Could not fetch user playlists or no items found.");
+     playlistSelect.innerHTML =
+       '<option value="" disabled>Could not load playlists.</option>';
+     startGameButton.disabled = true;
+-    // Optionally, inform the user more directly
+   }
+ }
+ 
+ async function fetchPlaylistTracks(playlistId) {
+   console.log(`Fetching tracks for playlist ID: ${playlistId}`);
+   currentPlaylistTracks = [];
+-  feedbackMessageDiv.textContent = "Loading tracks from playlist..."; // Loading message
+-  playSnippetButton.disabled = true; // Disable while loading new tracks
+-  startGameButton.disabled = true; // Also disable start game button during loading
++  feedbackMessageDiv.textContent = "Loading tracks from playlist..."; 
++  playSnippetButton.disabled = true; 
++  startGameButton.disabled = true; 
+   const songSuggestionsDatalist = document.getElementById("song-suggestions");
+ 
+-  // Request specific fields: name, artists (just name), id, uri, external_urls.spotify
+   const fields =
+     "items(track(name,artists(name),id,uri,external_urls(spotify)))";
+-  // Fetching up to 50 tracks, consistent with previous version. Consider pagination for very large playlists in future.
+   const data = await fetchWebApi(
+     `/playlists/${playlistId}/tracks?fields=${fields}&limit=50`,
+     "GET"
+@@ -452,8 +383,7 @@ async function fetchPlaylistTracks(playlistId) {
+ 
+   if (data && Array.isArray(data.items)) {
+     const validTracks = data.items
+-      .map((item) => item.track) // Get the track object
+-      // Filter for tracks that have a URI, name, and at least one artist.
++      .map((item) => item.track) 
+       .filter(
+         (track) =>
+           track &&
+@@ -465,30 +395,28 @@ async function fetchPlaylistTracks(playlistId) {
+       );
+ 
+     if (validTracks.length === 0) {
+-      // This case means data.items was an array, but it was either empty OR tracks were filtered out
+       alert(
+         "This playlist doesn't have any tracks that can be played with the SDK, or they are unsuitable (e.g. missing URI). Please select another playlist."
+       );
+       console.warn(
+         "No playable tracks (with URIs) after filtering in the selected playlist."
+       );
+-      playlistSection.style.display = "block"; // Show playlist selection again
++      playlistSection.style.display = "block"; 
+       gameSection.style.display = "none";
+       feedbackMessageDiv.textContent =
+-        "No playable tracks in this playlist. Please select another."; // Updated feedback
++        "No playable tracks in this playlist. Please select another."; 
+       if (playlistSelect) playlistSelect.disabled = false;
+       if (startGameButton) startGameButton.disabled = true;
+       if (songSuggestionsDatalist) {
+-        songSuggestionsDatalist.innerHTML = ""; // Clear suggestions
++        songSuggestionsDatalist.innerHTML = ""; 
+       }
+       return;
+     }
+     currentPlaylistTracks = validTracks;
+     console.log("Playable tracks (with URIs) loaded:", currentPlaylistTracks);
+ 
+-    // Populate datalist
+     if (songSuggestionsDatalist) {
+-      songSuggestionsDatalist.innerHTML = ""; // Clear previous
++      songSuggestionsDatalist.innerHTML = ""; 
+       currentPlaylistTracks.forEach((track) => {
+         const option = document.createElement("option");
+         option.value = track.name;
+@@ -499,29 +427,27 @@ async function fetchPlaylistTracks(playlistId) {
+     playlistSection.style.display = "none";
+     gameSection.style.display = "block";
+     resultsSection.style.display = "none";
+-    feedbackMessageDiv.textContent = "Tracks loaded! Starting new round..."; // Updated message
++    feedbackMessageDiv.textContent = "Tracks loaded! Starting new round..."; 
+ 
+-    startGame(); // Automatically start the first round.
++    startGame(); 
+   } else if (data && data.items && data.items.length === 0) {
+-    // Specifically handle case where items array is empty
+     alert(
+       "This playlist doesn't have any tracks that can be played with the SDK, or it's empty. Please select another playlist."
+     );
+     console.warn(
+       "No playable tracks (with URIs) found in the selected playlist."
+     );
+-    playlistSection.style.display = "block"; // Show playlist selection again
++    playlistSection.style.display = "block"; 
+     gameSection.style.display = "none";
+     feedbackMessageDiv.textContent =
+-      "No playable tracks in this playlist. Please select another."; // Updated feedback
++      "No playable tracks in this playlist. Please select another."; 
+     if (playlistSelect) playlistSelect.disabled = false;
+     if (startGameButton) startGameButton.disabled = true;
+     if (songSuggestionsDatalist) {
+-      songSuggestionsDatalist.innerHTML = ""; // Clear suggestions
++      songSuggestionsDatalist.innerHTML = ""; 
+     }
+-    return; // Return here as we've handled this specific "empty valid tracks" case
++    return; 
+   } else {
+-    // General failure to fetch tracks or other error
+     alert(
+       "Could not fetch tracks for this playlist. Please try again or select a different playlist."
+     );
+@@ -536,15 +462,13 @@ async function fetchPlaylistTracks(playlistId) {
+     if (playlistSelect) playlistSelect.disabled = false;
+     if (startGameButton) startGameButton.disabled = true;
+     if (songSuggestionsDatalist) {
+-      songSuggestionsDatalist.innerHTML = ""; // Clear suggestions
++      songSuggestionsDatalist.innerHTML = ""; 
+     }
+   }
+ }
+ 
+-// --- Game Logic Functions ---
+ let currentSong = null;
+ let remainingGuesses = 0;
+-// let currentSnippetDuration = 1000; // 1 second initial duration - Now managed by SNIPPET_DURATIONS
+ let currentSnippetDuration = SNIPPET_DURATIONS[0];
+ 
+ function startGame() {
+@@ -552,8 +476,8 @@ function startGame() {
+     alert(
+       "No tracks available to start the game. Please select another playlist."
+     );
+-    playlistSection.style.display = "block"; // Show playlist selection again
+-    gameSection.style.display = "none"; // Hide game section
++    playlistSection.style.display = "block"; 
++    gameSection.style.display = "none"; 
+     return;
+   }
+   if (!webPlaybackDeviceId) {
+@@ -561,7 +485,6 @@ function startGame() {
+       "Spotify Player not ready. Please ensure Spotify is active and allow a moment for connection, or try re-logging in."
+     );
+     playSnippetButton.disabled = true;
+-    // Potentially show login button or a "connect player" button
+     return;
+   }
+ 
+@@ -571,7 +494,7 @@ function startGame() {
+     ];
+   remainingGuesses = SNIPPET_DURATIONS.length;
+   currentSnippetDuration = SNIPPET_DURATIONS[0];
+-  failedGuessesArray = []; // Reset failed guesses
++  failedGuessesArray = []; 
+ 
+   console.log(
+     "New game started. Current song:",
+@@ -580,7 +503,6 @@ function startGame() {
+     currentSong.uri
+   );
+ 
+-  // Reset Snippet Progress Display
+   const snippetProgressDisplay = document.getElementById(
+     "snippet-progress-display"
+   );
+@@ -595,7 +517,6 @@ function startGame() {
+   feedbackMessageDiv.textContent = 'New round! Click "Play Snippet" to start.';
+   resultsSection.style.display = "none";
+ 
+-  // Clear and hide failed guesses display
+   const failedGuessesContainer = document.getElementById(
+     "failed-guesses-container"
+   );
+@@ -613,7 +534,6 @@ function startGame() {
+   skipButton.disabled = false;
+   guessesCountSpan.textContent = remainingGuesses;
+ 
+-  // Stop player if it was playing from a previous round/reveal (e.g. after results were shown)
+   if (spotifyPlayer && resultsSection.style.display === "block") {
+     spotifyPlayer
+       .pause()
+@@ -626,7 +546,7 @@ function startGame() {
+   }
+ }
+ 
+-let snippetPlayTimeout = null; // To manage stopping the snippet
++let snippetPlayTimeout = null; 
+ 
+ async function playTrackSnippetWithSDK() {
+   const snippetProgressDisplay = document.getElementById(
+@@ -636,7 +556,6 @@ async function playTrackSnippetWithSDK() {
+   const totalSnippetTimeEl = document.getElementById("total-snippet-time");
+ 
+   if (!currentSong || !currentSong.uri) {
+-    // Check for URI now
+     console.error("No current song or URI to play with SDK.");
+     feedbackMessageDiv.textContent = "Error: No song loaded to play.";
+     return;
+@@ -645,7 +564,6 @@ async function playTrackSnippetWithSDK() {
+     console.error("Spotify Player not ready or no Device ID.");
+     feedbackMessageDiv.textContent =
+       "Spotify Player is not ready. Please wait or try re-login.";
+-    // Potentially try to reconnect or re-initialize player if appropriate
+     if (!spotifyPlayer && accessToken) initializeSpotifyPlayer(accessToken);
+     return;
+   }
+@@ -659,7 +577,6 @@ async function playTrackSnippetWithSDK() {
+   feedbackMessageDiv.textContent = `Loading snippet...`;
+ 
+   try {
+-    // Tell Spotify to play the track on our SDK player device
+     const playResponse = await fetchWebApi(
+       `/me/player/play?device_id=${webPlaybackDeviceId}`,
+       "PUT",
+@@ -667,41 +584,31 @@ async function playTrackSnippetWithSDK() {
+     );
+ 
+     if (playResponse === null) {
+-      // fetchWebApi returns null on error (e.g. network or API error)
+       feedbackMessageDiv.textContent =
+         "Failed to start track playback. Check connection or try again.";
+-      playSnippetButton.disabled = false; // Re-enable button
++      playSnippetButton.disabled = false; 
+       return;
+     }
+ 
+-    // Spotify API's play command can take a moment to start.
+-    // There's no direct callback for when playback *actually* starts on the SDK
+-    // after this API call. We rely on player_state_changed or a timeout.
+-    // For simplicity here, we'll use a short timeout before attempting to control the snippet.
+-    // A more robust solution would listen to 'player_state_changed' to confirm the track is playing.
+ 
+-    // Clear any existing snippet timeout
+     if (snippetPlayTimeout) {
+       clearTimeout(snippetPlayTimeout);
+     }
+ 
+-    // Give Spotify a moment to start playing the track after the API call
+     setTimeout(async () => {
+       try {
+-        // Assuming playback has started, now try to control it for the snippet
+         await spotifyPlayer.pause();
+         await spotifyPlayer.seek(0);
+ 
+-        // ---- NEW DISPLAY LOGIC ----
+         if (totalSnippetTimeEl)
+           totalSnippetTimeEl.textContent = formatTime(currentSnippetDuration);
+         if (currentSnippetTimeEl)
+           currentSnippetTimeEl.textContent = formatTime(0);
+         if (snippetProgressDisplay)
+           snippetProgressDisplay.style.display = "block";
+-        currentSnippetPlaybackPosition = 0; // Reset position tracker
++        currentSnippetPlaybackPosition = 0; 
+ 
+-        if (snippetTimerInterval) clearInterval(snippetTimerInterval); // Clear previous just in case
++        if (snippetTimerInterval) clearInterval(snippetTimerInterval); 
+         snippetTimerInterval = setInterval(() => {
+           if (currentSnippetTimeEl) {
+             const displayPosition = Math.min(
+@@ -710,42 +617,37 @@ async function playTrackSnippetWithSDK() {
+             );
+             currentSnippetTimeEl.textContent = formatTime(displayPosition);
+           }
+-        }, 500); // Update display every 500ms
+-        // ---- END NEW DISPLAY LOGIC ----
++        }, 500); 
+ 
+-        await spotifyPlayer.resume(); // Start playing the snippet
++        await spotifyPlayer.resume(); 
+         feedbackMessageDiv.textContent = `Playing snippet... (${
+           currentSnippetDuration / 1000
+         }s)`;
+ 
+         snippetPlayTimeout = setTimeout(async () => {
+-          // This is the existing timeout to stop the snippet
+           if (spotifyPlayer) {
+             await spotifyPlayer.pause();
+             feedbackMessageDiv.textContent =
+               "Snippet finished. Make your guess!";
+           }
+-          // ---- NEW: Clear interval and finalize display ----
+           if (snippetTimerInterval) clearInterval(snippetTimerInterval);
+           if (currentSnippetTimeEl)
+             currentSnippetTimeEl.textContent = formatTime(
+               currentSnippetDuration
+             );
+-          // ---- END NEW ----
+           playSnippetButton.disabled = false;
+         }, currentSnippetDuration);
+       } catch (sdkError) {
+         console.error("Error controlling SDK for snippet:", sdkError);
+         feedbackMessageDiv.textContent =
+           "Error playing snippet. Is Spotify active?";
+-        if (snippetTimerInterval) clearInterval(snippetTimerInterval); // Also clear on error
++        if (snippetTimerInterval) clearInterval(snippetTimerInterval); 
+         if (snippetProgressDisplay)
+-          snippetProgressDisplay.style.display = "none"; // Hide on error
++          snippetProgressDisplay.style.display = "none"; 
+         playSnippetButton.disabled = false;
+       }
+-    }, 1000); // 1-second delay
++    }, 1000); 
+   } catch (apiError) {
+-    // This catch is for fetchWebApi itself if it throws, though it's designed to return null on error
+     console.error("API error starting playback:", apiError);
+     feedbackMessageDiv.textContent = "Error telling Spotify to play the track.";
+     playSnippetButton.disabled = false;
+@@ -753,7 +655,7 @@ async function playTrackSnippetWithSDK() {
+ }
+ 
+ function submitGuess() {
+-  if (!currentSong || guessInput.disabled) return; // Game not active or already ended
++  if (!currentSong || guessInput.disabled) return; 
+ 
+   const userGuess = guessInput.value.trim().toLowerCase();
+   if (!userGuess) {
+@@ -762,9 +664,8 @@ function submitGuess() {
+   }
+ 
+   const songTitle = currentSong.name.toLowerCase();
+-  const artistName = currentSong.artists[0].name.toLowerCase(); // Assuming primary artist
++  const artistName = currentSong.artists[0].name.toLowerCase(); 
+ 
+-  // Normalize titles for comparison (remove common parenthetical additions like "(Remastered)")
+   const normalize = (str) => str.replace(/\s*\([^)]*\)\s*/g, "").trim();
+ 
+   const isCorrect =
+@@ -776,12 +677,11 @@ function submitGuess() {
+     revealSong(true);
+   } else {
+     feedbackMessageDiv.textContent = "Incorrect guess. Try again!";
+-    // userGuess is already defined and normalized (lowercase, trimmed)
+     failedGuessesArray.push(userGuess);
+     displayFailedGuesses();
+     handleIncorrectGuess();
+   }
+-  guessInput.value = ""; // Clear input after guess
++  guessInput.value = ""; 
+ }
+ 
+ function displayFailedGuesses() {
+@@ -790,12 +690,12 @@ function displayFailedGuesses() {
+   );
+   const failedGuessesList = document.getElementById("failed-guesses-list");
+ 
+-  if (!failedGuessesList || !failedGuessesContainer) return; // Safety check
++  if (!failedGuessesList || !failedGuessesContainer) return; 
+ 
+-  failedGuessesList.innerHTML = ""; // Clear current list items
++  failedGuessesList.innerHTML = ""; 
+ 
+   if (failedGuessesArray.length === 0) {
+-    failedGuessesContainer.style.display = "none"; // Hide if no failed guesses
++    failedGuessesContainer.style.display = "none"; 
+     return;
+   }
+ 
+@@ -805,7 +705,7 @@ function displayFailedGuesses() {
+     failedGuessesList.appendChild(listItem);
+   });
+ 
+-  failedGuessesContainer.style.display = "block"; // Show the container
++  failedGuessesContainer.style.display = "block"; 
+ }
+ 
+ function handleIncorrectGuess() {
+@@ -815,26 +715,21 @@ function handleIncorrectGuess() {
+   if (remainingGuesses <= 0) {
+     revealSong(false);
+   } else {
+-    // Determine the index for the next snippet duration
+-    // SNIPPET_DURATIONS has N items. If 6 guesses, index is 6 - remainingGuesses.
+-    // e.g., 5 guesses left -> index 1 (second duration)
+-    //       1 guess left -> index 5 (last duration)
+     const durationIndex = SNIPPET_DURATIONS.length - remainingGuesses;
+     if (durationIndex < SNIPPET_DURATIONS.length) {
+       currentSnippetDuration = SNIPPET_DURATIONS[durationIndex];
+     } else {
+-      // Should not happen if remainingGuesses logic is correct with SNIPPET_DURATIONS.length
+       currentSnippetDuration = SNIPPET_DURATIONS[SNIPPET_DURATIONS.length - 1];
+     }
+     console.log(
+       `Incorrect. Next snippet duration: ${currentSnippetDuration / 1000}s`
+     );
+-    playSnippetButton.disabled = false; // Ensure play button is enabled for next snippet
++    playSnippetButton.disabled = false; 
+   }
+ }
+ 
+ function skipTurn() {
+-  if (guessInput.disabled || remainingGuesses <= 0) return; // Game not active or already ended / no guesses left
++  if (guessInput.disabled || remainingGuesses <= 0) return; 
+ 
+   feedbackMessageDiv.textContent = "Skipped! More of the song will play next.";
+   handleIncorrectGuess();
+@@ -850,7 +745,6 @@ function revealSong(isCorrect) {
+       .catch((e) => console.warn("Error pausing on revealSong:", e));
+   }
+ 
+-  // Hide and clear snippet progress display
+   const snippetProgressDisplay = document.getElementById(
+     "snippet-progress-display"
+   );
+@@ -874,28 +768,21 @@ function revealSong(isCorrect) {
+   skipButton.disabled = true;
+ }
+ 
+-// --- Event Listeners ---
+ if (loginButton) {
+   loginButton.addEventListener("click", redirectToSpotifyLogin);
+ }
+ 
+-// --- Initialization ---
+-/**
+- * Runs when the page loads. Checks for auth callback.
+- */
++
+ window.onload = () => {
+   if (window.location.hash.includes("access_token")) {
+     handleAuthCallback();
+   } else if (accessToken && !spotifyPlayer) {
+-    // This path is less common with implicit grant unless token was somehow persisted
+     initializeSpotifyPlayer(accessToken);
+   } else if (!accessToken) {
+-    // Not logged in, ensure game controls are disabled and provide login guidance
+     feedbackMessageDiv.textContent = "Please log in with Spotify to start.";
+-    disableGameControlsPreLogin(); // Explicitly disable controls
++    disableGameControlsPreLogin(); 
+   }
+ 
+-  // Initial check for startGameButton, even if logged in, might need SDK.
+   if (
+     startGameButton &&
+     (!webPlaybackDeviceId || (playlistSelect && playlistSelect.value === ""))
+@@ -907,10 +794,8 @@ window.onload = () => {
+ window.onbeforeunload = () => {
+   if (spotifyPlayer) {
+     console.log("Disconnecting Spotify Player before page unload.");
+-    spotifyPlayer.disconnect(); // Disconnect the player
++    spotifyPlayer.disconnect(); 
+   }
+-  // Note: You cannot reliably perform asynchronous operations in onbeforeunload,
+-  // but player.disconnect() is generally a synchronous cleanup call for the SDK instance.
+ };
+ 
+ function disableGameControlsPreLogin() {
+@@ -922,17 +807,10 @@ function disableGameControlsPreLogin() {
+   if (skipButton) skipButton.disabled = true;
+   if (resultsSection) resultsSection.style.display = "none";
+   if (gameSection) gameSection.style.display = "none";
+-  if (playlistSection) playlistSection.style.display = "none"; // Hide until logged in and SDK ready
+-  if (authSection) authSection.style.display = "block"; // Ensure login is visible
++  if (playlistSection) playlistSection.style.display = "none"; 
++  if (authSection) authSection.style.display = "block"; 
+ }
+ 
+-// Placeholder for later functions (will be filled in subsequent steps)
+-// function fetchPlaylistTracks(playlistId) { console.log(`TODO: Fetch tracks for ${playlistId}`); }
+-// function startGame(tracks) { console.log("TODO: Start game with tracks:", tracks); }
+-// function playTrackSnippet() { console.log("TODO: Play snippet"); }
+-// function submitGuess() { console.log("TODO: Submit guess"); }
+-// function skipTrack() { console.log("TODO: Skip track"); }
+-// function playAgain() { console.log("TODO: Play again"); }
+ 
+ if (startGameButton) {
+   startGameButton.addEventListener("click", () => {
+@@ -946,7 +824,6 @@ if (startGameButton) {
+   });
+ }
+ 
+-// Disable start game button if no playlist is selected
+ if (playlistSelect) {
+   playlistSelect.addEventListener("change", () => {
+     if (playlistSelect.value) {
+@@ -955,7 +832,6 @@ if (playlistSelect) {
+       startGameButton.disabled = true;
+     }
+   });
+-  // Initial check
+   startGameButton.disabled = !playlistSelect.value;
+ }
+ 
+@@ -967,11 +843,10 @@ if (submitGuessButton) {
+   submitGuessButton.addEventListener("click", submitGuess);
+ }
+ 
+-// Allow submitting guess with Enter key in the input field
+ if (guessInput) {
+   guessInput.addEventListener("keypress", (event) => {
+     if (event.key === "Enter") {
+-      event.preventDefault(); // Prevent default form submission if it were in a form
++      event.preventDefault(); 
+       submitGuess();
+     }
+   });
+@@ -983,16 +858,10 @@ if (skipButton) {
+ 
+ if (playAgainButton) {
+   playAgainButton.addEventListener("click", () => {
+-    // Stop any currently playing audio from the reveal
+-    // audioPlayer.pause(); // Old player
+-    // audioPlayer.currentTime = 0; // Old player
+     if (snippetPlayTimeout) {
+-      // Clear any pending snippet timeout
+       clearTimeout(snippetPlayTimeout);
+     }
+ 
+-    // Simply call startGame to reset and pick a new song from the same playlist
+-    // spotifyPlayer.pause() is now called at the start of startGame()
+     startGame();
+   });
+ }
+diff --git a/heardle/index.html b/heardle/index.html
+index c5e0260a..7270c209 100644
+--- a/heardle/index.html
++++ b/heardle/index.html
+@@ -48,7 +48,7 @@
+               list="song-suggestions"
+             />
+             <datalist id="song-suggestions">
+-              <!-- Options will be populated by JavaScript -->
++              
+             </datalist>
+             <button id="submit-guess-button" disabled>Guess</button>
+           </div>
+@@ -59,23 +59,23 @@
+ 
+           <div id="guesses-remaining-display">
+             Guesses remaining: <span id="guesses-count">6</span>
+-            <!-- Visual representation (e.g., boxes) can be added later with CSS/JS -->
++            
+           </div>
+ 
+           <div id="feedback-message" aria-live="polite">
+-            <!-- Feedback like "Correct!", "Incorrect!" will appear here -->
++            
+           </div>
+ 
+           <div id="failed-guesses-container" style="display: none">
+             <h4>Previous Guesses:</h4>
+             <ul id="failed-guesses-list">
+-              <!-- Failed guesses will be listed here by JavaScript -->
++              
+             </ul>
+           </div>
+ 
+           <div id="results-section" style="display: none">
+             <h3 id="result-message"></h3>
+-            <!-- e.g., "You got it!" or "Better luck next time!" -->
++            
+             <p>The song was: <strong id="correct-song-title"></strong></p>
+             <p>By: <strong id="correct-artist-name"></strong></p>
+             <a id="spotify-link" href="#" target="_blank">Listen on Spotify</a>
+@@ -92,7 +92,7 @@
+       <p>Powered by Spotify</p>
+     </footer>
+ 
+-    <!-- Just before app.js -->
++    
+     <script src="https://sdk.scdn.co/spotify-player.js"></script>
+     <script src="app.js"></script>
+   </body>
+diff --git a/heardle/style.css b/heardle/style.css
+index 612b9ae4..e444439c 100644
+--- a/heardle/style.css
++++ b/heardle/style.css
+@@ -5,7 +5,7 @@
+     --md-sys-color-on-primary: #FFFFFF;
+     --md-sys-color-primary-container: #EADDFF;
+     --md-sys-color-on-primary-container: #21005D;
+-    --md-sys-color-primary-container-rgb: 234, 221, 255; /* For rgba usage */
++    --md-sys-color-primary-container-rgb: 234, 221, 255; 
+ 
+     --md-sys-color-surface: #FEF7FF; 
+     --md-sys-color-on-surface: #1D1B20;
+@@ -59,7 +59,7 @@ main {
+ 
+ h1, h2, h3 {
+     color: var(--md-sys-color-primary);
+-    margin-top: 0; /* Adjusted in .card section h2 specifically */
++    margin-top: 0; 
+ }
+ 
+ h1 {
+@@ -79,11 +79,11 @@ h3 {
+ }
+ 
+ p {
+-    margin-bottom: 1rem; /* Default p margin */
++    margin-bottom: 1rem; 
+     color: var(--md-sys-color-on-surface-variant);
+ }
+ 
+-/* Card Styling */
++
+ .card {
+     background-color: var(--md-sys-color-surface);
+     color: var(--md-sys-color-on-surface);
+@@ -94,11 +94,11 @@ p {
+     box-sizing: border-box;
+ }
+ 
+-/* Ensure sections inside cards don't add extra conflicting margins or padding */
++
+ .card section {
+     padding: 0;
+     margin: 0;
+-    border-bottom: none; /* Remove any borders from sections within cards */
++    border-bottom: none; 
+ }
+ .card section:last-child{
+     margin-bottom: 0;
+@@ -107,13 +107,13 @@ p {
+ 
+ 
+ .card section h2 {
+-    margin-top: 0; /* First element in section, no top margin */
+-    margin-bottom: 12px; /* Spacing below h2 in card */
+-    font-size: 1.5rem; /* Slightly smaller h2 for cards */
++    margin-top: 0; 
++    margin-bottom: 12px; 
++    font-size: 1.5rem; 
+ }
+ 
+ 
+-/* Button Styling */
++
+ button, input[type="button"] {
+     font-family: var(--md-ref-typeface-brand);
+     font-weight: 500;
+@@ -128,10 +128,10 @@ button, input[type="button"] {
+     text-align: center;
+     min-height: 40px;
+     box-sizing: border-box;
+-    margin: 5px; /* Retain some margin for spacing between adjacent buttons */
++    margin: 5px; 
+ }
+ 
+-/* Filled Button Style (Default for most buttons) */
++
+ button {
+     background-color: var(--md-sys-color-primary);
+     color: var(--md-sys-color-on-primary);
+@@ -151,7 +151,7 @@ button:disabled {
+     cursor: not-allowed;
+ }
+ 
+-#login-button { /* Specific prominent button */
++#login-button { 
+     font-size: 1rem;
+     padding: 12px 28px;
+ }
+@@ -166,12 +166,12 @@ button:disabled {
+     color: var(--md-sys-color-on-primary-container);
+ }
+ 
+-/* Input Field Styling */
++
+ input[type="text"], select {
+     font-family: var(--md-ref-typeface-plain);
+     font-size: 1rem;
+     color: var(--md-sys-color-on-surface);
+-    background-color: #F3EDF7; /* A light, slightly purplish tone */
++    background-color: #F3EDF7; 
+     padding: 12px 16px;
+     border: 1px solid var(--md-sys-color-outline);
+     border-radius: 8px;
+@@ -209,23 +209,23 @@ select:disabled {
+     cursor: not-allowed;
+ }
+ 
+-/* Specific widths for select and input if they were in original CSS and needed */
++
+ select#playlist-select {
+-    /* width: 70%; Let new global style of 100% take precedence or uncomment if really needed */
+-    /* max-width: 300px; */
++    
++    
+ }
+ 
+ input#guess-input {
+-    /* width: 60%; Let new global style of 100% take precedence or uncomment if really needed */
+-    /* max-width: 250px; */
++    
++    
+ }
+ 
+ 
+-/* UI Adjustments */
++
+ #game-controls,
+ #guess-area,
+ #skip-area {
+-    margin-bottom: 16px; /* Standardized margin */
++    margin-bottom: 16px; 
+     display: flex; 
+     align-items: center;
+     flex-wrap: wrap; 
+@@ -241,8 +241,8 @@ input#guess-input {
+ }
+ 
+ #guesses-remaining-display {
+-    margin-top: 16px; /* Standardized margin from previous styles */
+-    margin-bottom: 10px; /* Keep or standardize */
++    margin-top: 16px; 
++    margin-bottom: 10px; 
+     font-size: 0.9rem;
+     color: var(--md-sys-color-on-surface-variant);
+ }
+@@ -255,15 +255,15 @@ input#guess-input {
+ 
+ #results-section p {
+     margin-bottom: 0.5rem;
+-    color: var(--md-sys-color-on-surface-variant); /* Ensure text color consistency */
++    color: var(--md-sys-color-on-surface-variant); 
+ }
+ 
+ #results-section #spotify-link {
+     color: var(--md-sys-color-primary);
+     text-decoration: none;
+     font-weight: 500;
+-    display: inline-block; /* Ensure it behaves like a block for margin purposes */
+-    margin-top: 10px; /* Spacing from text above */
++    display: inline-block; 
++    margin-top: 10px; 
+ }
+ 
+ #results-section #spotify-link:hover {
+@@ -279,9 +279,9 @@ footer {
+     width: 100%;
+ }
+ 
+-/* Cleanup old section rules if not already handled by .card section */
++
+ section {
+-    margin-bottom: 0; /* Handled by card gap or specific margins like #feedback-message */
++    margin-bottom: 0; 
+     padding-bottom: 0;
+     border-bottom: none;
+ }
+@@ -290,90 +290,84 @@ section:last-child {
+     margin-bottom: 0;
+     padding-bottom: 0;
+ }
+-#playlist-section h2 { /* Ensure card specific h2 style takes precedence */
++#playlist-section h2 { 
+     margin-top: 0;
+ }
+-#results-section { /* Padding is handled by .card now */
++#results-section { 
+     padding:0;
+ }
+-#results-section h3 { /* Already styled above */
++#results-section h3 { 
+     margin-top: 0;
+ }
+-#results-section p { /* Already styled above */
+-    margin: 8px 0; /* Re-evaluate if this is needed after global p and card styles */
+-    margin-bottom: 0.5rem; /* Consistent with above */
++#results-section p { 
++    margin: 8px 0; 
++    margin-bottom: 0.5rem; 
+ }
+ 
+-/* Retain original #spotify-link if it's not a button, but text link. Updated above. */
++
+ #spotify-link {
+-    /* display: inline-block; (now in #results-section #spotify-link) */
+-    /* margin-top: 10px; (now in #results-section #spotify-link) */
+-    /* background-color: #555; (removed for text-style link) */
+-    /* color: white; (removed for text-style link) */
+-    /* text-decoration: none; (now in #results-section #spotify-link) */
+-    /* border-radius: 15px; (removed for text-style link) */
++    
++    
++    
++    
++    
++    
+ }
+ #spotify-link:hover {
+-    /* background-color: #333; (removed for text-style link) */
++    
+ }
+-/* Initial hide rules for sections are not needed here as JS handles display logic. */
+-/* Any #id[style*="display:none"] rules are redundant. */
+ 
+-/* Failed Guesses Display Area */
++
++
++
+ #failed-guesses-container {
+-    margin-top: 20px; /* Space above the container */
+-    padding: 16px; /* Padding inside the container */
+-    background-color: #F5F0FA; /* A very light, slightly muted purple, distinct from main cards */
++    margin-top: 20px; 
++    padding: 16px; 
++    background-color: #F5F0FA; 
+     border-radius: 8px;
+-    color: var(--md-sys-color-on-surface-variant); /* Text color for this area */
++    color: var(--md-sys-color-on-surface-variant); 
+ }
+ 
+ #failed-guesses-container h4 {
+-    margin-top: 0; /* Remove top margin for the heading inside the container */
+-    margin-bottom: 12px; /* Space below the heading */
+-    font-size: 1rem; /* Adjust size as needed */
+-    font-weight: 500; /* Medium weight */
+-    color: var(--md-sys-color-on-surface); /* Or primary color if you want it to stand out more */
++    margin-top: 0; 
++    margin-bottom: 12px; 
++    font-size: 1rem; 
++    font-weight: 500; 
++    color: var(--md-sys-color-on-surface); 
+ }
+ 
+ #failed-guesses-list {
+-    list-style-type: none; /* Remove default list bullets */
+-    padding-left: 0; /* Remove default padding */
+-    margin-bottom: 0; /* Remove bottom margin from the list itself */
++    list-style-type: none; 
++    padding-left: 0; 
++    margin-bottom: 0; 
+ }
+ 
+ #failed-guesses-list li {
+-    padding: 6px 0; /* Padding for each list item */
++    padding: 6px 0; 
+     font-size: 0.9rem;
+-    color: var(--md-sys-color-on-surface-variant); /* Match container text or make slightly less prominent */
+-    border-bottom: 1px solid var(--md-sys-color-outline, #CAC4D0); /* Separator line */
+-    /* Opacity for a more "ghosted" look for failed guesses:
+-    opacity: 0.85; */
++    color: var(--md-sys-color-on-surface-variant); 
++    border-bottom: 1px solid var(--md-sys-color-outline, #CAC4D0); 
++    
+ }
+ 
+ #failed-guesses-list li:last-child {
+-    border-bottom: none; /* No border for the last item */
++    border-bottom: none; 
+ }
+ 
+-/* Snippet Progress Display */
++
+ #snippet-progress-display {
+-    margin-top: 12px; /* Space above the progress display, adjust as needed */
+-    padding: 8px 0;   /* Some vertical padding, no horizontal needed if text-aligned */
+-    text-align: center; /* Center the time text */
+-    font-family: var(--md-ref-typeface-plain); /* Ensure consistent font */
+-    color: var(--md-sys-color-on-surface-variant); /* Use a secondary text color */
+-    font-size: 0.9rem; /* Slightly smaller than body text, but readable */
++    margin-top: 12px; 
++    padding: 8px 0;   
++    text-align: center; 
++    font-family: var(--md-ref-typeface-plain); 
++    color: var(--md-sys-color-on-surface-variant); 
++    font-size: 0.9rem; 
+ }
+ 
+ #snippet-progress-display span {
+-    /* Individual styling for the time elements if needed, e.g., font-weight */
+-    /* For now, inheriting from parent is fine */
++    
++    
+ }
+ 
+-/* Example: Make current time slightly more prominent if desired */
+-/*
+-#current-snippet-time {
+-    font-weight: 500; 
+-    color: var(--md-sys-color-on-surface);
+-}
+-*/
++
++
+diff --git a/index.md b/index.md
+deleted file mode 100644
+index 00ae103c..00000000
+--- a/index.md
++++ /dev/null
+@@ -1,54 +0,0 @@
+-# Web Technology Demos
+-
+-WebRTC and advanced media features tested here.
+-
+-## Available Test Pages:
+-
+-- ### [Spatial Audio Test Page](./spatial_audio.html)
+-
+-  - **Description:** Demonstrates playback of potentially spatialized MP4 video/audio files and includes a Web Audio API example for 3D positional audio (HRTF).
+-  - **Link:** [Go to Spatial Audio Test](./spatial_audio.html)
+-
+-- ### [Video Flip Test Page](./flip.html)
+-  - **Description:** Features live camera preview, video recording with selectable MIME types (MP4, WebM), a conceptual video flip effect via MediaStreamTrack Insertable Streams, and a user interface styled after WebRTC samples.
+-  - **Link:** [Go to Video flip Test](./flip.html)
+-
+-- ### [WebCodecs Opus Test](./opus.html)
+-  - **Description:** Tests the WebCodecs AudioEncoder and AudioDecoder with the Opus codec and a user-defined frame duration.
+-  - **Link:** [Go to WebCodecs Opus Test](./opus.html)
+-
+-- ### [VTTCue Timing Test](./vtt.html)
+-  - **Description:** A test page for dynamically injecting a VTTCue into a video track to observe its timing and event behavior.
+-  - **Link:** [Go to VTTCue Timing Test](./vtt.html)
+-
+-- ### [Audio Playback Test](./bitdepth.html)
+-  - **Description:** A simple tool to record a 5-second audio clip from a microphone and play it back to verify capture quality.
+-  - **Link:** [Go to Audio Playback Test](./bitdepth.html)
+-
+-
+-- ### [MSE Test Page](./mse.html)
+-  - **Description:** A test page for Media Source Extensions (MSE). It allows for testing of various media types by specifying the source URL and type as query parameters.
+-  - **Link:** [Go to MSE Test Page](./mse.html)
+-
+-- ### [Matroska Recording Test](./manual_test_matroska_recording.html)
+-  - **Description:** Verifies that `video/matroska` and `audio/matroska` MIME types produce valid, playable files using a generated content source.
+-  - **Link:** [Go to Matroska Recording Test](./manual_test_matroska_recording.html)
+-
+-- ### [Autoplay Test Page](./autoplay.html)
+-  - **Description:** Tests the browser's autoplay permissions for audio playback.
+-  - **Link:** [Go to Autoplay Test](./autoplay.html)
+-
+----
+-
+-## Personal Pages:
+-
+-These are pages also hosted on this Github site.
+-
+-- ### [Spotify Heardle](./heardle/index.html)
+-  - **Description:** Game where a Premium Spotify User can log in and play a song guessing game based on their playlists.
+-  - **Link:** [Go to Spotify Heardle](./heardle/index.html)
+-
+----
+-
+-_This site is built with Markdown and hosted on GitHub Pages._
+-_Last updated: November 2025_
+diff --git a/manual_test_matroska_recording.html b/manual_test_matroska_recording.html
+index f31ea90f..f047585c 100644
+--- a/manual_test_matroska_recording.html
++++ b/manual_test_matroska_recording.html
+@@ -3,14 +3,7 @@
+ <head>
+     <meta charset="UTF-8">
+     <title>Matroska Recording Test</title>
+-    <style>
+-        body { font-family: sans-serif; padding: 20px; max-width: 800px; margin: 0 auto; }
+-        .controls { margin-bottom: 20px; border: 1px solid #ccc; padding: 15px; border-radius: 5px; background: #f9f9f9; }
+-        canvas { border: 1px solid black; background: #fff; margin-bottom: 10px; }
+-        .recording-log { margin-top: 10px; font-weight: bold; }
+-        h3 { margin-top: 0; }
+-        .result-item { border-bottom: 1px solid #eee; padding-bottom: 15px; margin-bottom: 15px; }
+-    </style>
++    <link rel="stylesheet" href="styles.css">
+ </head>
+ <body>
+     <h1>Matroska Recording Verification</h1>
+@@ -64,24 +57,20 @@
+         let recorder;
+         let chunks = [];
+         let animationId;
+-        
+-        // --- 1. Animation & Audio Generation ---
++
+         let x = 0;
+         let speed = 2;
+         function draw() {
+             ctx.clearRect(0, 0, canvas.width, canvas.height);
+-            
+-            // Background
++
+             ctx.fillStyle = '#f0f0f0';
+             ctx.fillRect(0, 0, canvas.width, canvas.height);
+ 
+-            // Time stamp (proves video is moving/live)
+             ctx.fillStyle = 'black';
+             ctx.font = '16px monospace';
+             ctx.fillText("Time: " + new Date().toLocaleTimeString(), 10, 30);
+             ctx.fillText("Frame: " + requestAnimationFrame(() => {}), 10, 50);
+ 
+-            // Moving box
+             ctx.fillStyle = '#D32F2F';
+             ctx.fillRect(x, 100, 50, 50);
+             
+@@ -91,23 +80,20 @@
+             animationId = requestAnimationFrame(draw);
+         }
+ 
+-        btnStartSource.onclick = async () => {
+-            // Start Audio (Oscillator)
++            btnStartSource.onclick = async () => {
+             if (!audioCtx) {
+                 audioCtx = new AudioContext();
+                 dest = audioCtx.createMediaStreamDestination();
+                 oscillator = audioCtx.createOscillator();
+                 oscillator.type = 'sine';
+-                oscillator.frequency.setValueAtTime(440, audioCtx.currentTime); // A4 tone
++                oscillator.frequency.setValueAtTime(440, audioCtx.currentTime);
+                 oscillator.connect(dest);
+                 oscillator.start();
+             }
+ 
+-            // Start Video Animation
+             if (!animationId) draw();
+ 
+-            // Combine canvas video + web audio into one MediaStream
+-            const canvasStream = canvas.captureStream(30); // 30 FPS
++            const canvasStream = canvas.captureStream(30);
+             const audioTrack = dest.stream.getAudioTracks()[0];
+             
+             mediaStream = new MediaStream();
+@@ -121,16 +107,13 @@
+             statusDiv.style.color = 'green';
+         };
+ 
+-        // --- 2. Recording Logic ---
+         btnStartRecord.onclick = () => {
+             const mimeType = mimeSelect.value;
+             chunks = [];
+             
+             try {
+-                // Determine which tracks to use based on requested type
+                 let streamToRecord;
+                 if (mimeType.startsWith('audio/')) {
+-                    // Create a new stream with ONLY the audio track
+                     streamToRecord = new MediaStream([mediaStream.getAudioTracks()[0]]);
+                 } else {
+                     streamToRecord = mediaStream;
+@@ -156,8 +139,7 @@
+                     statusDiv.textContent = `Status: Finished. Last file size: ${sizeKB} KB.`;
+                     statusDiv.style.color = 'black';
+ 
+-                    // Create playback UI
+-                    if (playbackArea.querySelector('i')) playbackArea.innerHTML = ''; // Clear placeholder
++                    if (playbackArea.querySelector('i')) playbackArea.innerHTML = '';
+ 
+                     const container = document.createElement('div');
+                     container.className = 'result-item';
+@@ -174,8 +156,7 @@
+                     mediaEl.style.display = 'block';
+                     mediaEl.style.marginTop = '10px';
+                     
+-                    // Extension logic
+-                    let ext = 'mkv'; // Default for matroska
++                    let ext = 'mkv';
+                     if (mimeType.startsWith('audio/')) ext = 'mka';
+                     if (mimeType.includes('webm')) ext = 'webm';
+                     if (mimeType.includes('mp4')) ext = 'mp4';
+diff --git a/mse.html b/mse.html
+index ddf2f6ac..d5533fe9 100644
+--- a/mse.html
++++ b/mse.html
+@@ -6,28 +6,12 @@
+ 
+ </html>
+ 
+-<style>
+-table, th, td {
+-  border: 1px solid black;
+-  border-collapse: collapse;
+-}
+-
+-video {
+-  width: 1280;
+-  height: 720;
+-}
+-</style>
++<link rel="stylesheet" href="styles.css">
+ 
+ <script>
+-  var QueryString = function() {
+-    // Allows access to query parameters on the URL; e.g., given a URL like:
+-    //    http://<server>/my.html?test=123&bob=123
+-    // Parameters can then be accessed via QueryString.test or QueryString.bob.
++    var QueryString = function () {
+     var params = {};
+-    // RegEx to split out values by & || ;.
+     var r = /([^&;=]+)=?([^&;]*)/g;
+-    // Lambda function for decoding extracted match values. Replaces "+" with
+-    // space so decodeURIComponent functions properly.
+     function d(s) { return decodeURIComponent(s.replace(/\+/g, " ")); }
+     var match;
+     while (match = r.exec(window.location.search.substring(1)))
+@@ -90,9 +74,6 @@ video {
+           await updateend;
+         }
+ 
+-        // In practice a very large fetch still needs to be broken up into
+-        // smaller chunks and appending as time goes by to avoid overflowing
+-        // the sourceBuffer.
+         let updateend = updatePromise();
+         sourceBuffer.appendBuffer(value);
+         await updateend;
+@@ -116,7 +97,6 @@ video {
+     var types = document.querySelector("table");
+     types.innerHTML = typeHtml;
+ 
+-    // Generate Links
+     var linksHtml = "";
+     FILES.forEach(function(file) {
+       var label = file.label || file.name;
+diff --git a/opus.html b/opus.html
+index b3a009a7..347f270e 100644
+--- a/opus.html
++++ b/opus.html
+@@ -4,15 +4,8 @@
+     <meta charset="UTF-8">
+     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+     <title>WebCodecs Opus Audio Test</title>
+-    <!-- 1. Load Tailwind CSS -->
+     <script src="https://cdn.tailwindcss.com"></script>
+-    <style>
+-        /* 2. Use Inter font */
+-        body {
+-            font-family: 'Inter', sans-serif;
+-        }
+-        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;700&display=swap');
+-    </style>
++    <link rel="stylesheet" href="styles.css">
+ </head>
+ <body class="bg-gray-100 text-gray-900 flex items-center justify-center min-h-screen">
+ 
+@@ -20,7 +13,6 @@
+         <h1 class="text-3xl font-bold text-center text-blue-600">WebCodecs AudioEncoder/Decoder Test</h1>
+         <p class="text-center text-gray-600">Test Opus encoding with a custom frame duration.</p>
+ 
+-        <!-- 3. Controls -->
+         <div class="flex flex-col sm:flex-row gap-4 items-center justify-center">
+             <div class="flex-1 w-full">
+                 <label for="frameDuration" class="block text-sm font-medium text-gray-700 mb-1">Opus Frame Duration (μs)</label>
+@@ -31,12 +23,10 @@
+             <button id="stopButton" class="w-full sm:w-auto px-6 py-3 bg-red-600 text-white font-medium rounded-lg shadow-md hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-red-500 focus:ring-offset-2 transition-all duration-150" disabled>Stop Test</button>
+         </div>
+ 
+-        <!-- 4. Status -->
+         <div id="status" class="text-center font-medium text-gray-700 bg-gray-100 p-4 rounded-lg">
+             Click "Start Test" to begin.
+         </div>
+ 
+-        <!-- 5. Audio Players -->
+         <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+             <div class="bg-gray-50 p-4 rounded-lg shadow-inner">
+                 <h3 class="text-lg font-semibold mb-2">Original Audio (Live Mic)</h3>
+@@ -50,7 +40,6 @@
+     </div>
+ 
+     <script>
+-        // --- Globals ---
+         let mediaStream = null;
+         let audioContext = null;
+         let scriptNode = null;
+@@ -59,10 +48,9 @@
+         let audioDecoder = null;
+ 
+         let decodedFrames = [];
+-        let encoderSampleRate = 48000; // Default, will be updated
+-        let encoderChannelCount = 1; // Default, will be updated
++                let encoderSampleRate = 48000;
++                let encoderChannelCount = 1;
+ 
+-        // --- DOM Elements ---
+         const startButton = document.getElementById('startButton');
+         const stopButton = document.getElementById('stopButton');
+         const durationInput = document.getElementById('frameDuration');
+@@ -70,12 +58,9 @@
+         const originalPlayer = document.getElementById('originalPlayer');
+         const decodedPlayer = document.getElementById('decodedPlayer');
+ 
+-        // --- Event Listeners ---
+         startButton.addEventListener('click', startTest);
+         stopButton.addEventListener('click', stopTest);
+ 
+-        // --- Core Functions ---
+-
+         async function startTest() {
+             if (!window.AudioEncoder || !window.AudioDecoder) {
+                 updateStatus('Error: WebCodecs API not supported in this browser.', true);
+@@ -89,34 +74,28 @@
+             updateStatus('Requesting microphone permission...');
+ 
+             try {
+-                // 1. Get Microphone Stream
+                 mediaStream = await navigator.mediaDevices.getUserMedia({
+                     audio: {
+-                        sampleRate: 48000, // Request a common rate for Opus
++                        sampleRate: 48000,
+                         channelCount: 1,
+                     }
+                 });
+-                
+-                // 2. Play Original Audio
++
+                 originalPlayer.srcObject = mediaStream;
+                 originalPlayer.play();
+-                originalPlayer.muted = true; // Mute the <audio> element, we will play via Web Audio
++                originalPlayer.muted = true;
+ 
+                 updateStatus('Microphone connected. Initializing codecs...');
+ 
+-                // 3. Setup Web Audio Context
+                 audioContext = new AudioContext();
+                 encoderSampleRate = audioContext.sampleRate;
+                 mediaStreamSource = audioContext.createMediaStreamSource(mediaStream);
+-                
+-                // We use 1 input channel, 1 output channel
++
+                 encoderChannelCount = 1; 
+-                
+-                // Buffer size for ScriptProcessorNode (must be power of 2)
++
+                 const bufferSize = 4096; 
+                 scriptNode = audioContext.createScriptProcessor(bufferSize, encoderChannelCount, encoderChannelCount);
+-                
+-                // 4. Setup Codecs
++
+                 const frameDuration = parseInt(durationInput.value, 10);
+                 if (isNaN(frameDuration) || frameDuration <= 0) {
+                     updateStatus('Invalid frame duration.', true);
+@@ -126,18 +105,17 @@
+ 
+                 initEncoder(frameDuration);
+                 initDecoder();
+-                
+-                // 5. Connect Audio Graph
++
+                 scriptNode.onaudioprocess = handleAudioProcess;
+                 mediaStreamSource.connect(scriptNode);
+-                scriptNode.connect(audioContext.destination); // Play original audio live
++                scriptNode.connect(audioContext.destination);
+ 
+                 updateStatus(`Test started. Encoding with Opus frame duration: ${frameDuration}μs`, false);
+ 
+             } catch (err) {
+                 console.error('Error starting test:', err);
+                 updateStatus(`Error: ${err.message}`, true);
+-                stopButton.click(); // Run cleanup
++                stopButton.click();
+             }
+         }
+ 
+@@ -199,8 +177,6 @@
+                 numberOfChannels: encoderChannelCount,
+                 opus: {
+                     frameDuration: frameDuration, 
+-                    // complexity: 10, // Optional: 0-10, 10 is highest quality/complexity
+-                    // bitrate: 64000, // Optional: e.g., 64000 (64kbps)
+                 }
+             });
+         }
+@@ -224,33 +200,29 @@
+             const inputBuffer = event.inputBuffer;
+             const outputBuffer = event.outputBuffer;
+ 
+-            // Pass audio through for live playback
+             for (let channel = 0; channel < outputBuffer.numberOfChannels; channel++) {
+                 const inputData = inputBuffer.getChannelData(channel);
+                 const outputData = outputBuffer.getChannelData(channel);
+                 outputData.set(inputData);
+             }
+ 
+-            // --- Create AudioData ---
+-            // We must clone the data buffer because the ScriptProcessor reuses it
+             const inputData = inputBuffer.getChannelData(0);
+             const dataClone = inputData.buffer.slice(0);
+ 
+             const audioData = new AudioData({
+-                format: 'f32-planar', // 'f32-planar' is standard for Web Audio
++                format: 'f32-planar',
+                 sampleRate: inputBuffer.sampleRate,
+                 numberOfFrames: inputBuffer.length,
+                 numberOfChannels: inputBuffer.numberOfChannels,
+-                timestamp: event.playbackTime * 1_000_000, // timestamp in microseconds
++                timestamp: event.playbackTime * 1_000_000,
+                 data: dataClone
+             });
+ 
+             try {
+                 audioEncoder.encode(audioData);
+-                // audioData is now owned by the encoder, no need to close
+             } catch (err) {
+                 console.error('Encoding error:', err);
+-                audioData.close(); // Close it if encoding failed
++                audioData.close();
+             }
+         }
+         
+@@ -264,8 +236,7 @@
+             }
+         }
+ 
+-        function handleDecodedFrame(frame) {
+-            // We must clone the frame's data because the frame will be recycled
++                function handleDecodedFrame(frame) {
+             const buffer = new ArrayBuffer(frame.allocationSize({planeIndex: 0}));
+             frame.copyTo(buffer, {planeIndex: 0});
+             
+@@ -278,9 +249,7 @@
+             });
+             
+             frame.close();
+-        }
+-        
+-        // --- UI & Helpers ---
++            }
+ 
+         function updateStatus(message, isError = false) {
+             statusEl.textContent = message;
+@@ -333,18 +302,11 @@
+                 console.error('Error building WAV:', err);
+                 updateStatus(`Error building decoded audio: ${err.message}`, true);
+             }
+-            
+-            // Clear buffer
++
+             decodedFrames = [];
+         }
+ 
+ 
+-        /**
+-         * Converts an AudioBuffer to a WAV file (Blob).
+-         * @param {AudioBuffer} abuffer The AudioBuffer to convert.
+-         * @param {boolean} [asFloat=false] Whether to use 32-bit float (true) or 16-bit int (false).
+-         * @returns {Blob} A Blob representing the WAV file.
+-         */
+         function bufferToWave(abuffer, asFloat = false) {
+             let numOfChan = abuffer.numberOfChannels;
+             let length = abuffer.length * numOfChan * (asFloat ? 4 : 2) + 44;
+@@ -354,7 +316,6 @@
+             let offset = 0;
+             let pos = 0;
+ 
+-            // Helper function
+             let writeString = (s) => {
+                 for (i = 0; i < s.length; i++) {
+                     view.setUint8(pos++, s.charCodeAt(i));
+@@ -374,34 +335,29 @@
+                 }
+             };
+ 
+-            // RIFF chunk descriptor
+             writeString('RIFF');
+             view.setUint32(pos, 36 + abuffer.length * numOfChan * (asFloat ? 4 : 2), true); pos += 4;
+             writeString('WAVE');
+ 
+-            // FMT sub-chunk
+             writeString('fmt ');
+-            view.setUint32(pos, 16, true); pos += 4; // Subchunk1Size
+-            view.setUint16(pos, asFloat ? 3 : 1, true); pos += 2; // AudioFormat
+-            view.setUint16(pos, numOfChan, true); pos += 2; // NumChannels
+-            view.setUint32(pos, abuffer.sampleRate, true); pos += 4; // SampleRate
+-            view.setUint32(pos, abuffer.sampleRate * numOfChan * (asFloat ? 4 : 2), true); pos += 4; // ByteRate
+-            view.setUint16(pos, numOfChan * (asFloat ? 4 : 2), true); pos += 2; // BlockAlign
+-            view.setUint16(pos, (asFloat ? 32 : 16), true); pos += 2; // BitsPerSample
+-
+-            // DATA sub-chunk
++            view.setUint32(pos, 16, true); pos += 4;
++            view.setUint16(pos, asFloat ? 3 : 1, true); pos += 2;
++            view.setUint16(pos, numOfChan, true); pos += 2;
++            view.setUint32(pos, abuffer.sampleRate, true); pos += 4;
++            view.setUint32(pos, abuffer.sampleRate * numOfChan * (asFloat ? 4 : 2), true); pos += 4;
++            view.setUint16(pos, numOfChan * (asFloat ? 4 : 2), true); pos += 2;
++            view.setUint16(pos, (asFloat ? 32 : 16), true); pos += 2;
++
+             writeString('data');
+-            view.setUint32(pos, abuffer.length * numOfChan * (asFloat ? 4 : 2), true); pos += 4; // Subchunk2Size
++            view.setUint32(pos, abuffer.length * numOfChan * (asFloat ? 4 : 2), true); pos += 4;
+ 
+-            // Write audio data
+             for (i = 0; i < abuffer.numberOfChannels; i++) {
+                 channels.push(abuffer.getChannelData(i));
+             }
+ 
+             let dataWriter = asFloat ? writeFloat32 : floatTo16BitPCM;
+             offset = pos;
+-            
+-            // Interleave channels
++
+             for(i = 0; i < abuffer.length; i++) {
+                 for(let chan = 0; chan < numOfChan; chan++) {
+                     let sample = channels[chan][i];
+@@ -409,7 +365,6 @@
+                         view.setFloat32(offset, sample, true);
+                         offset += 4;
+                     } else {
+-                        // 16-bit PCM
+                         sample = Math.max(-1, Math.min(1, sample));
+                         view.setInt16(offset, sample < 0 ? sample * 0x8000 : sample * 0x7FFF, true);
+                         offset += 2;
+diff --git a/spatial_audio.html b/spatial_audio.html
+index d4ef1e99..9aa65080 100644
+--- a/spatial_audio.html
++++ b/spatial_audio.html
+@@ -4,59 +4,7 @@
+     <meta charset="UTF-8">
+     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+     <title>Spatial Audio & Video Demo</title>
+-    <style>
+-        body {
+-            font-family: sans-serif;
+-            line-height: 1.6;
+-            margin: 20px;
+-            background-color: #f4f4f4;
+-            color: #333;
+-        }
+-        .container {
+-            background-color: #fff;
+-            padding: 20px;
+-            border-radius: 8px;
+-            box-shadow: 0 0 10px rgba(0,0,0,0.1);
+-            margin-bottom: 20px;
+-        }
+-        h1, h2 {
+-            color: #1a1a1a;
+-        }
+-        button {
+-            background-color: #007bff;
+-            color: white;
+-            border: none;
+-            padding: 10px 15px;
+-            border-radius: 5px;
+-            cursor: pointer;
+-            font-size: 16px;
+-            margin-right: 10px;
+-        }
+-        button:hover {
+-            background-color: #0056b3;
+-        }
+-        button:disabled {
+-            background-color: #ccc;
+-            cursor: not-allowed;
+-        }
+-        video { /* Changed from audio to video */
+-            width: 100%;
+-            max-width: 640px; /* You can adjust this */
+-            height: auto;    /* Maintain aspect ratio */
+-            margin-top: 10px;
+-            background-color: #000; /* Background for letterboxing if any */
+-        }
+-        pre {
+-            background-color: #eee;
+-            padding: 10px;
+-            border-radius: 4px;
+-            overflow-x: auto;
+-        }
+-        .info {
+-            font-size: 0.9em;
+-            color: #555;
+-        }
+-    </style>
++    <link rel="stylesheet" href="styles.css">
+ </head>
+ <body>
+ 
+diff --git a/vtt.html b/vtt.html
+index 5cebcf32..c0a71eed 100644
+--- a/vtt.html
++++ b/vtt.html
+@@ -5,71 +5,48 @@
+     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+     <title>Dynamic VTTCue Timing Test</title>
+     <script src="https://cdn.tailwindcss.com"></script>
+-    <style>
+-        /* Custom font for a modern look */
+-        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap');
+-        body {
+-            font-family: 'Inter', sans-serif;
+-            background-color: #f7f7f7;
+-        }
+-    </style>
++    <link rel="stylesheet" href="styles.css">
+ </head>
+ <body class="p-4 sm:p-8 flex flex-col items-center min-h-screen">
+ 
+     <div class="max-w-4xl w-full bg-white shadow-xl rounded-xl p-6">
+         <h1 class="text-3xl font-bold text-gray-800 mb-6 text-center">Video Cue Injection Test</h1>
+ 
+-        <!-- Video Player -->
+         <div class="mb-8">
+-            <!--
+-            NOTE: This is a 10-second, license-free placeholder video file from a public source.
+-            It's exactly 10 seconds long to meet the "longer than 10 seconds" request's intent
+-            while providing a reliable test environment.
+-            -->
+             <video id="myVideo" controls autoplay muted
+                    class="w-full rounded-lg shadow-md bg-black"
+                    preload="metadata">
+                 <source src="http://commondatastorage.googleapis.com/gtv-videos-bucket/sample/BigBuckBunny.mp4" type="video/mp4">
+                 Your browser does not support the video tag.
+ 
+-                <!-- Metadata Text Track -->
+-                <!-- The track element is necessary for the JS API (track.track.addCue) to work -->
+                 <track id="cueTrack" label="Dynamic Cues" kind="metadata" srclang="en" default>
+             </video>
+         </div>
+ 
+         <h2 class="text-xl font-semibold text-gray-700 mb-3">Test Status Log:</h2>
+ 
+-        <!-- Log Container -->
+         <div id="log" class="bg-gray-100 p-4 rounded-lg h-48 overflow-y-auto border border-gray-300 text-sm">
+             <p class="text-gray-500">Waiting for video to start and reach 8 seconds...</p>
+         </div>
+     </div>
+ 
+     <script type="module">
+-        // --- Firebase Setup (Required Canvas Boilerplate) ---
+-        // This application does not use Firestore or Authentication, but the required
+-        // global variables are handled here per environment instructions.
+-        const appId = typeof __app_id !== 'undefined' ? __app_id : 'default-app-id';
+-        // const firebaseConfig = JSON.parse(typeof __firebase_config !== 'undefined' ? __firebase_config : '{}');
+-        const apiKey = "";
+-        // ---------------------------------------------------
++            const appId = typeof __app_id !== 'undefined' ? __app_id : 'default-app-id';
++            const apiKey = "";
+ 
+         const video = document.getElementById('myVideo');
+         const trackElement = document.getElementById('cueTrack');
+-        const track = trackElement.track; // Get the TextTrack object
++            const track = trackElement.track;
+         const logContainer = document.getElementById('log');
+ 
+         let cueAdded = false;
+ 
+-        // Log initial status
+         function logStatus(message, color = 'text-gray-700') {
+             const time = video.currentTime.toFixed(2);
+             logContainer.innerHTML += `<p class="${color}">[${time}s] ${message}</p>`;
+-            logContainer.scrollTop = logContainer.scrollHeight; // Scroll to bottom
++            logContainer.scrollTop = logContainer.scrollHeight;
+         }
+ 
+-        // 1. Start video playback automatically
+         video.addEventListener('loadedmetadata', () => {
+             logStatus("Video metadata loaded. Starting playback...", 'text-yellow-600');
+             video.play().catch(e => {
+@@ -78,7 +55,6 @@
+             });
+         });
+ 
+-        // 2. Main Logic: Wait for 8 seconds and add the cue
+         video.addEventListener('timeupdate', () => {
+             const currentTime = video.currentTime;
+ 
+@@ -88,10 +64,8 @@
+                 const start = 1;
+                 const end = 3;
+ 
+-                // Create the VTTCue
+                 const cue = new VTTCue(start, end, 'Problem Cue Added Late');
+ 
+-                // 3. Define onenter and onexit events
+                 cue.onenter = function() {
+                     const time = video.currentTime.toFixed(2);
+                     logStatus(`✅ CUE ENTERED at ${time}s! (Cue: ${start}-${end}s).`, 'text-green-600 font-semibold');
+@@ -102,7 +76,6 @@
+                     logStatus(`❌ CUE EXITED at ${time}s! (Cue: ${start}-${end}s).`, 'text-red-600 font-semibold');
+                 };
+ 
+-                // Add the cue to the track
+                 track.addCue(cue);
+ 
+                 logStatus(`--- Cue Injected! ---`, 'text-blue-600 font-bold');
+@@ -111,7 +84,6 @@
+                 logStatus(`Observation: The 'onenter' event for the 1-3s cue should NOT fire retroactively.`, 'text-blue-600 italic');
+             }
+ 
+-            // Optional: Show current time for debugging
+             if (Math.floor(currentTime) > Math.floor(video.currentTime - 0.1)) {
+                 logStatus(`Video Time: ${currentTime.toFixed(1)}s`, 'text-gray-400');
+             }
