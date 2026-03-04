@@ -2,3 +2,6 @@
 package-lock.json
 .DS_Store
 /src/.DS_Store
+/_site
+.jekyll-metadata
+.jekyll-cache/

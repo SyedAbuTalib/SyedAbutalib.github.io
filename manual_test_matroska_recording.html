@@ -3,14 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <title>Matroska Recording Test</title>
-    <style>
-        body { font-family: sans-serif; padding: 20px; max-width: 800px; margin: 0 auto; }
-        .controls { margin-bottom: 20px; border: 1px solid #ccc; padding: 15px; border-radius: 5px; background: #f9f9f9; }
-        canvas { border: 1px solid black; background: #fff; margin-bottom: 10px; }
-        .recording-log { margin-top: 10px; font-weight: bold; }
-        h3 { margin-top: 0; }
-        .result-item { border-bottom: 1px solid #eee; padding-bottom: 15px; margin-bottom: 15px; }
-    </style>
+    <link rel="stylesheet" href="styles.css">
 </head>
 <body>
     <h1>Matroska Recording Verification</h1>
@@ -64,24 +57,20 @@
         let recorder;
         let chunks = [];
         let animationId;
-        
-        // --- 1. Animation & Audio Generation ---
+
         let x = 0;
         let speed = 2;
         function draw() {
             ctx.clearRect(0, 0, canvas.width, canvas.height);
-            
-            // Background
+
             ctx.fillStyle = '#f0f0f0';
             ctx.fillRect(0, 0, canvas.width, canvas.height);
 
-            // Time stamp (proves video is moving/live)
             ctx.fillStyle = 'black';
             ctx.font = '16px monospace';
             ctx.fillText("Time: " + new Date().toLocaleTimeString(), 10, 30);
             ctx.fillText("Frame: " + requestAnimationFrame(() => {}), 10, 50);
 
-            // Moving box
             ctx.fillStyle = '#D32F2F';
             ctx.fillRect(x, 100, 50, 50);
             
@@ -91,23 +80,20 @@
             animationId = requestAnimationFrame(draw);
         }
 
-        btnStartSource.onclick = async () => {
-            // Start Audio (Oscillator)
+            btnStartSource.onclick = async () => {
             if (!audioCtx) {
                 audioCtx = new AudioContext();
                 dest = audioCtx.createMediaStreamDestination();
                 oscillator = audioCtx.createOscillator();
                 oscillator.type = 'sine';
-                oscillator.frequency.setValueAtTime(440, audioCtx.currentTime); // A4 tone
+                oscillator.frequency.setValueAtTime(440, audioCtx.currentTime);
                 oscillator.connect(dest);
                 oscillator.start();
             }
 
-            // Start Video Animation
             if (!animationId) draw();
 
-            // Combine canvas video + web audio into one MediaStream
-            const canvasStream = canvas.captureStream(30); // 30 FPS
+            const canvasStream = canvas.captureStream(30);
             const audioTrack = dest.stream.getAudioTracks()[0];
             
             mediaStream = new MediaStream();
@@ -121,16 +107,13 @@
             statusDiv.style.color = 'green';
         };
 
-        // --- 2. Recording Logic ---
         btnStartRecord.onclick = () => {
             const mimeType = mimeSelect.value;
             chunks = [];
             
             try {
-                // Determine which tracks to use based on requested type
                 let streamToRecord;
                 if (mimeType.startsWith('audio/')) {
-                    // Create a new stream with ONLY the audio track
                     streamToRecord = new MediaStream([mediaStream.getAudioTracks()[0]]);
                 } else {
                     streamToRecord = mediaStream;
@@ -156,8 +139,7 @@
                     statusDiv.textContent = `Status: Finished. Last file size: ${sizeKB} KB.`;
                     statusDiv.style.color = 'black';
 
-                    // Create playback UI
-                    if (playbackArea.querySelector('i')) playbackArea.innerHTML = ''; // Clear placeholder
+                    if (playbackArea.querySelector('i')) playbackArea.innerHTML = '';
 
                     const container = document.createElement('div');
                     container.className = 'result-item';
@@ -174,8 +156,7 @@
                     mediaEl.style.display = 'block';
                     mediaEl.style.marginTop = '10px';
                     
-                    // Extension logic
-                    let ext = 'mkv'; // Default for matroska
+                    let ext = 'mkv';
                     if (mimeType.startsWith('audio/')) ext = 'mka';
                     if (mimeType.includes('webm')) ext = 'webm';
                     if (mimeType.includes('mp4')) ext = 'mp4';

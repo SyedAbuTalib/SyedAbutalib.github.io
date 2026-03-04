@@ -4,55 +4,7 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Audio Capture Playback Test</title>
-    <style>
-      body {
-        font-family: sans-serif;
-        background-color: #f0f0f0;
-        color: #333;
-        max-width: 800px;
-        margin: 0 auto;
-        padding: 20px;
-      }
-      h1 {
-        color: #111;
-      }
-      #status {
-        padding: 10px;
-        border-radius: 5px;
-        margin: 10px 0;
-        font-weight: bold;
-      }
-      .success {
-        background-color: #d4edda;
-        color: #155724;
-      }
-      .error {
-        background-color: #f8d7da;
-        color: #721c24;
-      }
-      .info {
-        background-color: #e2e3e5;
-        color: #383d41;
-      }
-      button {
-        font-size: 1em;
-        padding: 10px 15px;
-        margin-right: 10px;
-        border-radius: 5px;
-        border: 1px solid #ccc;
-      }
-      button:disabled {
-        cursor: not-allowed;
-        opacity: 0.6;
-      }
-      #controls,
-      #results {
-        margin-top: 20px;
-      }
-      a {
-        color: #007bff;
-      }
-    </style>
+    <link rel="stylesheet" href="styles.css">
   </head>
   <body>
     <h1>Audio Capture Playback Test</h1>
@@ -150,7 +102,7 @@
 
         setTimeout(() => {
           stopRecordingAndGenerateWav();
-        }, 5000); // Record for 5 seconds
+        }, 5000);
       };
 
       function stopRecordingAndGenerateWav() {
@@ -162,7 +114,6 @@
           audioBuffers,
           audioBuffers.reduce((acc, buf) => acc + buf.length, 0)
         );
-        // Encode as 32-bit float WAV for highest fidelity playback
         const wavBlob = encodeWAV(fullBuffer, audioContext.sampleRate, 32);
 
         if (audioContext.state !== "closed") {
@@ -191,14 +142,11 @@
         return result;
       }
 
-      // --- WAV Encoding Functions ---
-
       function encodeWAV(samples, sampleRate, bitsPerSample) {
         const isFloat = bitsPerSample === 32;
         const bytesPerSample = bitsPerSample / 8;
         const numChannels = 1;
 
-        // Correctly calculate header size based on format
         const headerSize = isFloat ? 46 : 44;
 
         const buffer = new ArrayBuffer(headerSize + samples.length * bytesPerSample);
@@ -207,19 +155,17 @@
         const blockAlign = numChannels * bytesPerSample;
         const byteRate = sampleRate * blockAlign;
 
-        // RIFF header
         writeString(view, 0, "RIFF");
-        view.setUint32(4, (headerSize - 8) + samples.length * bytesPerSample, true); // File size - 8
+        view.setUint32(4, (headerSize - 8) + samples.length * bytesPerSample, true);
         writeString(view, 8, "WAVE");
 
-        // fmt sub-chunk
         writeString(view, 12, "fmt ");
         if (isFloat) {
-            view.setUint32(16, 18, true); // Sub-chunk size for float
-            view.setUint16(20, 3, true); // Audio format (3 = IEEE float)
+          view.setUint32(16, 18, true);
+          view.setUint16(20, 3, true);
         } else {
-            view.setUint32(16, 16, true); // Sub-chunk size for PCM
-            view.setUint16(20, 1, true); // Audio format (1 = PCM)
+          view.setUint32(16, 16, true);
+          view.setUint16(20, 1, true);
         }
         
         view.setUint16(22, numChannels, true);
@@ -228,14 +174,12 @@
         view.setUint16(32, blockAlign, true);
         view.setUint16(34, bitsPerSample, true);
         if (isFloat) {
-            view.setUint16(36, 0, true); // Extra size
+          view.setUint16(36, 0, true);
         }
 
-        // data sub-chunk
         writeString(view, isFloat ? 38 : 36, "data");
         view.setUint32(isFloat ? 42 : 40, samples.length * bytesPerSample, true);
 
-        // Write samples
         if (isFloat) {
             floatTo32BitPCM(view, headerSize, samples);
         } else if (bitsPerSample === 16) {
