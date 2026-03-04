@@ -30,8 +30,8 @@ This repository contains the source code for my personal website and a collectio
 - ### [MSE Test Page](./mse.html)
   - **Description:** Media Source Extensions (MSE) test page for various media types using source URL and type as query parameters.
 
-- ### [Matroska Recording Test](./manual_test_matroska_recording.html)
-  - **Description:** Verifies that `video/matroska` and `audio/matroska` MIME types produce valid files.
+- ### [Media Formats Test](./formats.html)
+  - **Description:** Verifies that the browser can successfully record and natively play back media formats (e.g., Matroska, QuickTime).
 
 - ### [Autoplay Test Page](./autoplay.html)
   - **Description:** Tests the browser's autoplay permissions for audio playback.
