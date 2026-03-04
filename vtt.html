@@ -4,18 +4,15 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Dynamic VTTCue Timing Test</title>
-    <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="styles.css">
 </head>
-<body class="p-4 sm:p-8 flex flex-col items-center min-h-screen">
+<body>
 
-    <div class="max-w-4xl w-full bg-white shadow-xl rounded-xl p-6">
-        <h1 class="text-3xl font-bold text-gray-800 mb-6 text-center">Video Cue Injection Test</h1>
+    <div class="container">
+        <h1 style="text-align: center;">Video Cue Injection Test</h1>
 
-        <div class="mb-8">
-            <video id="myVideo" controls autoplay muted
-                   class="w-full rounded-lg shadow-md bg-black"
-                   preload="metadata">
+        <div class="controls" style="text-align: center;">
+            <video id="myVideo" controls autoplay muted preload="metadata">
                 <source src="http://commondatastorage.googleapis.com/gtv-videos-bucket/sample/BigBuckBunny.mp4" type="video/mp4">
                 Your browser does not support the video tag.
 
@@ -23,10 +20,11 @@
             </video>
         </div>
 
-        <h2 class="text-xl font-semibold text-gray-700 mb-3">Test Status Log:</h2>
+        <h2>Test Status Log:</h2>
 
-        <div id="log" class="bg-gray-100 p-4 rounded-lg h-48 overflow-y-auto border border-gray-300 text-sm">
-            <p class="text-gray-500">Waiting for video to start and reach 8 seconds...</p>
+        <div id="log"
+            style="height: 200px; overflow-y: auto; background: #f9f9f9; border: 1px solid #ccc; padding: 10px; border-radius: 5px;">
+            <p class="info-text">Waiting for video to start and reach 8 seconds...</p>
         </div>
     </div>
 
@@ -41,9 +39,16 @@
 
         let cueAdded = false;
 
-        function logStatus(message, color = 'text-gray-700') {
+            function logStatus(message, colorClass = '') {
             const time = video.currentTime.toFixed(2);
-            logContainer.innerHTML += `<p class="${color}">[${time}s] ${message}</p>`;
+            let style = '';
+            if (colorClass.includes('text-red')) style = 'color: #d9534f; font-weight: bold;';
+            else if (colorClass.includes('text-yellow')) style = 'color: #f0ad4e; font-weight: bold;';
+            else if (colorClass.includes('text-green')) style = 'color: #5cb85c; font-weight: bold;';
+            else if (colorClass.includes('text-blue')) style = 'color: #0275d8;';
+            else if (colorClass.includes('text-gray-400')) style = 'color: #999; font-size: 0.9em;';
+
+            logContainer.innerHTML += `<p class="info-text" style="${style}">[${time}s] ${message}</p>`;
             logContainer.scrollTop = logContainer.scrollHeight;
         }
 
