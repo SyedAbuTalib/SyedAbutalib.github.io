@@ -2,97 +2,173 @@
 <html lang="en">
   <head>
     <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Spotify HeardleWordle</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>heardle — guess the song</title>
+    <meta
+      name="description"
+      content="A six-guess music game powered by your own Spotify playlists."
+    />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;700&family=Inter:wght@400;500;600&display=swap"
+      rel="stylesheet"
+    />
     <link rel="stylesheet" href="style.css" />
   </head>
   <body>
-    <header>
-      <h1>Spotify HeardleWordle</h1>
+    <div class="aurora" aria-hidden="true"></div>
+
+    <header class="brand">
+      <span class="brand-mark">heardle<span class="brand-dot">.</span></span>
+      <span class="brand-tag">six guesses · one song</span>
     </header>
 
-    <main>
-      <div class="card" id="auth-card">
-        <section id="auth-section">
-          <button id="login-button">Login with Spotify</button>
-        </section>
-      </div>
+    <main class="stage">
+      <section id="auth-section" class="panel panel--center">
+        <p class="eyebrow">Step one</p>
+        <h1 class="display">
+          Six chances.<br /><span class="accent">One song.</span>
+        </h1>
+        <p class="lede">
+          Sign in with Spotify, choose a playlist, and guess the track from
+          progressively longer snippets.
+        </p>
+        <button id="login-button" class="btn btn--primary btn--lg">
+          Connect Spotify
+        </button>
+        <p class="micro">Spotify Premium required for in-browser playback.</p>
+      </section>
 
-      <div class="card" id="playlist-card">
-        <section id="playlist-section" style="display: none">
-          <h2>Choose a Playlist</h2>
-          <select id="playlist-select" disabled></select>
-          <button id="start-game-button" disabled>
-            Start Game with this Playlist
-          </button>
-        </section>
-      </div>
-
-      <div class="card" id="game-card">
-        <section id="game-section" style="display: none">
-          <div id="game-controls">
-            <button id="play-snippet-button" disabled>Play Snippet</button>
-            <audio id="audio-player" style="display: none"></audio>
-            <div id="snippet-progress-display" style="display: none">
-              <span id="current-snippet-time">0:00</span> /
-              <span id="total-snippet-time">0:00</span>
-            </div>
+      <section id="playlist-section" class="panel" hidden>
+        <header class="panel-head">
+          <p class="eyebrow">Step two</p>
+          <h2 class="title">Pick your source</h2>
+        </header>
+        <label class="field" for="playlist-select">
+          <span class="field-label">Playlist</span>
+          <div class="select-wrap">
+            <select id="playlist-select" disabled>
+              <option value="">Loading your playlists…</option>
+            </select>
           </div>
+        </label>
+        <button id="start-game-button" class="btn btn--primary" disabled>
+          Start round
+        </button>
+      </section>
 
-          <div id="guess-area">
+      <section id="game-section" class="panel" hidden>
+        <header class="round-head">
+          <p class="eyebrow">Round in progress</p>
+          <p class="round-meta">
+            <span id="guesses-count">6</span> guesses left
+          </p>
+        </header>
+
+        <ol
+          id="segment-bar"
+          class="segments"
+          aria-label="Snippet length progression"
+        >
+          <li class="segment" data-index="0"><span>1s</span></li>
+          <li class="segment" data-index="1"><span>2s</span></li>
+          <li class="segment" data-index="2"><span>4s</span></li>
+          <li class="segment" data-index="3"><span>8s</span></li>
+          <li class="segment" data-index="4"><span>16s</span></li>
+          <li class="segment" data-index="5"><span>30s</span></li>
+        </ol>
+
+        <div class="player">
+          <button
+            id="play-snippet-button"
+            class="play-orb"
+            disabled
+            aria-label="Play snippet"
+          >
+            <svg viewBox="0 0 24 24" aria-hidden="true">
+              <path d="M8 5v14l11-7z" />
+            </svg>
+          </button>
+          <div id="snippet-progress-display" class="snippet-time" hidden>
+            <span id="current-snippet-time">0:00</span>
+            <span class="snippet-divider">/</span>
+            <span id="total-snippet-time">0:00</span>
+          </div>
+        </div>
+
+        <div class="guess-block">
+          <div class="typeahead">
             <input
               type="text"
               id="guess-input"
-              placeholder="Guess song or artist..."
+              class="guess-input"
+              placeholder="Type a song or artist…"
+              autocomplete="off"
+              spellcheck="false"
               disabled
-              list="song-suggestions"
             />
-            <datalist id="song-suggestions">
-              
-            </datalist>
-            <button id="submit-guess-button" disabled>Guess</button>
+            <div
+              id="suggestions-dropdown"
+              class="suggestions"
+              role="listbox"
+              hidden
+            ></div>
           </div>
-
-          <div id="skip-area">
-            <button id="skip-button" disabled>Skip (Counts as a guess)</button>
-          </div>
-
-          <div id="guesses-remaining-display">
-            Guesses remaining: <span id="guesses-count">6</span>
-            
-          </div>
-
-          <div id="feedback-message" aria-live="polite">
-            
-          </div>
-
-          <div id="failed-guesses-container" style="display: none">
-            <h4>Previous Guesses:</h4>
-            <ul id="failed-guesses-list">
-              
-            </ul>
-          </div>
-
-          <div id="results-section" style="display: none">
-            <h3 id="result-message"></h3>
-            
-            <p>The song was: <strong id="correct-song-title"></strong></p>
-            <p>By: <strong id="correct-artist-name"></strong></p>
-            <a id="spotify-link" href="#" target="_blank">Listen on Spotify</a>
-            <br /><br />
-            <button id="play-again-button">
-              Play Again with this Playlist
+          <div class="guess-actions">
+            <button id="submit-guess-button" class="btn btn--primary" disabled>
+              Guess
+            </button>
+            <button id="skip-button" class="btn btn--ghost" disabled>
+              Skip
             </button>
           </div>
-        </section>
-      </div>
+        </div>
+
+        <p id="feedback-message" class="feedback" aria-live="polite"></p>
+
+        <div id="failed-guesses-container" class="history" hidden>
+          <p class="eyebrow">Previous guesses</p>
+          <ul id="failed-guesses-list" class="history-list"></ul>
+        </div>
+
+        <div id="results-section" class="results" hidden>
+          <h3 id="result-message" class="result-headline"></h3>
+          <p class="result-line">
+            <span class="result-label">Track</span>
+            <strong id="correct-song-title"></strong>
+          </p>
+          <p class="result-line">
+            <span class="result-label">Artist</span>
+            <strong id="correct-artist-name"></strong>
+          </p>
+          <div class="result-actions">
+            <a
+              id="spotify-link"
+              class="btn btn--ghost"
+              href="#"
+              target="_blank"
+              rel="noopener"
+            >
+              Open in Spotify
+            </a>
+            <button id="play-again-button" class="btn btn--primary">
+              Another round
+            </button>
+          </div>
+        </div>
+      </section>
     </main>
 
-    <footer>
-      <p>Powered by Spotify</p>
-    </footer>
+    <footer class="foot">Built on the Spotify Web Playback SDK</footer>
 
-    
+    <div
+      id="toast-region"
+      class="toast-region"
+      role="status"
+      aria-live="polite"
+    ></div>
+
     <script src="https://sdk.scdn.co/spotify-player.js"></script>
     <script src="app.js"></script>
   </body>
