@@ -2,3 +2,10 @@ Eclipsa_V5_WithLogo_dialogue_loudness.mp4 filter=lfs diff=lfs merge=lfs -text
 *.mp4 filter=lfs diff=lfs merge=lfs -text
 *.wav filter=lfs diff=lfs merge=lfs -text
 autoplay.wav -filter -diff -merge -text
+assets/media/iamf_sine_500ms.mp4 -filter -diff -merge -text
+assets/media/iamf_syed_voice_audio_only.mp4 -filter -diff -merge -text
+assets/media/iamf_syed_video_and_audio.mp4 -filter -diff -merge -text
+assets/media/714_frag.mp4 -filter -diff -merge -text
+assets/media/iamf_alternating_sine_waves.mp4 -filter -diff -merge -text
+assets/media/iamf_video_testsrc.mp4 -filter -diff -merge -text
+
