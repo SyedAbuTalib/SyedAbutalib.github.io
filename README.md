@@ -38,6 +38,9 @@ This repository contains the source code for my personal website and a collectio
 - ### [Autoplay Test Page](./autoplay.html)
   - Tests the browser's autoplay permissions for audio playback.
 
+- ### [Multichannel Audio Verification Suite](./9ch.html)
+  - Verifies `decodeAudioData()`, Web Audio multichannel routing, and direct `<audio>` element playback with per-channel peak level meters.
+
 ## Personal Projects
 
 - ### [Spotify Heardle](./heardle/index.html)

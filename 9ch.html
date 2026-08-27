@@ -1,0 +1,468 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Chromium Multichannel Audio Verification Suite</title>
+  <style>
+    :root {
+      --primary: #1a73e8;
+      --surface: #ffffff;
+      --bg: #f8f9fa;
+      --border: #dadce0;
+      --text: #202124;
+      --text-muted: #5f6368;
+      --success: #1e8e3e;
+      --error: #d93025;
+    }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+      max-width: 960px;
+      margin: 32px auto;
+      padding: 0 20px;
+      background: var(--bg);
+      color: var(--text);
+      line-height: 1.5;
+    }
+
+    h1 {
+      font-size: 1.6rem;
+      color: var(--primary);
+      margin-bottom: 4px;
+    }
+
+    p.subtitle {
+      color: var(--text-muted);
+      font-size: 0.95rem;
+      margin-top: 0;
+    }
+
+    .callout {
+      background: #e8f0fe;
+      border-left: 4px solid var(--primary);
+      padding: 14px 18px;
+      border-radius: 4px;
+      margin: 20px 0;
+      font-size: 0.92rem;
+    }
+
+    .callout h4 {
+      margin: 0 0 6px 0;
+      color: #174ea6;
+      font-size: 1rem;
+    }
+
+    .callout ul {
+      margin: 6px 0 0 0;
+      padding-left: 20px;
+    }
+
+    .card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 18px 20px;
+      margin-bottom: 20px;
+      box-shadow: 0 1px 3px rgba(0, 0, 0, 0.04);
+    }
+
+    .card-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 12px;
+    }
+
+    .card-title {
+      font-size: 1.1rem;
+      font-weight: 600;
+    }
+
+    .badge {
+      background: #e8f0fe;
+      color: var(--primary);
+      padding: 4px 10px;
+      border-radius: 12px;
+      font-size: 0.82rem;
+      font-weight: 600;
+    }
+
+    .btn-group {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      margin: 12px 0;
+    }
+
+    button {
+      background: var(--primary);
+      color: white;
+      border: none;
+      padding: 8px 14px;
+      border-radius: 4px;
+      font-size: 0.88rem;
+      font-weight: 500;
+      cursor: pointer;
+      transition: background 0.15s;
+    }
+
+    button:hover {
+      background: #1557b0;
+    }
+
+    button.secondary {
+      background: #f1f3f4;
+      color: #3c4043;
+      border: 1px solid var(--border);
+    }
+
+    button.secondary:hover {
+      background: #e8eaed;
+    }
+
+    .media-player-row {
+      margin-top: 14px;
+      padding-top: 12px;
+      border-top: 1px solid #f1f3f4;
+    }
+
+    .media-player-row label {
+      display: block;
+      font-size: 0.85rem;
+      font-weight: 500;
+      color: var(--text-muted);
+      margin-bottom: 6px;
+    }
+
+    audio {
+      width: 100%;
+      height: 38px;
+    }
+
+    .meters-container {
+      display: flex;
+      gap: 4px;
+      margin: 12px 0 6px 0;
+      height: 24px;
+      background: #f1f3f4;
+      border-radius: 4px;
+      padding: 2px 4px;
+      align-items: center;
+    }
+
+    .meter-col {
+      flex: 1;
+      height: 100%;
+      background: #dadce0;
+      border-radius: 2px;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .meter-fill {
+      position: absolute;
+      bottom: 0;
+      left: 0;
+      right: 0;
+      background: var(--success);
+      height: 0%;
+      transition: height 0.2s;
+    }
+
+    .meter-labels {
+      display: flex;
+      gap: 4px;
+      font-size: 0.65rem;
+      color: var(--text-muted);
+      text-align: center;
+      margin-bottom: 8px;
+    }
+
+    .meter-labels span {
+      flex: 1;
+    }
+
+    .terminal {
+      background: #202124;
+      color: #e8eaed;
+      font-family: ui-monospace, Menlo, Monaco, Consolas, monospace;
+      font-size: 0.8rem;
+      padding: 10px 14px;
+      border-radius: 6px;
+      white-space: pre-wrap;
+      max-height: 100px;
+      overflow-y: auto;
+      margin-top: 8px;
+    }
+
+    .text-ok {
+      color: #81c995;
+      font-weight: 600;
+    }
+
+    .text-err {
+      color: #f28b82;
+      font-weight: 600;
+    }
+
+    .dropzone {
+      border: 2px dashed var(--border);
+      padding: 24px;
+      text-align: center;
+      border-radius: 8px;
+      background: white;
+      cursor: pointer;
+      margin-bottom: 24px;
+      color: var(--text-muted);
+    }
+
+    .dropzone:hover {
+      border-color: var(--primary);
+      background: #f8fbff;
+    }
+  </style>
+</head>
+
+<body>
+
+  <h1>Chromium Multichannel Audio Verification Suite</h1>
+  <p class="subtitle">Verifying <code>decodeAudioData()</code>, Web Audio multichannel routing, and direct
+    <code>&lt;audio&gt;</code> element playback.</p>
+
+  <div class="callout">
+    <h4>Why the original test was silent / reported 2 channels:</h4>
+    <ul>
+      <li><strong><code>MediaElementAudioSourceNode.channelCount</code> is 2 by W3C Spec:</strong> The
+        <code>channelCount</code> property on an <code>AudioNode</code> specifies how <em>inputs</em> to that node are
+        up/down-mixed. Because source nodes have 0 inputs,
+        <code>channelCount</code> defaults to 2 and has no effect on output channels. The actual channel count is found
+        via <code>decodeAudioData()</code> or by querying output pin connections.
+      </li>
+      <li><strong><code>createMediaElementSource()</code> detaches native speaker output:</strong> Calling
+        <code>createMediaElementSource(audio)</code> redirects audio away from standard browser playback into the Web
+        Audio graph. If the context is suspended (autoplay policy) or not
+        routed to <code>destination</code>, the player goes silent.</li>
+      <li><strong>Discrete Stereo Downmixing on macOS:</strong> For channel counts &gt; 6, the Web Audio spec mandates
+        discrete routing. Stereo headphones/speakers only receive channels 0 &amp; 1; channels 2+ are dropped unless
+        mixed down to stereo.</li>
+    </ul>
+  </div>
+
+  <div class="dropzone" id="dropzone">
+    <strong>Optional:</strong> Drag &amp; drop your own WAV / multi-channel audio file here, or <input type="file"
+      id="file-input" style="display:none"><a href="#" id="browse-link">browse</a> to test your custom assets.
+  </div>
+
+  <div id="cards-container"></div>
+
+  <script>
+    let sharedAudioCtx = null;
+
+    function getAudioContext() {
+      if (!sharedAudioCtx) {
+        sharedAudioCtx = new (window.AudioContext || window.webkitAudioContext)();
+      }
+      if (sharedAudioCtx.state === 'suspended') {
+        sharedAudioCtx.resume();
+      }
+      return sharedAudioCtx;
+    }
+
+    // Creates multi-channel 16-bit PCM WAV Blob with distinct frequencies per channel                                                                                                                                                                                                     
+    function generateMultichannelWav(numChannels, sampleRate = 48000, durationSec = 1.5) {
+      const numFrames = sampleRate * durationSec;
+      const bytesPerSample = 2;
+      const blockAlign = numChannels * bytesPerSample;
+      const byteRate = sampleRate * blockAlign;
+      const dataSize = numFrames * blockAlign;
+      const buffer = new ArrayBuffer(44 + dataSize);
+      const view = new DataView(buffer);
+
+      function writeStr(offset, str) {
+        for (let i = 0; i < str.length; i++) view.setUint8(offset + i, str.charCodeAt(i));
+      }
+
+      writeStr(0, 'RIFF');
+      view.setUint32(4, 36 + dataSize, true);
+      writeStr(8, 'WAVE');
+      writeStr(12, 'fmt ');
+      view.setUint32(16, 16, true);
+      view.setUint16(20, 1, true); // PCM                                                                                                                                                                                                                                                  
+      view.setUint16(22, numChannels, true);
+      view.setUint32(24, sampleRate, true);
+      view.setUint32(28, byteRate, true);
+      view.setUint16(32, blockAlign, true);
+      view.setUint16(34, 16, true); // 16-bit                                                                                                                                                                                                                                              
+      writeStr(36, 'data');
+      view.setUint32(40, dataSize, true);
+
+      let offset = 44;
+      for (let i = 0; i < numFrames; i++) {
+        for (let ch = 0; ch < numChannels; ch++) {
+          const freq = 220 + (ch * 110);
+          const sample = Math.sin((2 * Math.PI * freq * i) / sampleRate) * 0.6;
+          const intSample = Math.max(-32768, Math.min(32767, sample * 32767));
+          view.setInt16(offset, intSample, true);
+          offset += 2;
+        }
+      }
+      return new Blob([buffer], { type: 'audio/wav' });
+    }
+
+    const testSuites = [
+      { name: "2 Channels (Stereo)", channels: 2 },
+      { name: "10 Channels (5.1.4 Dolby Atmos Layout)", channels: 10 },
+      { name: "12 Channels (7.1.4 Dolby Atmos Layout)", channels: 12 },
+      { name: "16 Channels (Discrete Multichannel)", channels: 16 }
+    ];
+
+    const container = document.getElementById('cards-container');
+
+    function createTestCard(title, numChannels, blob) {
+      const blobUrl = URL.createObjectURL(blob);
+      const card = document.createElement('div');
+      card.className = 'card';
+
+      let meterCols = '';
+      let meterLabels = '';
+      for (let i = 0; i < numChannels; i++) {
+        meterCols += `<div class="meter-col"><div class="meter-fill" id="meter-${numChannels}-${i}"></div></div>`;
+        meterLabels += `<span>Ch${i}</span>`;
+      }
+
+      card.innerHTML = `                                                                                                                                                                                                                                                                   
+            <div class="card-header">                                                                                                                                                                                                                                                          
+              <div class="card-title">${title}</div>                                                                                                                                                                                                                                           
+              <span class="badge">${numChannels} Channels</span>                                                                                                                                                                                                                               
+            </div>                                                                                                                                                                                                                                                                             
+                                                                                                                                                                                                                                                                                               
+            <div class="btn-group">                                                                                                                                                                                                                                                            
+              <button id="decode-btn-${numChannels}">1. Verify decodeAudioData()</button>                                                                                                                                                                                                      
+              <button id="downmix-btn-${numChannels}" class="secondary">2. Play Stereo Downmix (Hear all channels)</button>                                                                                                                                                                    
+              <button id="discrete-btn-${numChannels}" class="secondary">3. Play Direct (Discrete Routing)</button>                                                                                                                                                                            
+            </div>                                                                                                                                                                                                                                                                             
+                                                                                                                                                                                                                                                                                               
+            <label style="font-size:0.75rem; font-weight:600; color:var(--text-muted); text-transform:uppercase;">Decoded Signal Levels per Channel:</label>                                                                                                                                   
+            <div class="meters-container">${meterCols}</div>                                                                                                                                                                                                                                   
+            <div class="meter-labels">${meterLabels}</div>                                                                                                                                                                                                                                     
+                                                                                                                                                                                                                                                                                               
+            <div class="media-player-row">                                                                                                                                                                                                                                                     
+              <label>Native Browser &lt;audio&gt; Player (Direct Media Pipeline, No Web Audio Hijack):</label>                                                                                                                                                                                 
+              <audio controls src="${blobUrl}"></audio>                                                                                                                                                                                                                                        
+            </div>                                                                                                                                                                                                                                                                             
+                                                                                                                                                                                                                                                                                               
+            <div class="terminal" id="term-${numChannels}">Ready. Click "1. Verify decodeAudioData()" to decode and measure.</div>                                                                                                                                                             
+          `;
+
+      container.appendChild(card);
+
+      let decodedAudioBuffer = null;
+      const term = card.querySelector(`#term-${numChannels}`);
+
+      // 1. decodeAudioData Verification                                                                                                                                                                                                                                                   
+      card.querySelector(`#decode-btn-${numChannels}`).addEventListener('click', async () => {
+        const ctx = getAudioContext();
+        try {
+          term.textContent = "Fetching and decoding buffer...";
+          const arrayBuffer = await blob.arrayBuffer();
+          decodedAudioBuffer = await ctx.decodeAudioData(arrayBuffer);
+
+          term.innerHTML = `<span class="text-ok">✔ decodeAudioData() SUCCEEDED:</span>\n` +
+            `• Channels decoded: ${decodedAudioBuffer.numberOfChannels} / ${numChannels}\n` +
+            `• Sample Rate: ${decodedAudioBuffer.sampleRate} Hz | Duration: ${decodedAudioBuffer.duration.toFixed(2)}s\n` +
+            `• Peak Amplitudes: Calculating...`;
+
+          // Calculate and render peak levels for all channels                                                                                                                                                                                                                             
+          for (let c = 0; c < decodedAudioBuffer.numberOfChannels; c++) {
+            const data = decodedAudioBuffer.getChannelData(c);
+            let peak = 0;
+            for (let i = 0; i < data.length; i++) {
+              const val = Math.abs(data[i]);
+              if (val > peak) peak = val;
+            }
+            const meter = card.querySelector(`#meter-${numChannels}-${c}`);
+            if (meter) meter.style.height = `${Math.min(100, peak * 100)}%`;
+          }
+          term.innerHTML = term.innerHTML.replace("Calculating...", "Levels rendered above.");
+        } catch (err) {
+          term.innerHTML = `<span class="text-err">✖ decodeAudioData() Failed:</span> ${err.message}`;
+        }
+      });
+
+      // 2. Play with Stereo Downmix                                                                                                                                                                                                                                                       
+      card.querySelector(`#downmix-btn-${numChannels}`).addEventListener('click', async () => {
+        const ctx = getAudioContext();
+        if (!decodedAudioBuffer) {
+          term.innerHTML = `<span class="text-err">Please run "1. Verify decodeAudioData()" first.</span>`;
+          return;
+        }
+
+        const stereo = ctx.createBuffer(2, decodedAudioBuffer.length, decodedAudioBuffer.sampleRate);
+        const L = stereo.getChannelData(0);
+        const R = stereo.getChannelData(1);
+
+        for (let c = 0; c < decodedAudioBuffer.numberOfChannels; c++) {
+          const chData = decodedAudioBuffer.getChannelData(c);
+          const dest = (c % 2 === 0) ? L : R;
+          for (let i = 0; i < decodedAudioBuffer.length; i++) {
+            dest[i] += chData[i] / (decodedAudioBuffer.numberOfChannels / 2);
+          }
+        }
+
+        const src = ctx.createBufferSource();
+        src.buffer = stereo;
+        src.connect(ctx.destination);
+        src.start();
+        term.textContent += `\n▶ Playing all ${numChannels} channels downmixed to stereo.`;
+      });
+
+      // 3. Play Direct (Discrete)                                                                                                                                                                                                                                                         
+      card.querySelector(`#discrete-btn-${numChannels}`).addEventListener('click', async () => {
+        const ctx = getAudioContext();
+        if (!decodedAudioBuffer) {
+          term.innerHTML = `<span class="text-err">Please run "1. Verify decodeAudioData()" first.</span>`;
+          return;
+        }
+
+        const src = ctx.createBufferSource();
+        src.buffer = decodedAudioBuffer;
+        src.connect(ctx.destination);
+        src.start();
+        term.textContent += `\n▶ Playing direct to destination (channels 0 & 1 routed to stereo speakers, 2+ dropped per spec).`;
+      });
+    }
+
+    // Initialize the default suite cards
+    testSuites.forEach(s => {
+      const blob = generateMultichannelWav(s.channels);
+      createTestCard(s.name, s.channels, blob);
+    });
+
+    // Custom File Drop Handling
+    const dropzone = document.getElementById('dropzone');
+    const fileInput = document.getElementById('file-input');
+    document.getElementById('browse-link').addEventListener('click', (e) => { e.preventDefault(); fileInput.click(); });
+
+    async function handleCustomFile(file) {
+      const ctx = getAudioContext();
+      try {
+        const arrayBuf = await file.arrayBuffer();
+        const decoded = await ctx.decodeAudioData(arrayBuf.slice(0));
+        createTestCard(`Uploaded: ${file.name}`, decoded.numberOfChannels, file);
+      } catch (err) {
+        alert("Failed to decode uploaded file: " + err.message);
+      }
+    }
+
+    fileInput.addEventListener('change', () => { if (fileInput.files[0]) handleCustomFile(fileInput.files[0]); });
+    dropzone.addEventListener('dragover', (e) => { e.preventDefault(); });
+    dropzone.addEventListener('drop', (e) => {
+      e.preventDefault();
+      if (e.dataTransfer.files[0]) handleCustomFile(e.dataTransfer.files[0]);
+    });
+  </script>
+</body>
+
+</html>
