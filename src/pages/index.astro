@@ -20,7 +20,7 @@ const t = useTranslations(locale);
 
 const posts = await getCollection("posts");
 const sortedPosts = getSortedPosts(posts);
-const featuredPosts = sortedPosts.filter(({ data }) => data.featured);
+// const featuredPosts = sortedPosts.filter(({ data }) => data.featured);
 const recentPosts = sortedPosts.filter(({ data }) => !data.featured);
 const homePath = getRelativeLocaleUrl(locale, "");
 ---
@@ -71,7 +71,7 @@ const homePath = getRelativeLocaleUrl(locale, "");
       }
     </section>
 
-    {
+    {/*
       featuredPosts.length > 0 && (
         <section
           id="featured"
@@ -90,7 +90,7 @@ const homePath = getRelativeLocaleUrl(locale, "");
           </ul>
         </section>
       )
-    }
+    */}
 
     {
       recentPosts.length > 0 && (
