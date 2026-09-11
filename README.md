@@ -1,61 +1,166 @@
+# AstroPaper 📄
+
+![AstroPaper](public/default-og.jpg)
+[![Figma](https://img.shields.io/badge/Figma-F24E1E?style=for-the-badge&logo=figma&logoColor=white)](https://www.figma.com/community/file/1356898632249991861)
+![Typescript](https://img.shields.io/badge/TypeScript-007ACC?style=for-the-badge&logo=typescript&logoColor=white)
+![GitHub](https://img.shields.io/github/license/satnaing/astro-paper?color=%232F3741&style=for-the-badge)
+[![Conventional Commits](https://img.shields.io/badge/Conventional%20Commits-1.0.0-%23FE5196?logo=conventionalcommits&logoColor=white&style=for-the-badge)](https://conventionalcommits.org)
+[![Commitizen friendly](https://img.shields.io/badge/commitizen-friendly-brightgreen.svg?style=for-the-badge)](http://commitizen.github.io/cz-cli/)
+
+AstroPaper is a minimal, responsive, accessible and SEO-friendly Astro blog theme. This theme is designed and crafted based on [my personal blog](https://satnaing.dev/blog).
+
+Read [the blog posts](https://astro-paper.pages.dev/posts/) or check [the README Documentation Section](#-documentation) for more info.
+
+## 🔥 Features
+
+- [x] type-safe markdown
+- [x] super fast performance
+- [x] accessible (Keyboard/VoiceOver)
+- [x] responsive (mobile ~ desktops)
+- [x] SEO-friendly
+- [x] light & dark mode
+- [x] static search ([Pagefind](https://pagefind.app/))
+- [x] draft posts & pagination
+- [x] sitemap & rss feed
+- [x] MDX support
+- [x] collapsible table of contents
+- [x] followed best practices
+- [x] highly customizable
+- [x] dynamic OG image generation for blog posts ([Blog Post](https://astro-paper.pages.dev/posts/dynamic-og-image-generation-in-astropaper-blog-posts/))
+- [x] i18n ready
+
+_Note: I've tested screen-reader accessibility of AstroPaper using **VoiceOver** on Mac and **TalkBack** on Android. I couldn't test all other screen-readers out there. However, accessibility enhancements in AstroPaper should be working fine on others as well._
+
+## ✅ Lighthouse Score
+
+<p align="center">
+  <a href="https://pagespeed.web.dev/report?url=https%3A%2F%2Fastro-paper.pages.dev%2F&form_factor=desktop">
+    <img width="710" alt="AstroPaper Lighthouse Score" src="AstroPaper-lighthouse-score.svg">
+  </a>
+</p>
+
+## 🚀 Project Structure
+
+Inside of AstroPaper, you'll see the following folders and files:
+
+```bash
+/
+├── public/
+│   ├── pagefind/          # auto-generated on build
+│   ├── favicon.svg
+│   └── default-og.jpg
+├── src/
+│   ├── assets/
+│   │   ├── icons/
+│   │   └── images/
+│   ├── components/
+│   ├── content/
+│   │   ├── pages/
+│   │   │   └── about.md
+│   │   └── posts/
+│   │       └── some-blog-posts.md
+│   ├── i18n/
+│   ├── layouts/
+│   ├── pages/
+│   ├── scripts/
+│   ├── styles/
+│   ├── types/
+│   ├── utils/
+│   ├── config.ts
+│   └── content.config.ts
+├── astro-paper.config.ts  # user-defined configurations
+└── astro.config.ts
+```
+
+All blog posts are stored in the `src/content/posts/` directory. You can organise posts into subdirectories — the subdirectory name becomes part of the post URL.
+
+## 📖 Documentation
+
+Documentation can be read in two formats\_ _markdown_ & _blog post_.
+
+- Configuration - [markdown](src/content/posts/how-to-configure-astropaper-theme.md) | [blog post](https://astro-paper.pages.dev/posts/how-to-configure-astropaper-theme/)
+- Add Posts - [markdown](src/content/posts/adding-new-post.md) | [blog post](https://astro-paper.pages.dev/posts/adding-new-posts-in-astropaper-theme/)
+- Customize Color Schemes - [markdown](src/content/posts/customizing-astropaper-theme-color-schemes.md) | [blog post](https://astro-paper.pages.dev/posts/customizing-astropaper-theme-color-schemes/)
+- Predefined Color Schemes - [markdown](src/content/posts/predefined-color-schemes.md) | [blog post](https://astro-paper.pages.dev/posts/predefined-color-schemes/)
+
+## 💻 Tech Stack
+
+**Main Framework** - [Astro](https://astro.build/)  
+**Type Checking** - [TypeScript](https://www.typescriptlang.org/)  
+**Styling** - [TailwindCSS](https://tailwindcss.com/)  
+**UI/UX** - [Figma Design File](https://www.figma.com/community/file/1356898632249991861)  
+**Static Search** - [Pagefind](https://pagefind.app/)  
+**Icons** - [Tablers](https://tabler-icons.io/)  
+**Code Formatting** - [Prettier](https://prettier.io/)  
+**Deployment** - [Cloudflare Pages](https://pages.cloudflare.com/)  
+**Linting** - [ESLint](https://eslint.org)  
+**Dynamic OG images** - [Satori](https://github.com/vercel/satori) + [Sharp](https://sharp.pixelplumbing.com/) + [Astro Fonts](https://docs.astro.build/en/guides/fonts/)
+
+## 👨🏻‍💻 Running Locally
+
+You can start using this project locally by running the following command in your desired directory:
+
+```bash
+# pnpm
+pnpm create astro@latest --template satnaing/astro-paper
+
+# npm
+npm create astro@latest -- --template satnaing/astro-paper
+
+# yarn
+yarn create astro --template satnaing/astro-paper
+
+# bun
+bun create astro@latest -- --template satnaing/astro-paper
+```
+
+Then start the project by running the following commands:
+
+```bash
+# install dependencies if you haven't done so in the previous step.
+pnpm install
+
+# start running the project
+pnpm dev
+```
+
+## Google Site Verification (optional)
+
+You can add your [Google Site Verification HTML tag](https://support.google.com/webmasters/answer/9008080#meta_tag_verification&zippy=%2Chtml-tag) by setting `site.googleVerification` in `astro-paper.config.ts`:
+
+```ts file="astro-paper.config.ts"
+export default defineAstroPaperConfig({
+  site: {
+    // ...
+    googleVerification: "your-google-site-verification-value",
+  },
+  // ...
+});
+```
+
+> See [this discussion](https://github.com/satnaing/astro-paper/discussions/334#discussioncomment-10139247) for adding AstroPaper to the Google Search Console.
+
+## 🧞 Commands
+
+All commands are run from the root of the project, from a terminal:
+
+| Command          | Action                                                                                                                           |
+| :--------------- | :------------------------------------------------------------------------------------------------------------------------------- |
+| `pnpm install`   | Installs dependencies                                                                                                            |
+| `pnpm dev`       | Starts local dev server at `localhost:4321`                                                                                      |
+| `pnpm build`     | Type-checks, builds the site, runs Pagefind indexing, and copies the index to `public/pagefind/`                                 |
+| `pnpm preview`   | Preview your build locally, before deploying                                                                                     |
+| `pnpm sync`      | Generates TypeScript types for all Astro modules. [Learn more](https://docs.astro.build/en/reference/cli-reference/#astro-sync). |
+| `pnpm astro ...` | Run CLI commands like `astro add`, `astro check`                                                                                 |
+
+## ✨ Feedback & Suggestions
+
+If you have any suggestions/feedback, you can contact me via [my email](mailto:satnaingdev+astropaper@gmail.com). Alternatively, feel free to open an issue if you find bugs or want to request new features.
+
+## 📜 License
+
+Licensed under the MIT License, Copyright © 2026
+
 ---
-layout: default
-title: Web Technology Demos
-permalink: /
----
 
-<a href="https://github.com/SyedAbuTalib/SyedAbutalib.github.io" class="github-corner" aria-label="View source on GitHub"><svg width="80" height="80" viewBox="0 0 250 250" style="fill:#267CB9; color:#fff; position: absolute; top: 0; border: 0; right: 0; z-index: 1001;" aria-hidden="true"><path d="M0,0 L115,115 L130,115 L142,142 L250,250 L250,0 Z"/><path d="M128.3,109.0 C113.8,99.7 119.0,89.6 119.0,89.6 C122.0,82.7 120.5,78.6 120.5,78.6 C119.2,72.0 123.4,76.3 123.4,76.3 C127.3,80.9 125.5,87.3 125.5,87.3 C122.9,97.6 130.6,101.9 134.4,103.2" fill="currentColor" style="transform-origin: 130px 106px;" class="octo-arm"/><path d="M115.0,115.0 C114.9,115.1 118.7,116.5 119.8,115.4 L133.7,101.6 C136.9,99.2 139.9,98.4 142.2,98.6 C133.8,88.0 127.5,74.4 143.8,58.0 C148.5,53.4 154.0,51.2 159.7,51.0 C160.3,49.4 163.2,43.6 171.4,40.1 C171.4,40.1 176.1,42.5 178.8,56.2 C183.1,58.6 187.2,61.8 190.9,65.4 C194.5,69.0 197.7,73.2 200.1,77.6 C213.8,80.2 216.3,84.9 216.3,84.9 C212.7,93.1 206.9,96.0 205.4,96.6 C205.1,102.4 203.0,107.8 198.3,112.5 C181.9,128.9 168.3,122.5 157.7,114.1 C157.9,116.9 156.7,120.9 152.7,124.9 L141.0,136.5 C139.8,137.7 141.6,141.9 141.8,141.8 Z" fill="currentColor" class="octo-body"/></svg></a><style>.github-corner:hover .octo-arm{animation:octocat-wave 560ms ease-in-out}@keyframes octocat-wave{0%,100%{transform:rotate(0)}20%,60%{transform:rotate(-25deg)}40%,80%{transform:rotate(10deg)}}@media (max-width:500px){.github-corner:hover .octo-arm{animation:none}.github-corner .octo-arm{animation:octocat-wave 560ms ease-in-out}}</style>
-
-# Web Technology Demos
-
-This repository contains the source code for my personal website and a collection of web technology demos.
-
-[**Visit the live website**](https://syedabutalib.github.io/)
-
-## Available Test Pages:
-
-- ### [Spatial Audio Test Page](./spatial_audio.html)
-  - Demonstrates playback of potentially spatialized MP4 video/audio files and includes a Web Audio API example for 3D positional audio.
-
-- ### [Video Flip Test Page](./flip.html)
-  - Features live camera preview, video recording with selectable MIME types, a conceptual video flip effect.
-
-- ### [WebCodecs Opus Test](./opus.html)
-  - Tests the WebCodecs AudioEncoder and AudioDecoder with the Opus codec and a user-defined frame duration.
-
-- ### [VTTCue Timing Test](./vtt.html)
-  - Dynamically injecting a VTTCue into a video track to observe its timing and event behavior.
-
-- ### [Audio Playback Test](./bitdepth.html)
-  - Record a 5-second audio clip from a microphone and play it back to verify capture quality.
-
-- ### [MSE Test Page](./mse.html)
-  - Media Source Extensions (MSE) test page for various media types using source URL and type as query parameters.
-
-- ### [Media Formats Test](./formats.html)
-  - Verifies that the browser can successfully record and natively play back media formats (e.g., Matroska, QuickTime).
-
-- ### [Autoplay Test Page](./autoplay.html)
-  - Tests the browser's autoplay permissions for audio playback.
-
-- ### [Multichannel Audio Verification Suite](./9ch.html)
-  - Verifies `decodeAudioData()`, Web Audio multichannel routing, and direct `<audio>` element playback with per-channel peak level meters.
-
-## Personal Projects
-
-- ### [Spotify Heardle](./heardle/index.html)
-  - Game where a Premium Spotify User can log in and play a song guessing game based on their playlists.
-
-- ### [IAMF Web Studio](https://syedabutalib.github.io/iamf-web-studio/)
-  - A specialized web-based studio for creating, editing, and previewing Immersive Audio Model and Formats (IAMF) content.
-
-## Technologies Used
-
-- HTML5 / CSS3 / JavaScript
-- WebRTC & Web Audio API
-- Media Source Extensions & WebCodecs
-- Jekyll & GitHub Pages
-
----
-
-_This site is built with Markdown and hosted on GitHub Pages._
+Made with 🤍 by [Sat Naing](https://satnaing.dev) 👨🏻‍💻 and [contributors](https://github.com/satnaing/astro-paper/graphs/contributors).

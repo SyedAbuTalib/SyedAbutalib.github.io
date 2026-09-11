@@ -1,0 +1,103 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dynamic VTTCue Timing Test</title>
+    <link rel="stylesheet" href="jekyll.css">
+</head>
+<body>
+
+    <div class="container">
+        <h1 style="text-align: center;">Video Cue Injection Test</h1>
+
+        <div class="controls" style="text-align: center;">
+            <video id="myVideo" controls autoplay muted preload="metadata">
+                <source src="http://commondatastorage.googleapis.com/gtv-videos-bucket/sample/BigBuckBunny.mp4" type="video/mp4">
+                Your browser does not support the video tag.
+
+                <track id="cueTrack" label="Dynamic Cues" kind="metadata" srclang="en" default>
+            </video>
+        </div>
+
+        <h2>Test Status Log:</h2>
+
+        <div id="log"
+            style="height: 200px; overflow-y: auto; background: #f9f9f9; border: 1px solid #ccc; padding: 10px; border-radius: 5px;">
+            <p class="info-text">Waiting for video to start and reach 8 seconds...</p>
+        </div>
+    </div>
+
+    <script type="module">
+            const appId = typeof __app_id !== 'undefined' ? __app_id : 'default-app-id';
+            const apiKey = "";
+
+        const video = document.getElementById('myVideo');
+        const trackElement = document.getElementById('cueTrack');
+            const track = trackElement.track;
+        const logContainer = document.getElementById('log');
+
+        let cueAdded = false;
+
+            function logStatus(message, colorClass = '') {
+            const time = video.currentTime.toFixed(2);
+            let style = '';
+            if (colorClass.includes('text-red')) style = 'color: #d9534f; font-weight: bold;';
+            else if (colorClass.includes('text-yellow')) style = 'color: #f0ad4e; font-weight: bold;';
+            else if (colorClass.includes('text-green')) style = 'color: #5cb85c; font-weight: bold;';
+            else if (colorClass.includes('text-blue')) style = 'color: #0275d8;';
+            else if (colorClass.includes('text-gray-400')) style = 'color: #999; font-size: 0.9em;';
+
+            logContainer.innerHTML += `<p class="info-text" style="${style}">[${time}s] ${message}</p>`;
+            logContainer.scrollTop = logContainer.scrollHeight;
+        }
+
+        video.addEventListener('loadedmetadata', () => {
+            logStatus("Video metadata loaded. Starting playback...", 'text-yellow-600');
+            video.play().catch(e => {
+                logStatus(`Playback failed (browser security usually requires user interaction): ${e.message}`, 'text-red-700 font-bold');
+                logStatus("Please press the play button manually.", 'text-red-700 font-bold');
+            });
+        });
+
+        video.addEventListener('timeupdate', () => {
+            const currentTime = video.currentTime;
+
+            if (currentTime >= 8 && !cueAdded) {
+                cueAdded = true;
+
+                const start = 1;
+                const end = 3;
+
+                const cue = new VTTCue(start, end, 'Problem Cue Added Late');
+
+                cue.onenter = function() {
+                    const time = video.currentTime.toFixed(2);
+                    logStatus(`✅ CUE ENTERED at ${time}s! (Cue: ${start}-${end}s).`, 'text-green-600 font-semibold');
+                };
+
+                cue.onexit = function() {
+                    const time = video.currentTime.toFixed(2);
+                    logStatus(`❌ CUE EXITED at ${time}s! (Cue: ${start}-${end}s).`, 'text-red-600 font-semibold');
+                };
+
+                track.addCue(cue);
+
+                logStatus(`--- Cue Injected! ---`, 'text-blue-600 font-bold');
+                logStatus(`Current time: ${currentTime.toFixed(2)}s.`, 'text-blue-600');
+                logStatus(`Injected Cue range: ${start}s to ${end}s.`, 'text-blue-600');
+                logStatus(`Observation: The 'onenter' event for the 1-3s cue should NOT fire retroactively.`, 'text-blue-600 italic');
+            }
+
+            if (Math.floor(currentTime) > Math.floor(video.currentTime - 0.1)) {
+                logStatus(`Video Time: ${currentTime.toFixed(1)}s`, 'text-gray-400');
+            }
+        });
+
+        video.addEventListener('ended', () => {
+            logStatus("Video playback ended.", 'text-gray-700');
+        });
+
+    </script>
+</body>
+</html>
