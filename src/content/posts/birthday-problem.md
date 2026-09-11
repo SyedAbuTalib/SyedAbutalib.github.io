@@ -1,7 +1,8 @@
 ---
 title: "The birthday problem, in code"
 description: "There's a 50/50 chance two people in a room of 23 share a birthday. Walking through why, with Ruby and a little algebra."
-pubDatetime: 2026-09-11T00:00:00Z
+pubDatetime: 2020-05-02T07:59:04Z
+modDatetime: 2026-09-11T13:00:00Z
 tags:
   - ruby
   - probability
