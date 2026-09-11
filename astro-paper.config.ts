@@ -4,7 +4,8 @@ export default defineAstroPaperConfig({
   site: {
     url: "https://syedabutalib.github.io/",
     title: "Sydward's blog",
-    description: "Astro blog for testing purposes.",
+    description:
+      "Personal website, engineering blog, and web technology & audio demos.",
     author: "Syed AbuTalib",
     profile: "https://syedabutalib.github.io/",
     ogImage: "default-og.jpg",
