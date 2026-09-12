@@ -24,8 +24,7 @@ export default defineAstroPaperConfig({
     showArchives: true,
     showBackButton: true,
     editPost: {
-      enabled: true,
-      url: "https://github.com/SyedAbuTalib/SyedAbutalib.github.io/edit/master/",
+      enabled: false,
     },
     search: "pagefind",
   },
