@@ -37,7 +37,7 @@ export const demos: Demo[] = [
   },
   {
     title: "MSE Test Page",
-    href: "/mse.html",
+    href: "/mse/",
     description:
       "Media Source Extensions (MSE) test page for various media types using source URL and type as query parameters.",
   },
