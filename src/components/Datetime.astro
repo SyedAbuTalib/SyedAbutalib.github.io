@@ -56,7 +56,8 @@ const modDate = modDateObj?.format("D MMM, YYYY");
   {
     isModified && (
       <span class:list={["text-sm italic", { "sm:text-base": size === "lg" }]}>
-        ({t.post.updatedAt}: <time datetime={modDateObj!.toISOString()}>{modDate}</time>)
+        ({t.post.updatedAt}:{" "}
+        <time datetime={modDateObj!.toISOString()}>{modDate}</time>)
       </span>
     )
   }

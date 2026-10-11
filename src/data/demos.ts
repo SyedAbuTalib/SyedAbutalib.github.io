@@ -50,8 +50,7 @@ export const demos: Demo[] = [
   {
     title: "Autoplay Test Page",
     href: "/autoplay.html",
-    description:
-      "Tests the browser's autoplay permissions for audio playback.",
+    description: "Tests the browser's autoplay permissions for audio playback.",
   },
   {
     title: "Multichannel Audio Verification Suite",

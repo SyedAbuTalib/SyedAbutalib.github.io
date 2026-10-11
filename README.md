@@ -15,7 +15,7 @@ A collection of browser media, audio, and video test pages:
 - **[WebCodecs Opus Test](https://syedabutalib.github.io/opus.html)** — Tests WebCodecs `AudioEncoder` and `AudioDecoder` with the Opus codec and user-defined frame duration.
 - **[VTTCue Timing Test](https://syedabutalib.github.io/vtt.html)** — Dynamically injects a VTTCue into a video track to observe timing and event behavior.
 - **[Audio Playback Test](https://syedabutalib.github.io/bitdepth.html)** — Records a 5-second audio clip from a microphone and plays it back to verify capture quality.
-- **[MSE Test Page](https://syedabutalib.github.io/mse.html)** — Media Source Extensions (MSE) test page for various media types using source URL and type as query parameters.
+- **[MSE Test Page](https://syedabutalib.github.io/mse/)** — Media Source Extensions (MSE) test page for various media types using source URL and type as query parameters.
 - **[Media Formats Test](https://syedabutalib.github.io/formats.html)** — Verifies that the browser can successfully record and natively play back media formats (e.g., Matroska, QuickTime).
 - **[Autoplay Test Page](https://syedabutalib.github.io/autoplay.html)** — Tests the browser's autoplay permissions for audio playback.
 - **[Multichannel Audio Verification Suite](https://syedabutalib.github.io/9ch.html)** — Verifies `decodeAudioData()`, Web Audio multichannel routing, and direct `<audio>` element playback with per-channel peak level meters.

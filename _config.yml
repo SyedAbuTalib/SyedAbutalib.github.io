@@ -1,6 +1,0 @@
-title: Syed AbuTalib
-description: A collection of web technology demos. Please report any issues on the GitHub repository.
-theme: jekyll-theme-minimal
-plugins:
-  - jekyll-sitemap
-  - jekyll-readme-index

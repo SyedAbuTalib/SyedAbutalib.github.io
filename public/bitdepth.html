@@ -1,10 +1,10 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en">
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Audio Capture Playback Test</title>
-    <link rel="stylesheet" href="jekyll.css">
+    <link rel="stylesheet" href="jekyll.css" />
   </head>
   <body>
     <h1>Audio Capture Playback Test</h1>
@@ -26,7 +26,9 @@
       <audio id="audioPlayback" controls></audio>
       <br />
       <a id="downloadLink">Download WAV file</a>
-      <p>You can optionally download the recorded clip to analyze it further.</p>
+      <p>
+        You can optionally download the recorded clip to analyze it further.
+      </p>
     </div>
 
     <script>
@@ -91,9 +93,8 @@
 
         scriptNode = audioContext.createScriptProcessor(4096, 1, 1);
 
-        scriptNode.onaudioprocess = (audioProcessingEvent) => {
-          const inputData =
-            audioProcessingEvent.inputBuffer.getChannelData(0);
+        scriptNode.onaudioprocess = audioProcessingEvent => {
+          const inputData = audioProcessingEvent.inputBuffer.getChannelData(0);
           audioBuffers.push(new Float32Array(inputData));
         };
 
@@ -149,14 +150,20 @@
 
         const headerSize = isFloat ? 46 : 44;
 
-        const buffer = new ArrayBuffer(headerSize + samples.length * bytesPerSample);
+        const buffer = new ArrayBuffer(
+          headerSize + samples.length * bytesPerSample
+        );
         const view = new DataView(buffer);
 
         const blockAlign = numChannels * bytesPerSample;
         const byteRate = sampleRate * blockAlign;
 
         writeString(view, 0, "RIFF");
-        view.setUint32(4, (headerSize - 8) + samples.length * bytesPerSample, true);
+        view.setUint32(
+          4,
+          headerSize - 8 + samples.length * bytesPerSample,
+          true
+        );
         writeString(view, 8, "WAVE");
 
         writeString(view, 12, "fmt ");
@@ -167,7 +174,7 @@
           view.setUint32(16, 16, true);
           view.setUint16(20, 1, true);
         }
-        
+
         view.setUint16(22, numChannels, true);
         view.setUint32(24, sampleRate, true);
         view.setUint32(28, byteRate, true);
@@ -178,14 +185,18 @@
         }
 
         writeString(view, isFloat ? 38 : 36, "data");
-        view.setUint32(isFloat ? 42 : 40, samples.length * bytesPerSample, true);
+        view.setUint32(
+          isFloat ? 42 : 40,
+          samples.length * bytesPerSample,
+          true
+        );
 
         if (isFloat) {
-            floatTo32BitPCM(view, headerSize, samples);
+          floatTo32BitPCM(view, headerSize, samples);
         } else if (bitsPerSample === 16) {
-            floatTo16BitPCM(view, headerSize, samples);
+          floatTo16BitPCM(view, headerSize, samples);
         } else if (bitsPerSample === 24) {
-            floatTo24BitPCM(view, headerSize, samples);
+          floatTo24BitPCM(view, headerSize, samples);
         }
 
         return new Blob([view], { type: "audio/wav" });
