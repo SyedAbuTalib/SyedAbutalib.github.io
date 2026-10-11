@@ -7,7 +7,6 @@ on:
   pull_request:
     types:
       - opened
-      - edited
       - synchronize
       - reopened
   workflow_call:
@@ -16,7 +15,7 @@ jobs:
   build:
     name: Code standards & build
     runs-on: ubuntu-latest
-    timeout-minutes: 3
+    timeout-minutes: 10
 
     steps:
       - name: "☁️ Checkout repository"
@@ -25,12 +24,12 @@ jobs:
       - name: "📦 Install pnpm"
         uses: pnpm/action-setup@v4
         with:
-          version: "11.3.0"
+          version: 12
 
       - name: Use Node.js
         uses: actions/setup-node@v4
         with:
-          node-version: "24"
+          node-version: 22
           cache: "pnpm"
 
       - name: "📦 Install dependencies"
