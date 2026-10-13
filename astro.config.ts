@@ -1,87 +1,117 @@
-import {
-  defineConfig,
-  envField,
-  fontProviders,
-  svgoOptimizer,
-} from "astro/config";
-import tailwindcss from "@tailwindcss/vite";
+import fs from "node:fs";
+import { satteri, satteriHeadingIdsPlugin } from "@astrojs/markdown-satteri";
 import mdx from "@astrojs/mdx";
 import sitemap from "@astrojs/sitemap";
-import { unified } from "@astrojs/markdown-remark";
-import remarkToc from "remark-toc";
-import remarkCollapse from "remark-collapse";
-import rehypeCallouts from "rehype-callouts";
-import remarkMath from "remark-math";
-import rehypeKatex from "rehype-katex";
+import { katex } from "@nullpinter/satteri-katex";
+import tailwind from "@tailwindcss/vite";
+import { defineConfig, envField } from "astro/config";
+import expressiveCode from "astro-expressive-code";
+import icon from "astro-icon";
+import robotsTxt from "astro-robots-txt";
+import webmanifest from "astro-webmanifest";
+import { satteriAdmonitionsPlugin } from "./src/plugins/admonitions";
+import { satteriGithubCardPlugin } from "./src/plugins/github-cards";
 import {
-  transformerNotationDiff,
-  transformerNotationHighlight,
-  transformerNotationWordHighlight,
-} from "@shikijs/transformers";
-import { transformerFileName } from "./src/utils/transformers/fileName";
-import config from "./astro-paper.config";
+	satteriAutolinkHeadingsPlugin,
+	satteriExternalLinksPlugin,
+	satteriFootnoteLabelPlugin,
+	satteriReadingTimePlugin,
+	satteriUnwrapImagesPlugin,
+} from "./src/plugins/satteri";
+import { expressiveCodeOptions, siteConfig } from "./src/site.config";
 
+// https://astro.build/config
 export default defineConfig({
-  site: config.site.url,
-  integrations: [
-    mdx(),
-    sitemap({
-      filter: page =>
-        config.features?.showArchives !== false || !page.endsWith("/archives/"),
-    }),
-  ],
-  i18n: {
-    locales: ["en"],
-    defaultLocale: "en",
-    routing: {
-      prefixDefaultLocale: false,
-    },
-  },
-  markdown: {
-    processor: unified({
-      remarkPlugins: [
-        remarkMath,
-        remarkToc,
-        [remarkCollapse, { test: "Table of contents" }],
-      ],
-      rehypePlugins: [rehypeCallouts, rehypeKatex],
-    }),
-    shikiConfig: {
-      themes: { light: "min-light", dark: "night-owl" },
-      defaultColor: false,
-      wrap: false,
-      transformers: [
-        transformerFileName({ style: "v2", hideDot: false }),
-        transformerNotationHighlight(),
-        transformerNotationWordHighlight(),
-        transformerNotationDiff({ matchAlgorithm: "v3" }),
-      ],
-    },
-  },
-  vite: {
-    plugins: [tailwindcss()],
-  },
-  fonts: [
-    {
-      name: "Google Sans Code",
-      cssVariable: "--font-google-sans-code",
-      provider: fontProviders.google(),
-      fallbacks: ["monospace"],
-      weights: [300, 400, 500, 600, 700],
-      styles: ["normal", "italic"],
-      formats: ["woff", "ttf"],
-    },
-  ],
-  env: {
-    schema: {
-      PUBLIC_GOOGLE_SITE_VERIFICATION: envField.string({
-        access: "public",
-        context: "client",
-        optional: true,
-      }),
-    },
-  },
-  experimental: {
-    svgOptimizer: svgoOptimizer(),
-  },
+	site: siteConfig.url,
+	image: {
+		domains: ["webmention.io"],
+	},
+	integrations: [
+		expressiveCode(expressiveCodeOptions),
+		icon(),
+		sitemap(),
+		mdx(),
+		robotsTxt(),
+		webmanifest({
+			// See: https://github.com/alextim/astro-lib/blob/main/packages/astro-webmanifest/README.md
+			name: siteConfig.title,
+			description: siteConfig.description,
+			lang: siteConfig.lang,
+			// Source for the generated PNG favicon & app icons. A pre-rasterised PNG rather than
+			// public/icon.svg because sharp/librsvg can't render colour emoji from an SVG <text>.
+			icon: "src/assets/icon.png",
+			icons: [
+				{
+					src: "icons/apple-touch-icon.png", // used in src/components/BaseHead.astro L:26
+					sizes: "180x180",
+					type: "image/png",
+				},
+				{
+					src: "icons/icon-192.png",
+					sizes: "192x192",
+					type: "image/png",
+				},
+				{
+					src: "icons/icon-512.png",
+					sizes: "512x512",
+					type: "image/png",
+				},
+			],
+			start_url: "/",
+			background_color: "#212737",
+			theme_color: "#a79fe8",
+			display: "standalone",
+			config: {
+				insertFaviconLinks: false,
+				insertThemeColorMeta: false,
+				insertManifestLink: false,
+			},
+		}),
+	],
+	markdown: {
+		processor: satteri({
+			// `math` parses $...$ / $$...$$ into math nodes; the katex() plugin below renders them
+			features: { directive: true, math: true },
+			mdastPlugins: [
+				satteriUnwrapImagesPlugin(),
+				satteriReadingTimePlugin(),
+				satteriGithubCardPlugin(),
+				satteriAdmonitionsPlugin(),
+				katex(),
+			],
+			hastPlugins: [
+				satteriHeadingIdsPlugin(),
+				satteriAutolinkHeadingsPlugin(),
+				satteriFootnoteLabelPlugin(),
+				satteriExternalLinksPlugin(),
+			],
+		}),
+	},
+	vite: {
+		plugins: [tailwind(), rawFonts([".ttf", ".woff"])],
+	},
+	env: {
+		schema: {
+			WEBMENTION_API_KEY: envField.string({ context: "server", access: "secret", optional: true }),
+			WEBMENTION_URL: envField.string({ context: "client", access: "public", optional: true }),
+			WEBMENTION_PINGBACK: envField.string({ context: "client", access: "public", optional: true }),
+		},
+	},
 });
+
+function rawFonts(ext: string[]) {
+	return {
+		name: "vite-plugin-raw-fonts",
+		// @ts-expect-error:next-line
+		transform(_, id) {
+			if (ext.some((e) => id.endsWith(e))) {
+				const buffer = fs.readFileSync(id);
+				return {
+					code: `export default ${JSON.stringify(buffer)}`,
+					map: null,
+					moduleType: "js",
+				};
+			}
+		},
+	};
+}

@@ -1,252 +1,217 @@
 ---
-import Layout from "@/layouts/Layout.astro";
-import Header from "@/components/Header.astro";
-import Breadcrumb from "@/components/Breadcrumb.astro";
-import Main from "@/components/Main.astro";
-import Footer from "@/components/Footer.astro";
-import config from "@/config";
 import { MSE_SAMPLES, MSE_TYPES } from "@/data/mse";
+import PageLayout from "@/layouts/Base.astro";
+
+const meta = {
+	description:
+		"Streams a file into a Media Source Extensions SourceBuffer. Pick a sample, or pass ?src= and ?type= yourself.",
+	title: "MSE Test Page",
+};
 
 const sampleHref = (name: string, type: string) =>
-  `?src=${encodeURIComponent(`/assets/media/${name}`)}&type=${type}`;
+	`?src=${encodeURIComponent(`/assets/media/${name}`)}&type=${type}`;
 ---
 
-<Layout title={`MSE Test Page | ${config.site.title}`}>
-  <Header />
+<PageLayout meta={meta}>
+	<h1 class="title mb-6">MSE Test Page</h1>
+	<p class="mb-10">
+		Streams a file into a Media Source Extensions <code>SourceBuffer</code>. Pick a sample below, or
+		pass <code>?src=</code> and <code>?type=</code> yourself.
+	</p>
 
-  <Breadcrumb />
+	<section aria-labelledby="player-heading" class="mb-12">
+		<h2 id="player-heading" class="sr-only">Player</h2>
+		<video id="mse-video" controls class="border-muted/40 aspect-video w-full border"></video>
+		<dl id="mse-status" class="mt-3 grid grid-cols-[auto_1fr] gap-x-4 gap-y-1">
+			<dt class="text-muted">src</dt>
+			<dd id="mse-src" class="break-all">—</dd>
+			<dt class="text-muted">type</dt>
+			<dd id="mse-mime" class="break-all">—</dd>
+			<dt class="text-muted">status</dt>
+			<dd id="mse-state">Pick a sample to start.</dd>
+		</dl>
+	</section>
 
-  <Main
-    pageTitle="MSE Test Page"
-    pageDesc="Streams a file into a Media Source Extensions SourceBuffer. Pick a sample below, or pass ?src= and ?type= yourself."
-  >
-    <section aria-labelledby="player-heading" class="mb-10">
-      <h2 id="player-heading" class="sr-only">Player</h2>
-      <video
-        id="mse-video"
-        controls
-        class="border-border bg-muted/40 aspect-video w-full border"></video>
-      <dl
-        id="mse-status"
-        class="mt-3 grid grid-cols-[auto_1fr] gap-x-4 gap-y-1 text-sm"
-      >
-        <dt class="text-muted-foreground">src</dt>
-        <dd id="mse-src" class="break-all">—</dd>
-        <dt class="text-muted-foreground">type</dt>
-        <dd id="mse-mime" class="break-all">—</dd>
-        <dt class="text-muted-foreground">status</dt>
-        <dd id="mse-state">Pick a sample to start.</dd>
-      </dl>
-    </section>
+	<section aria-labelledby="samples-heading" class="mb-12">
+		<h2 id="samples-heading" class="title mb-4 text-xl">Samples</h2>
+		<ul class="space-y-4" role="list">
+			{
+				MSE_SAMPLES.map((sample) => (
+					<li>
+						<a
+							class="cactus-link text-accent font-semibold break-all"
+							data-mse-src={`/assets/media/${sample.name}`}
+							href={sampleHref(sample.name, sample.type)}
+						>
+							{sample.name}
+						</a>
+						<p class="text-muted mt-1">{sample.label ?? sample.type}</p>
+					</li>
+				))
+			}
+		</ul>
+	</section>
 
-    <section aria-labelledby="samples-heading" class="mb-10">
-      <h2 id="samples-heading" class="mb-3 text-xl font-semibold">Samples</h2>
-      <ul>
-        {
-          MSE_SAMPLES.map(sample => (
-            <li class="my-3">
-              <a
-                href={sampleHref(sample.name, sample.type)}
-                data-astro-reload
-                data-mse-src={`/assets/media/${sample.name}`}
-                class:list={[
-                  "text-accent font-medium break-all",
-                  "decoration-dashed underline-offset-4 hover:underline",
-                  "focus-visible:no-underline focus-visible:underline-offset-0",
-                ]}
-              >
-                {sample.name}
-              </a>
-              <p class="text-muted-foreground text-sm">
-                {sample.label ?? sample.type}
-              </p>
-            </li>
-          ))
-        }
-      </ul>
-    </section>
-
-    <section aria-labelledby="types-heading">
-      <h2 id="types-heading" class="mb-3 text-xl font-semibold">Types</h2>
-      <p class="mb-4 text-sm">
-        Values accepted by <code class="bg-muted/75 rounded px-1">?type=</code>.
-        A dot shows whether this browser reports support via
-        <code class="bg-muted/75 rounded px-1">MediaSource.isTypeSupported</code
-        >.
-      </p>
-      <div class="overflow-x-auto">
-        <table class="w-full border-collapse text-sm">
-          <thead>
-            <tr>
-              <th class="border-border border p-2 text-left">Key</th>
-              <th class="border-border border p-2 text-left">MIME type</th>
-            </tr>
-          </thead>
-          <tbody>
-            {
-              Object.entries(MSE_TYPES).map(([key, mime]) => (
-                <tr data-mse-type={key}>
-                  <td class="border-border border p-2 whitespace-nowrap">
-                    <span
-                      class="mse-support bg-muted mr-2 inline-block size-2 rounded-full"
-                      aria-hidden="true"
-                    />
-                    {key}
-                  </td>
-                  <td class="border-border text-muted-foreground border p-2 break-all">
-                    {mime}
-                  </td>
-                </tr>
-              ))
-            }
-          </tbody>
-        </table>
-      </div>
-    </section>
-  </Main>
-
-  <Footer />
-</Layout>
+	<section aria-labelledby="types-heading">
+		<h2 id="types-heading" class="title mb-4 text-xl">Types</h2>
+		<p class="mb-4">
+			Values accepted by <code>?type=</code>. A dot shows whether this browser reports support via
+			<code>MediaSource.isTypeSupported</code>.
+		</p>
+		<div class="overflow-x-auto">
+			<table class="w-full border-collapse">
+				<thead>
+					<tr>
+						<th class="border-muted/40 border p-2 text-start">Key</th>
+						<th class="border-muted/40 border p-2 text-start">MIME type</th>
+					</tr>
+				</thead>
+				<tbody>
+					{
+						Object.entries(MSE_TYPES).map(([key, mime]) => (
+							<tr data-mse-type={key}>
+								<td class="border-muted/40 border p-2 whitespace-nowrap">
+									<span
+										aria-hidden="true"
+										class="mse-support bg-muted/40 me-2 inline-block size-2 rounded-full"
+									/>
+									{key}
+								</td>
+								<td class="border-muted/40 text-muted border p-2 break-all">{mime}</td>
+							</tr>
+						))
+					}
+				</tbody>
+			</table>
+		</div>
+	</section>
+</PageLayout>
 
 <script>
-  import { MSE_TYPES } from "@/data/mse";
+	import { MSE_TYPES } from "@/data/mse";
 
-  let abort: AbortController | null = null;
+	function setText(id: string, text: string) {
+		const el = document.getElementById(id);
+		if (el) el.textContent = text;
+	}
 
-  function setText(id: string, text: string) {
-    const el = document.getElementById(id);
-    if (el) el.textContent = text;
-  }
+	function markSupport() {
+		const canCheck = typeof MediaSource !== "undefined";
+		document.querySelectorAll<HTMLElement>("[data-mse-type]").forEach((row) => {
+			const mime = MSE_TYPES[row.dataset.mseType ?? ""];
+			const dot = row.querySelector(".mse-support");
+			if (!dot || !canCheck || !mime) return;
+			const supported = MediaSource.isTypeSupported(mime);
+			dot.classList.remove("bg-muted/40");
+			dot.classList.toggle("bg-accent", supported);
+			dot.classList.toggle("ring-1", !supported);
+			dot.classList.toggle("ring-muted", !supported);
+			row.title = supported ? "Supported" : "Not supported";
+		});
+	}
 
-  function markSupport() {
-    const canCheck = typeof MediaSource !== "undefined";
-    document.querySelectorAll<HTMLElement>("[data-mse-type]").forEach(row => {
-      const mime = MSE_TYPES[row.dataset.mseType ?? ""];
-      const dot = row.querySelector(".mse-support");
-      if (!dot || !canCheck || !mime) return;
-      const supported = MediaSource.isTypeSupported(mime);
-      dot.classList.replace("bg-muted", supported ? "bg-accent" : "bg-border");
-      dot.classList.toggle("ring-1", !supported);
-      dot.classList.toggle("ring-muted-foreground", !supported);
-      row.title = supported ? "Supported" : "Not supported";
-    });
-  }
+	function waitForUpdateEnd(sourceBuffer: SourceBuffer) {
+		return new Promise<void>((resolve) =>
+			sourceBuffer.addEventListener("updateend", () => resolve(), {
+				once: true,
+			}),
+		);
+	}
 
-  function waitForUpdateEnd(sourceBuffer: SourceBuffer) {
-    return new Promise<void>(resolve =>
-      sourceBuffer.addEventListener("updateend", () => resolve(), {
-        once: true,
-      })
-    );
-  }
+	async function pump(
+		stream: ReadableStream<Uint8Array<ArrayBuffer>>,
+		video: HTMLVideoElement,
+		mediaSource: MediaSource,
+		sourceBuffer: SourceBuffer,
+		gc: boolean,
+	) {
+		const reader = stream.getReader();
+		while (true) {
+			const { done, value } = await reader.read();
+			if (value && value.length > 0) {
+				if (gc && video.currentTime > 1) {
+					const removed = waitForUpdateEnd(sourceBuffer);
+					sourceBuffer.remove(0, video.currentTime - 1);
+					await removed;
+				}
+				const appended = waitForUpdateEnd(sourceBuffer);
+				sourceBuffer.appendBuffer(value);
+				await appended;
+			}
+			if (done) {
+				mediaSource.endOfStream();
+				setText("mse-state", "Stream complete.");
+				return;
+			}
+		}
+	}
 
-  async function pump(
-    stream: ReadableStream<Uint8Array<ArrayBuffer>>,
-    video: HTMLVideoElement,
-    mediaSource: MediaSource,
-    sourceBuffer: SourceBuffer,
-    gc: boolean
-  ) {
-    const reader = stream.getReader();
-    while (true) {
-      const { done, value } = await reader.read();
-      if (value && value.length > 0) {
-        if (gc && video.currentTime > 1) {
-          const removed = waitForUpdateEnd(sourceBuffer);
-          sourceBuffer.remove(0, video.currentTime - 1);
-          await removed;
-        }
-        const appended = waitForUpdateEnd(sourceBuffer);
-        sourceBuffer.appendBuffer(value);
-        await appended;
-      }
-      if (done) {
-        mediaSource.endOfStream();
-        setText("mse-state", "Stream complete.");
-        return;
-      }
-    }
-  }
+	function start() {
+		const video = document.getElementById("mse-video") as HTMLVideoElement | null;
+		if (!video) return;
 
-  function start() {
-    const video = document.getElementById(
-      "mse-video"
-    ) as HTMLVideoElement | null;
-    if (!video) return;
+		markSupport();
 
-    markSupport();
+		const params = new URLSearchParams(window.location.search);
+		const src = params.get("src");
+		const typeKey = params.get("type");
 
-    const params = new URLSearchParams(window.location.search);
-    const src = params.get("src");
-    const typeKey = params.get("type");
+		document.querySelectorAll<HTMLAnchorElement>("[data-mse-src]").forEach((link) => {
+			const isCurrent = link.dataset.mseSrc === src;
+			link.classList.toggle("underline", isCurrent);
+			link.toggleAttribute("aria-current", isCurrent);
+		});
 
-    document
-      .querySelectorAll<HTMLAnchorElement>("[data-mse-src]")
-      .forEach(link => {
-        const isCurrent = link.dataset.mseSrc === src;
-        link.classList.toggle("underline", isCurrent);
-        link.toggleAttribute("aria-current", isCurrent);
-      });
+		if (!src) return;
+		setText("mse-src", src);
 
-    if (!src) return;
-    setText("mse-src", src);
+		const mime = typeKey ? MSE_TYPES[typeKey] : undefined;
+		if (!mime) {
+			setText("mse-state", `Error: unknown or missing ?type= (${typeKey ?? "none"}).`);
+			return;
+		}
+		setText("mse-mime", `${typeKey} → ${mime}`);
 
-    const mime = typeKey ? MSE_TYPES[typeKey] : undefined;
-    if (!mime) {
-      setText(
-        "mse-state",
-        `Error: unknown or missing ?type= (${typeKey ?? "none"}).`
-      );
-      return;
-    }
-    setText("mse-mime", `${typeKey} → ${mime}`);
+		if (typeof MediaSource === "undefined") {
+			setText("mse-state", "Error: MediaSource is not available here.");
+			return;
+		}
+		if (!MediaSource.isTypeSupported(mime)) {
+			setText("mse-state", "Warning: isTypeSupported() returned false.");
+		}
 
-    if (typeof MediaSource === "undefined") {
-      setText("mse-state", "Error: MediaSource is not available here.");
-      return;
-    }
-    if (!MediaSource.isTypeSupported(mime)) {
-      setText("mse-state", "Warning: isTypeSupported() returned false.");
-    }
+		const mediaSource = new MediaSource();
 
-    abort = new AbortController();
-    const { signal } = abort;
-    const mediaSource = new MediaSource();
+		mediaSource.addEventListener(
+			"sourceopen",
+			async () => {
+				try {
+					const sourceBuffer = mediaSource.addSourceBuffer(mime);
+					setText("mse-state", "Fetching…");
+					const response = await fetch(src);
+					if (!response.ok || !response.body) {
+						throw new Error(`HTTP ${response.status}`);
+					}
+					setText("mse-state", "Streaming…");
+					await pump(response.body, video, mediaSource, sourceBuffer, params.has("gc"));
+				} catch (error) {
+					const message = error instanceof Error ? error.message : String(error);
+					setText("mse-state", `Error: ${message}`);
+				}
+			},
+			{ once: true },
+		);
 
-    mediaSource.addEventListener(
-      "sourceopen",
-      async () => {
-        try {
-          const sourceBuffer = mediaSource.addSourceBuffer(mime);
-          setText("mse-state", "Fetching…");
-          const response = await fetch(src, { signal });
-          if (!response.ok || !response.body) {
-            throw new Error(`HTTP ${response.status}`);
-          }
-          setText("mse-state", "Streaming…");
-          await pump(
-            response.body,
-            video,
-            mediaSource,
-            sourceBuffer,
-            params.has("gc")
-          );
-        } catch (error) {
-          if (signal.aborted) return;
-          const message =
-            error instanceof Error ? error.message : String(error);
-          setText("mse-state", `Error: ${message}`);
-        }
-      },
-      { once: true }
-    );
+		video.src = URL.createObjectURL(mediaSource);
+	}
 
-    video.src = URL.createObjectURL(mediaSource);
-  }
-
-  document.addEventListener("astro:page-load", start);
-  document.addEventListener("astro:before-swap", () => {
-    abort?.abort();
-    abort = null;
-  });
+	// The base layout ships speculation rules that may prerender same-origin
+	// links on hover. Don't start fetching media inside a prerendered page —
+	// wait until it's actually shown. (`document.prerendering` isn't in lib.dom yet.)
+	const doc = document as Document & { prerendering?: boolean };
+	if (doc.prerendering) {
+		document.addEventListener("prerenderingchange", start, { once: true });
+	} else {
+		start();
+	}
 </script>

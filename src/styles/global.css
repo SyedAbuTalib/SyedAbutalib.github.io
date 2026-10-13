@@ -1,40 +1,149 @@
-@import "tailwindcss";
-@import "./theme.css";
-@import "./typography.css";
-@import "rehype-callouts/theme/obsidian";
-@import "katex/dist/katex.min.css";
+@layer theme, base, pagefind, components, utilities;
 
-@custom-variant dark (&:where([data-theme=dark], [data-theme=dark] *));
+@import "tailwindcss/theme.css" layer(theme);
+@import "tailwindcss/preflight.css" layer(base);
+@import "tailwindcss/utilities.css" layer(utilities);
+
+/* tailwind to ignore satori generated og-image */
+@source not "../pages/og-image";
+/* config for tailwindcss-typography plugin */
+@config "../../tailwind.config.ts";
+
+/* use a selector-based strategy for dark mode */
+@custom-variant dark (&:where([data-theme="dark"], [data-theme="dark"] *));
+
+/* register custom colour properties */
+/* Palette: "Nila" (light) / "Deep Purple" (dark), carried over from the previous AstroPaper build */
+@property --color-global-bg {
+	syntax: "<color>";
+	inherits: true;
+	initial-value: #f6f6fb;
+}
+@property --color-global-text {
+	syntax: "<color>";
+	inherits: true;
+	initial-value: #0c0c19;
+}
+@property --color-muted {
+	syntax: "<color>";
+	inherits: true;
+	initial-value: #54515b;
+}
+@property --color-link {
+	syntax: "<color>";
+	inherits: true;
+	initial-value: #6760b4;
+}
+@property --color-accent {
+	syntax: "<color>";
+	inherits: true;
+	initial-value: #6760b4;
+}
+@property --color-accent-2 {
+	syntax: "<color>";
+	inherits: true;
+	initial-value: #0c0c19;
+}
+@property --color-quote {
+	syntax: "<color>";
+	inherits: true;
+	initial-value: #6760b4;
+}
+
+/* you could refactor below to use light-dark(), depending on your target audience */
+@theme {
+	--color-global-bg: #f6f6fb;
+	--color-global-text: #0c0c19;
+	--color-muted: #54515b;
+	--color-link: #6760b4;
+	--color-accent: #6760b4;
+	--color-accent-2: #0c0c19;
+	--color-quote: #6760b4;
+}
 
 @layer base {
-  * {
-    @apply border-border outline-accent/75;
-    scrollbar-width: auto;
-    scrollbar-color: var(--color-muted) transparent;
-  }
-  a,
-  button,
-  #main-content {
-    @apply outline-accent outline-offset-1 focus-visible:no-underline focus-visible:outline-2 focus-visible:outline-dashed;
-  }
-  button:not(:disabled),
-  [role="button"]:not(:disabled) {
-    cursor: pointer;
-  }
+	html {
+		color-scheme: light dark;
+		accent-color: var(--color-accent);
+		scrollbar-gutter: stable;
+
+		&[data-theme="light"] {
+			color-scheme: light;
+		}
+
+		&[data-theme="dark"] {
+			color-scheme: dark;
+			--color-global-bg: #212737;
+			--color-global-text: #eaedf3;
+			--color-muted: #b3aec9;
+			--color-link: #a79fe8;
+			--color-accent: #a79fe8;
+			--color-accent-2: #eaedf3;
+			--color-quote: #a79fe8;
+		}
+
+		--color-mode-transition-duration: 300ms;
+		--color-mode-transition-easing: ease-in-out;
+
+		transition:
+			--color-global-bg var(--color-mode-transition-duration) var(--color-mode-transition-easing),
+			--color-global-text var(--color-mode-transition-duration) var(--color-mode-transition-easing),
+			--color-muted var(--color-mode-transition-duration) var(--color-mode-transition-easing),
+			--color-link var(--color-mode-transition-duration) var(--color-mode-transition-easing),
+			--color-accent var(--color-mode-transition-duration) var(--color-mode-transition-easing),
+			--color-accent-2 var(--color-mode-transition-duration) var(--color-mode-transition-easing),
+			--color-quote var(--color-mode-transition-duration) var(--color-mode-transition-easing);
+	}
+
+	:target {
+		scroll-margin-block: 5ex;
+	}
+
+	@view-transition {
+		navigation: auto;
+	}
+
+	/* Astro image responsive styles, modified from -> https://docs.astro.build/en/guides/images/#responsive-image-styles */
+	:where([data-astro-image]) {
+		object-fit: var(--fit);
+		object-position: var(--pos);
+	}
+	[data-astro-image="full-width"] {
+		width: 100%;
+	}
+	[data-astro-image="constrained"] {
+		max-width: 100%;
+	}
 }
 
-@utility max-w-app {
-  @apply max-w-3xl;
+@layer components {
+	@import "./components/admonition.css";
+	@import "./components/github-card.css";
+	@import "katex/dist/katex.min.css";
+
+	/* KaTeX output should follow the page's text colour in both themes */
+	.katex,
+	.katex-display {
+		color: var(--color-global-text);
+	}
+
+	.cactus-link {
+		@apply hover:decoration-link underline underline-offset-2 hover:decoration-2;
+	}
+
+	.title {
+		@apply text-accent-2 text-2xl font-semibold;
+	}
 }
 
-@utility app-layout {
-  @apply max-w-app mx-auto w-full px-4;
-}
-
-@utility active-nav {
-  @apply underline decoration-wavy decoration-2 underline-offset-8;
-}
-
-:target {
-  scroll-margin-block: 1rem;
+@utility prose {
+	--tw-prose-body: var(--color-global-text);
+	--tw-prose-bold: var(--color-global-text);
+	--tw-prose-bullets: var(--color-global-text);
+	--tw-prose-code: var(--color-global-text);
+	--tw-prose-headings: var(--color-accent-2);
+	--tw-prose-hr: 0.5px dashed #666;
+	--tw-prose-links: var(--color-global-text);
+	--tw-prose-quotes: var(--color-quote);
+	--tw-prose-th-borders: #666;
 }

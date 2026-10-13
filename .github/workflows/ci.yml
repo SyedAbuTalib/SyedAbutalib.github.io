@@ -1,45 +1,44 @@
-name: CI
+name: ci
+
+on:
+  push:
+    branches: [master]
+  pull_request:
+    branches: [master]
 
 permissions:
   contents: read
 
-on:
-  pull_request:
-    types:
-      - opened
-      - synchronize
-      - reopened
-  workflow_call:
-
 jobs:
-  build:
-    name: Code standards & build
+  lint:
+    name: Check for build and type issues
     runs-on: ubuntu-latest
-    timeout-minutes: 10
 
     steps:
-      - name: "☁️ Checkout repository"
-        uses: actions/checkout@v4
+      - name: Checkout code
+        uses: actions/checkout@v6
+        with:
+          lfs: true
 
-      - name: "📦 Install pnpm"
+      - name: Install pnpm
         uses: pnpm/action-setup@v4
         with:
           version: 12
+          run_install: false
 
-      - name: Use Node.js
-        uses: actions/setup-node@v4
+      - name: Setup node
+        uses: actions/setup-node@v6
         with:
           node-version: 22
           cache: "pnpm"
 
-      - name: "📦 Install dependencies"
+      - name: Install dependencies
         run: pnpm install --frozen-lockfile
 
-      - name: "🔎 Lint code"
-        run: pnpm run lint
+        # use astro check for issues
+      - name: Run Astro check
+        run: pnpm astro check
 
-      - name: "📝 Checking code format"
-        run: pnpm run format:check
-
-      - name: "🚀 Build the project"
-        run: pnpm run build
+        # ensure build works
+      - name: Run Astro build
+        run: pnpm build

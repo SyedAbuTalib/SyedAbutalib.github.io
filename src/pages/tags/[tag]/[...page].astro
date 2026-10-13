@@ -1,57 +1,79 @@
 ---
-import { getCollection } from "astro:content";
-import type { GetStaticPathsOptions } from "astro";
-import Layout from "@/layouts/Layout.astro";
-import Header from "@/components/Header.astro";
-import Main from "@/components/Main.astro";
-import Breadcrumb from "@/components/Breadcrumb.astro";
-import Card from "@/components/Card.astro";
-import Footer from "@/components/Footer.astro";
-import Pagination from "@/components/Pagination.astro";
-import { getUniqueTags } from "@/utils/getUniqueTags";
-import { getSortedPosts } from "@/utils/getSortedPosts";
-import { slugifyAll } from "@/utils/slugify";
-import { useTranslations } from "@/i18n";
-import config from "@/config";
+import { render } from "astro:content";
+import type { GetStaticPaths, InferGetStaticPropsType } from "astro";
+import { Icon } from "astro-icon/components";
+import PostPreview from "@/components/blog/PostPreview.astro";
+import Pagination from "@/components/Paginator.astro";
+import { getAllPosts, getTagMeta, getUniqueTags } from "@/data/post";
+import PageLayout from "@/layouts/Base.astro";
+import { collectionDateSort } from "@/utils/date";
 
-export async function getStaticPaths({ paginate }: GetStaticPathsOptions) {
-  const posts = await getCollection("posts", ({ data }) => !data.draft);
-  const tags = getUniqueTags(posts);
+export const getStaticPaths = (async ({ paginate }) => {
+	const allPosts = await getAllPosts();
+	const sortedPosts = allPosts.sort(collectionDateSort);
+	const uniqueTags = getUniqueTags(sortedPosts);
 
-  return tags.flatMap(({ tag, tagName }) => {
-    const tagPosts = getSortedPosts(
-      posts.filter(({ data }) => slugifyAll(data.tags).includes(tag))
-    );
+	return uniqueTags.flatMap((tag) => {
+		const postsWithTag = sortedPosts.filter((post) => post.data.tags.includes(tag));
+		return paginate(postsWithTag, {
+			pageSize: 10,
+			params: { tag },
+		});
+	});
+}) satisfies GetStaticPaths;
 
-    return paginate(tagPosts, {
-      params: { tag },
-      props: { tagName },
-      pageSize: config.posts.perPage,
-    });
-  });
-}
+type Props = InferGetStaticPropsType<typeof getStaticPaths>;
 
-const { page, tagName } = Astro.props;
+const { page } = Astro.props as Props;
+const { tag } = Astro.params;
+const tagMeta = await getTagMeta(tag);
 
-const locale = Astro.currentLocale ?? config.site.lang;
-const t = useTranslations(locale);
+const TagContent = tagMeta ? (await render(tagMeta)).Content : null;
+
+const meta = {
+	description: tagMeta?.data.description ?? `View all posts with the tag - ${tag}`,
+	title: tagMeta?.data.title ?? `Posts about ${tag}`,
+};
+
+const paginationProps = {
+	...(page.url.prev && {
+		prevUrl: {
+			text: "← Previous Tags",
+			url: page.url.prev,
+		},
+	}),
+	...(page.url.next && {
+		nextUrl: {
+			text: "Next Tags →",
+			url: page.url.next,
+		},
+	}),
+};
 ---
 
-<Layout title={`${t.pages.tagTitle}: ${tagName} | ${config.site.title}`}>
-  <Header />
-
-  <Breadcrumb />
-
-  <Main
-    pageTitle={`${t.pages.tagTitle}: ${tagName}`}
-    pageDesc={`${t.pages.tagDesc} "${tagName}".`}
-  >
-    <ul>
-      {page.data.map(data => <Card {...data} />)}
-    </ul>
-  </Main>
-
-  <Pagination {page} />
-
-  <Footer noMarginTop={page.lastPage > 1} />
-</Layout>
+<PageLayout meta={meta}>
+	<nav class="mb-8" aria-label="Breadcrumbs">
+		<ul class="flex items-center">
+			<li class="flex items-center">
+				<a class="text-accent" href="/tags/">Tags</a>
+				<Icon aria-hidden="true" name="mdi:chevron-right" class="mx-1.5" />
+			</li>
+			<li aria-current="page" class=""><span aria-hidden="true">#</span>{tag}</li>
+		</ul>
+	</nav>
+	<h1 class="title capitalize">{tagMeta?.data.title ?? `Posts about ${tag}`}</h1>
+	<div class="prose prose-sm prose-cactus mb-16 max-w-none">
+		{tagMeta?.data.description && <p>{tagMeta.data.description}</p>}
+		{TagContent && <TagContent />}
+	</div>
+	<ul class="space-y-4">
+		{
+			page.data.map((p) => (
+				<li class="grid gap-1 sm:grid-cols-[auto_1fr]">
+					<PostPreview as="h2" post={p} />
+				</li>
+			))
+		}
+	</ul>
+	<Pagination {...paginationProps} />
+</PageLayout>

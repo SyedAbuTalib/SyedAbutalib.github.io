@@ -1,32 +1,34 @@
 ---
-import { getCollection } from "astro:content";
-import Layout from "@/layouts/Layout.astro";
-import Header from "@/components/Header.astro";
-import Breadcrumb from "@/components/Breadcrumb.astro";
-import Main from "@/components/Main.astro";
-import Footer from "@/components/Footer.astro";
-import Tag from "@/components/Tag.astro";
-import { getUniqueTags } from "@/utils/getUniqueTags";
-import { useTranslations } from "@/i18n";
-import config from "@/config";
+import { getAllPosts, getUniqueTagsWithCount } from "@/data/post";
+import PageLayout from "@/layouts/Base.astro";
 
-const posts = await getCollection("posts", ({ data }) => !data.draft);
-const tags = getUniqueTags(posts);
+const allPosts = await getAllPosts();
+const allTags = getUniqueTagsWithCount(allPosts);
 
-const locale = Astro.currentLocale ?? config.site.lang;
-const t = useTranslations(locale);
+const meta = {
+	description: "A list of all the topics I've written about in my posts",
+	title: "All Tags",
+};
 ---
 
-<Layout title={`${t.pages.tagsTitle} | ${config.site.title}`}>
-  <Header />
-
-  <Breadcrumb />
-
-  <Main pageTitle={t.pages.tagsTitle} pageDesc={t.pages.tagsDesc}>
-    <ul class="flex flex-wrap gap-6">
-      {tags.map(({ tag, tagName }) => <Tag {tag} {tagName} />)}
-    </ul>
-  </Main>
-
-  <Footer />
-</Layout>
+<PageLayout meta={meta}>
+	<h1 class="title mb-6">Tags</h1>
+	<ul class="space-y-4">
+		{
+			allTags.map(([tag, val]) => (
+				<li class="flex items-center gap-x-2">
+					<a
+						class="cactus-link inline-block"
+						href={`/tags/${tag}/`}
+						title={`View posts with the tag: ${tag}`}
+					>
+						&#35;{tag}
+					</a>
+					<span class="inline-block">
+						- {val} Post{val > 1 && "s"}
+					</span>
+				</li>
+			))
+		}
+	</ul>
+</PageLayout>

@@ -1,17 +1,8 @@
-# Ignore everything
-/*
+*.min.js
+node_modules
 
-# Except these files & folders
-!/src
-!/public
-!/.github
-!tsconfig.json
-!astro.config.ts
-!package.json
-!.prettierrc
-!eslint.config.js
-!README.md
-!.vscode
+# cache-dirs
+**/.cache
 
-# Ignore MDX files
-*.mdx
+pnpm-lock.yaml
+dist
