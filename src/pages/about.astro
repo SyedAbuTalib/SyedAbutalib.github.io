@@ -2,7 +2,8 @@
 import PageLayout from "@/layouts/Base.astro";
 
 const meta = {
-	description: "I'm a starter theme for Astro.build",
+	description:
+		"Syed AbuTalib — software engineer on Chromium's audio stack at Google. Notes, posts, and browser media test pages.",
 	title: "About",
 };
 ---
@@ -11,26 +12,56 @@ const meta = {
 	<h1 class="title mb-12">About</h1>
 	<div class="prose prose-sm prose-cactus max-w-none">
 		<p>
-			Hi, I’m a starter Astro. I’m particularly great for getting you started with your own blogging
-			website.
+			Howdy, I'm Syed. I'm a software engineer at Google in Seattle, working on audio in Chromium,
+			going from the <code>&lt;audio&gt;</code> tag all the way to your speakers.
 		</p>
-		<p>Here are my some of my awesome built in features:</p>
+		<p>Some things I've worked on lately:</p>
 		<ul class="list-inside list-disc" role="list">
-			<li>I'm ultra fast as I'm a static site</li>
-			<li>I'm fully responsive</li>
-			<li>I come with a light and dark mode</li>
-			<li>I'm easy to customise and add additional content</li>
-			<li>I have Tailwind CSS styling</li>
-			<li>Shiki code syntax highlighting</li>
-			<li>Satori for auto generating OG images for blog posts</li>
+			<li>
+				Shipping IAMF (immersive / spatial audio) decoding in Chrome 153: the C++ streaming decoder,
+				the design doc, and the Blink intent-to-ship.
+			</li>
+			<li>
+				Reworking Chromium's multiprocess audio pipeline and its Mojo IPCs so it can carry 7.1.4 and
+				5.1.4 layouts instead of stopping at 7.1.
+			</li>
+			<li>
+				Fuzzing the audio stack with LibFuzzer and ClusterFuzz, which turned up 20+ memory-safety
+				bugs in AOMedia's IAMF decoder. Also found a ten-year-old integer overflow in{" "}
+				<code>base::CheckedNumeric</code>.
+			</li>
+			<li>
+				Wiring up AVFoundation audio for Chrome on macOS, and reporting the bugs I find to Apple.
+			</li>
 		</ul>
 		<p>
-			Clone or fork my <a
-				class="cactus-link inline-block"
-				href="https://github.com/chrismwilliams/astro-cactus"
-				rel="noreferrer"
-				target="_blank">repo</a
-			> if you like me!
+			Before Chrome I spent two years on Google Cloud Marketplace's commerce backends (Java, gRPC,
+			Spanner), and before that I built tools for the Private Investments team at Liberty Mutual in
+			Boston (Django, React). I studied computer science at UT Dallas.
+		</p>
+
+		<h2>This site</h2>
+		<p>
+			Mostly <a href="/notes/">notes</a>: short TILs from work on codecs, containers, and browser
+			media APIs. Occasionally a longer <a href="/posts/">post</a>. The <a href="/demos/">demos</a>{" "}
+			are the test pages I use to poke at Media Source Extensions, WebCodecs, Web Audio, and
+			multichannel playback. Feel free to use them.
+		</p>
+
+		<h2>Elsewhere</h2>
+		<p>
+			<a href="https://github.com/SyedAbuTalib" rel="noreferrer" target="_blank">
+				GitHub
+			</a>
+			,{" "}
+			<a href="https://www.linkedin.com/in/syed-abutalib/" rel="noreferrer" target="_blank">
+				LinkedIn
+			</a>
+			, or <a href="mailto:blog@jellyward.com">email</a>. There's also a{" "}
+			<a href="/resume.pdf" rel="noreferrer" target="_blank">
+				resume
+			</a>{" "}
+			if you want the formal version.
 		</p>
 	</div>
 </PageLayout>
