@@ -20,42 +20,64 @@ const sampleHref = (name: string, type: string) =>
 	</p>
 
 	<section aria-labelledby="player-heading" class="mb-12">
-		<h2 id="player-heading" class="sr-only">Player</h2>
+		<h2 id="player-heading" class="sr-only">
+			Player
+		</h2>
 		<video id="mse-video" controls class="border-muted/40 aspect-video w-full border"></video>
 		<dl id="mse-status" class="mt-3 grid grid-cols-[auto_1fr] gap-x-4 gap-y-1">
 			<dt class="text-muted">src</dt>
-			<dd id="mse-src" class="break-all">—</dd>
+			<dd id="mse-src" class="break-all">
+				—
+			</dd>
 			<dt class="text-muted">type</dt>
-			<dd id="mse-mime" class="break-all">—</dd>
+			<dd id="mse-mime" class="break-all">
+				—
+			</dd>
 			<dt class="text-muted">status</dt>
 			<dd id="mse-state">Pick a sample to start.</dd>
+			<dt class="text-muted">stream</dt>
+			<dd>
+				<span id="mse-stream">—</span>
+				<ul id="mse-stream-details" class="text-muted mt-1 list-inside list-disc" hidden></ul>
+			</dd>
+			<dt class="text-muted">output</dt>
+			<dd id="mse-output">—</dd>
 		</dl>
+		<p class="text-muted mt-3">
+			<em>stream</em> is read from the container's init segment (<code>stsd</code>,{" "}
+			<code>esds</code>,<code>dOps</code>, <code>iacb</code>, EBML <code>Tracks</code>…) since no
+			media-element API exposes decoded channel counts. <em>output</em> is the current audio
+			device's
+			<code>AudioContext.destination.maxChannelCount</code>.
+		</p>
 	</section>
 
 	<section aria-labelledby="samples-heading" class="mb-12">
-		<h2 id="samples-heading" class="title mb-4 text-xl">Samples</h2>
+		<h2 id="samples-heading" class="title mb-4 text-xl">
+			Samples
+		</h2>
 		<ul class="space-y-4" role="list">
-			{
-				MSE_SAMPLES.map((sample) => (
-					<li>
-						<a
-							class="cactus-link text-accent font-semibold break-all"
-							data-mse-src={`/assets/media/${sample.name}`}
-							href={sampleHref(sample.name, sample.type)}
-						>
-							{sample.name}
-						</a>
-						<p class="text-muted mt-1">{sample.label ?? sample.type}</p>
-					</li>
-				))
-			}
+			{MSE_SAMPLES.map((sample) => (
+				<li>
+					<a
+						class="cactus-link text-accent font-semibold break-all"
+						data-mse-src={`/assets/media/${sample.name}`}
+						href={sampleHref(sample.name, sample.type)}
+					>
+						{sample.name}
+					</a>
+					<p class="text-muted mt-1">{sample.label ?? sample.type}</p>
+				</li>
+			))}
 		</ul>
 	</section>
 
 	<section aria-labelledby="types-heading">
-		<h2 id="types-heading" class="title mb-4 text-xl">Types</h2>
+		<h2 id="types-heading" class="title mb-4 text-xl">
+			Types
+		</h2>
 		<p class="mb-4">
-			Values accepted by <code>?type=</code>. A dot shows whether this browser reports support via
+			Values accepted by <code>?type=</code>. A dot shows whether this browser reports support via{" "}
 			<code>MediaSource.isTypeSupported</code>.
 		</p>
 		<div class="overflow-x-auto">
@@ -67,20 +89,18 @@ const sampleHref = (name: string, type: string) =>
 					</tr>
 				</thead>
 				<tbody>
-					{
-						Object.entries(MSE_TYPES).map(([key, mime]) => (
-							<tr data-mse-type={key}>
-								<td class="border-muted/40 border p-2 whitespace-nowrap">
-									<span
-										aria-hidden="true"
-										class="mse-support bg-muted/40 me-2 inline-block size-2 rounded-full"
-									/>
-									{key}
-								</td>
-								<td class="border-muted/40 text-muted border p-2 break-all">{mime}</td>
-							</tr>
-						))
-					}
+					{Object.entries(MSE_TYPES).map(([key, mime]) => (
+						<tr data-mse-type={key}>
+							<td class="border-muted/40 border p-2 whitespace-nowrap">
+								<span
+									aria-hidden="true"
+									class="mse-support bg-muted/40 me-2 inline-block size-2 rounded-full"
+								/>
+								{key}
+							</td>
+							<td class="border-muted/40 text-muted border p-2 break-all">{mime}</td>
+						</tr>
+					))}
 				</tbody>
 			</table>
 		</div>
@@ -89,10 +109,77 @@ const sampleHref = (name: string, type: string) =>
 
 <script>
 	import { MSE_TYPES } from "@/data/mse";
+	import {
+		type AudioStreamInfo,
+		describeChannels,
+		inspectInitSegment,
+		summarizeStream,
+	} from "@/utils/mediaInfo";
+	import { whenPageShown } from "@/utils/prerender";
 
 	function setText(id: string, text: string) {
 		const el = document.getElementById(id);
 		if (el) el.textContent = text;
+	}
+
+	/** Reports what the current output device can take (what a multichannel stream gets mixed to). */
+	function showOutputChannels() {
+		try {
+			const context = new AudioContext();
+			const max = context.destination.maxChannelCount;
+			context.close();
+			setText("mse-output", `${describeChannels(max)} on the current output device`);
+		} catch {
+			setText("mse-output", "unavailable (AudioContext could not be created)");
+		}
+	}
+
+	function renderStreamInfo(info: AudioStreamInfo | undefined) {
+		setText("mse-stream", info ? summarizeStream(info) : "could not inspect the init segment");
+		const list = document.getElementById("mse-stream-details");
+		if (!list) return;
+		list.replaceChildren(
+			...(info?.details ?? []).map((detail) => {
+				const item = document.createElement("li");
+				item.textContent = detail;
+				return item;
+			}),
+		);
+		list.hidden = list.childElementCount === 0;
+	}
+
+	/**
+	 * Accumulates the first bytes of the stream and inspects them until the init segment is
+	 * complete (or we give up after a few MB). Amortised growth keeps this O(n).
+	 */
+	function createInspector() {
+		const CAP = 8 * 1024 * 1024;
+		let buffer = new Uint8Array(256 * 1024);
+		let length = 0;
+		let done = false;
+
+		return (chunk: Uint8Array) => {
+			if (done) return;
+			if (length + chunk.length > buffer.length) {
+				const grown = new Uint8Array(Math.max(buffer.length * 2, length + chunk.length));
+				grown.set(buffer.subarray(0, length));
+				buffer = grown;
+			}
+			buffer.set(chunk, length);
+			length += chunk.length;
+
+			let info: AudioStreamInfo | undefined;
+			try {
+				info = inspectInitSegment(buffer.subarray(0, length));
+			} catch (error) {
+				console.warn("init segment inspection failed:", error);
+			}
+			if (!info || info.complete || length >= CAP) {
+				done = true;
+				buffer = new Uint8Array(0);
+				renderStreamInfo(info);
+			}
+		};
 	}
 
 	function markSupport() {
@@ -126,9 +213,11 @@ const sampleHref = (name: string, type: string) =>
 		gc: boolean,
 	) {
 		const reader = stream.getReader();
+		const inspect = createInspector();
 		while (true) {
 			const { done, value } = await reader.read();
 			if (value && value.length > 0) {
+				inspect(value);
 				if (gc && video.currentTime > 1) {
 					const removed = waitForUpdateEnd(sourceBuffer);
 					sourceBuffer.remove(0, video.currentTime - 1);
@@ -164,6 +253,8 @@ const sampleHref = (name: string, type: string) =>
 
 		if (!src) return;
 		setText("mse-src", src);
+		setText("mse-stream", "inspecting…");
+		showOutputChannels();
 
 		const mime = typeKey ? MSE_TYPES[typeKey] : undefined;
 		if (!mime) {
@@ -205,13 +296,6 @@ const sampleHref = (name: string, type: string) =>
 		video.src = URL.createObjectURL(mediaSource);
 	}
 
-	// The base layout ships speculation rules that may prerender same-origin
-	// links on hover. Don't start fetching media inside a prerendered page —
-	// wait until it's actually shown. (`document.prerendering` isn't in lib.dom yet.)
-	const doc = document as Document & { prerendering?: boolean };
-	if (doc.prerendering) {
-		document.addEventListener("prerenderingchange", start, { once: true });
-	} else {
-		start();
-	}
+	// Don't start fetching media inside a speculative prerender — wait until it's shown.
+	whenPageShown(start);
 </script>
