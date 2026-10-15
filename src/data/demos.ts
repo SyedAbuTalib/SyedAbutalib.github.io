@@ -7,31 +7,31 @@ export type Demo = {
 export const demos: Demo[] = [
 	{
 		title: "Spatial Audio Test Page",
-		href: "/spatial_audio.html",
+		href: "/spatial_audio/",
 		description:
 			"Demonstrates playback of potentially spatialized MP4 video/audio files and includes a Web Audio API example for 3D positional audio.",
 	},
 	{
 		title: "Video Flip Test Page",
-		href: "/flip.html",
+		href: "/flip/",
 		description:
 			"Features live camera preview, video recording with selectable MIME types, a conceptual video flip effect.",
 	},
 	{
 		title: "WebCodecs Opus Test",
-		href: "/opus.html",
+		href: "/opus/",
 		description:
 			"Tests the WebCodecs AudioEncoder and AudioDecoder with the Opus codec and a user-defined frame duration.",
 	},
 	{
 		title: "VTTCue Timing Test",
-		href: "/vtt.html",
+		href: "/vtt/",
 		description:
 			"Dynamically injecting a VTTCue into a video track to observe its timing and event behavior.",
 	},
 	{
 		title: "Audio Playback Test",
-		href: "/bitdepth.html",
+		href: "/bitdepth/",
 		description:
 			"Record a 5-second audio clip from a microphone and play it back to verify capture quality.",
 	},
@@ -43,18 +43,18 @@ export const demos: Demo[] = [
 	},
 	{
 		title: "Media Formats Test",
-		href: "/formats.html",
+		href: "/formats/",
 		description:
 			"Verifies that the browser can successfully record and natively play back media formats (e.g., Matroska, QuickTime).",
 	},
 	{
 		title: "Autoplay Test Page",
-		href: "/autoplay.html",
+		href: "/autoplay/",
 		description: "Tests the browser's autoplay permissions for audio playback.",
 	},
 	{
 		title: "Multichannel Audio Verification Suite",
-		href: "/9ch.html",
+		href: "/9ch/",
 		description:
 			"Verifies decodeAudioData(), Web Audio multichannel routing, and direct <audio> element playback with per-channel peak level meters.",
 	},

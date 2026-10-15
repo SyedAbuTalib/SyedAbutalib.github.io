@@ -1,0 +1,190 @@
+---
+import PageLayout from "@/layouts/Base.astro";
+
+const meta = {
+	description:
+		"Two spatial audio checks: a Web Audio HRTF panner that orbits a tone around your head, and a multichannel MP4 for system-level spatialization.",
+	title: "Spatial Audio & Video Demonstrations",
+};
+---
+
+<PageLayout meta={meta}>
+	<h1 class="title mb-6">Spatial Audio & Video Demonstrations</h1>
+	<p class="mb-10">
+		Two ways to check spatial audio in this browser: a Web Audio <code>PannerNode</code> that orbits
+		a tone around your head, and a multichannel MP4 for system-level spatialization.
+	</p>
+
+	<section aria-labelledby="hrtf-heading" class="mb-12">
+		<h2 id="hrtf-heading" class="title mb-4 text-xl">
+			Demo 1: Web Audio API — 3D Positional Audio (HRTF)
+		</h2>
+		<p class="mb-4">
+			This demo uses the Web Audio API to create a sound and move it around your head. You should
+			hear the sound change position. This works with any stereo headphones.
+		</p>
+		<div class="flex flex-wrap gap-3">
+			<button id="playButton" class="demo-button" type="button">
+				Play & Move Sound
+			</button>
+			<button id="stopButton" class="demo-button" type="button" disabled>
+				Stop Sound
+			</button>
+		</div>
+		<p id="status" class="demo-status mt-4" role="status">
+			Status: Idle
+		</p>
+	</section>
+
+	<section aria-labelledby="system-heading">
+		<h2 id="system-heading" class="title mb-4 text-xl">
+			Demo 2: System-Level Spatial Audio with <code>audio.mp4</code>
+		</h2>
+		<p class="mb-4">
+			This section plays <code>audio.mp4</code> and displays its video content. For true
+			system-level spatial audio from the file (like Dolby Atmos or 5.1/7.1 surround being
+			spatialized by macOS with compatible headphones), the following conditions must be met:
+		</p>
+		<p class="mb-2 font-semibold">Prerequisites:</p>
+		<ul class="mb-6 list-inside list-disc space-y-2" role="list">
+			<li>
+				The file <code>audio.mp4</code> must contain a multi-channel audio track (e.g., 5.1 AAC,
+				E-AC-3 JOC for Atmos).
+			</li>
+			<li>
+				Your browser (e.g., your custom Chromium build) must be configured to correctly output the
+				multi-channel audio to the operating system.
+			</li>
+			<li>
+				On macOS, "Spatial Audio" (Fixed or Head Tracked) must be enabled in Control Center &gt;
+				Sound, and you must be using compatible headphones (AirPods Pro/Max, AirPods 3rd Gen, Beats
+				Fit Pro, etc.).
+			</li>
+		</ul>
+
+		<video
+			controls
+			preload="metadata"
+			src="/assets/media/audio.mp4"
+			class="border-muted/40 aspect-video w-full border"
+		>
+			Your browser does not support the video tag or the video format.
+		</video>
+		<p class="text-muted mt-4">
+			If <code>audio.mp4</code> is a valid multi-channel audio file and your system/browser are set
+			up correctly, you should hear spatial audio while watching the video.
+		</p>
+	</section>
+</PageLayout>
+
+<script>
+	function init() {
+		const playButton = document.getElementById("playButton") as HTMLButtonElement | null;
+		const stopButton = document.getElementById("stopButton") as HTMLButtonElement | null;
+		const statusEl = document.getElementById("status");
+		if (!playButton || !stopButton || !statusEl) return;
+
+		let audioContext: AudioContext | undefined;
+		let oscillator: OscillatorNode | undefined;
+		let panner: PannerNode | undefined;
+		let gainNode: GainNode | undefined;
+		let animationFrameId: number | undefined;
+		let angle = 0;
+
+		function setStatus(message: string, state: "info" | "success" | "error" = "info") {
+			if (!statusEl) return;
+			statusEl.textContent = message;
+			statusEl.dataset.state = state;
+		}
+
+		function stop() {
+			if (oscillator) {
+				oscillator.stop();
+				oscillator.disconnect();
+				panner?.disconnect();
+				gainNode?.disconnect();
+				oscillator = undefined;
+				panner = undefined;
+				gainNode = undefined;
+			}
+			if (animationFrameId !== undefined) {
+				cancelAnimationFrame(animationFrameId);
+				animationFrameId = undefined;
+			}
+			if (!playButton || !stopButton) return;
+			playButton.disabled = false;
+			stopButton.disabled = true;
+			setStatus("Status: Stopped.");
+		}
+
+		function animateSound() {
+			if (!panner || !audioContext || audioContext.state === "closed" || !oscillator) return;
+
+			const radius = 2;
+			const x = Math.sin(angle) * radius;
+			const z = Math.cos(angle) * radius - radius;
+
+			try {
+				panner.positionX.setValueAtTime(x, audioContext.currentTime);
+				panner.positionZ.setValueAtTime(z, audioContext.currentTime);
+			} catch (error) {
+				console.error("Error setting panner position:", error);
+				setStatus("Error: could not update the panner position.", "error");
+				stop();
+				return;
+			}
+
+			angle += 0.01;
+			animationFrameId = requestAnimationFrame(animateSound);
+		}
+
+		playButton.addEventListener("click", () => {
+			if (!audioContext) {
+				audioContext = new AudioContext();
+			} else if (audioContext.state === "suspended") {
+				audioContext.resume();
+			}
+			const context = audioContext;
+
+			oscillator = context.createOscillator();
+			oscillator.type = "sine";
+			oscillator.frequency.setValueAtTime(440, context.currentTime);
+
+			panner = context.createPanner();
+			panner.panningModel = "HRTF";
+			panner.distanceModel = "inverse";
+			panner.refDistance = 1;
+			panner.maxDistance = 10000;
+			panner.rolloffFactor = 1;
+			panner.coneInnerAngle = 360;
+			panner.coneOuterAngle = 0;
+			panner.coneOuterGain = 0;
+			panner.positionX.setValueAtTime(0, context.currentTime);
+			panner.positionY.setValueAtTime(0, context.currentTime);
+			panner.positionZ.setValueAtTime(-1, context.currentTime);
+
+			gainNode = context.createGain();
+			gainNode.gain.setValueAtTime(0.3, context.currentTime);
+
+			oscillator.connect(panner);
+			panner.connect(gainNode);
+			gainNode.connect(context.destination);
+
+			oscillator.start();
+			animateSound();
+
+			playButton.disabled = true;
+			stopButton.disabled = false;
+			setStatus("Status: Playing and moving sound…", "success");
+		});
+
+		stopButton.addEventListener("click", stop);
+
+		// Don't keep a tone orbiting in a background tab.
+		document.addEventListener("visibilitychange", () => {
+			if (document.hidden && oscillator) stop();
+		});
+	}
+
+	init();
+</script>

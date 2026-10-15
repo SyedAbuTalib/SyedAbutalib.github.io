@@ -1,0 +1,347 @@
+---
+import PageLayout from "@/layouts/Base.astro";
+
+const meta = {
+	description:
+		"Encodes live microphone audio with the WebCodecs AudioEncoder (Opus) using a custom frame duration, decodes it straight back, and plays the round-tripped result.",
+	title: "WebCodecs Opus Audio Test",
+};
+---
+
+<PageLayout meta={meta}>
+	<h1 class="title mb-6">WebCodecs AudioEncoder/Decoder Test</h1>
+	<p class="mb-10">
+		Encodes live microphone audio with the WebCodecs <code>AudioEncoder</code> (Opus) using a custom
+		frame duration, feeds every chunk straight into an <code>AudioDecoder</code>, and plays the
+		round-tripped audio back when you stop the test.
+	</p>
+
+	<section aria-labelledby="controls-heading" class="mb-12">
+		<h2 id="controls-heading" class="sr-only">
+			Controls
+		</h2>
+		<label class="text-muted mb-1 block" for="frameDuration">
+			Opus frame duration (μs)
+		</label>
+		<input id="frameDuration" class="demo-input w-full sm:max-w-xs" type="number" value="7500" />
+		<p class="text-muted mt-1 mb-4">
+			e.g. 2500 (2.5 ms), 5000 (5 ms), 7500 (7.5 ms), 10000 (10 ms)
+		</p>
+		<div class="flex flex-wrap gap-3">
+			<button id="startButton" class="demo-button" type="button">
+				Start Test
+			</button>
+			<button id="stopButton" class="demo-button" type="button" disabled>
+				Stop Test
+			</button>
+		</div>
+		<p id="status" class="demo-status mt-4" role="status">
+			Click "Start Test" to begin.
+		</p>
+	</section>
+
+	<section aria-labelledby="players-heading">
+		<h2 id="players-heading" class="sr-only">
+			Players
+		</h2>
+		<div class="grid gap-6 sm:grid-cols-2">
+			<div>
+				<h3 class="mb-2 font-semibold">Original Audio (Live Mic)</h3>
+				<audio id="originalPlayer" controls class="w-full"></audio>
+			</div>
+			<div>
+				<h3 class="mb-2 font-semibold">Decoded Audio (After Stop)</h3>
+				<audio id="decodedPlayer" controls class="w-full"></audio>
+			</div>
+		</div>
+	</section>
+</PageLayout>
+
+<script>
+	type DecodedFrame = {
+		buffer: ArrayBuffer;
+		sampleRate: number;
+		numberOfFrames: number;
+		numberOfChannels: number;
+	};
+
+	/** Interleaves an AudioBuffer into a 16-bit PCM (or 32-bit float) WAV blob. */
+	function bufferToWave(abuffer: AudioBuffer, asFloat = false) {
+		const numOfChan = abuffer.numberOfChannels;
+		const bytesPerSample = asFloat ? 4 : 2;
+		const dataLength = abuffer.length * numOfChan * bytesPerSample;
+		const buffer = new ArrayBuffer(44 + dataLength);
+		const view = new DataView(buffer);
+		let pos = 0;
+
+		const writeString = (s: string) => {
+			for (let i = 0; i < s.length; i++) view.setUint8(pos++, s.charCodeAt(i));
+		};
+		const writeUint32 = (value: number) => {
+			view.setUint32(pos, value, true);
+			pos += 4;
+		};
+		const writeUint16 = (value: number) => {
+			view.setUint16(pos, value, true);
+			pos += 2;
+		};
+
+		writeString("RIFF");
+		writeUint32(36 + dataLength);
+		writeString("WAVE");
+		writeString("fmt ");
+		writeUint32(16);
+		writeUint16(asFloat ? 3 : 1);
+		writeUint16(numOfChan);
+		writeUint32(abuffer.sampleRate);
+		writeUint32(abuffer.sampleRate * numOfChan * bytesPerSample);
+		writeUint16(numOfChan * bytesPerSample);
+		writeUint16(asFloat ? 32 : 16);
+		writeString("data");
+		writeUint32(dataLength);
+
+		const channels = Array.from({ length: numOfChan }, (_, i) => abuffer.getChannelData(i));
+		for (let i = 0; i < abuffer.length; i++) {
+			for (const channel of channels) {
+				const sample = channel[i] ?? 0;
+				if (asFloat) {
+					view.setFloat32(pos, sample, true);
+					pos += 4;
+				} else {
+					const s = Math.max(-1, Math.min(1, sample));
+					view.setInt16(pos, s < 0 ? s * 0x8000 : s * 0x7fff, true);
+					pos += 2;
+				}
+			}
+		}
+
+		return new Blob([buffer], { type: "audio/wav" });
+	}
+
+	function init() {
+		const startButton = document.getElementById("startButton") as HTMLButtonElement | null;
+		const stopButton = document.getElementById("stopButton") as HTMLButtonElement | null;
+		const durationInput = document.getElementById("frameDuration") as HTMLInputElement | null;
+		const statusEl = document.getElementById("status");
+		const originalPlayer = document.getElementById("originalPlayer") as HTMLAudioElement | null;
+		const decodedPlayer = document.getElementById("decodedPlayer") as HTMLAudioElement | null;
+		if (
+			!startButton ||
+			!stopButton ||
+			!durationInput ||
+			!statusEl ||
+			!originalPlayer ||
+			!decodedPlayer
+		) {
+			return;
+		}
+
+		let mediaStream: MediaStream | undefined;
+		let audioContext: AudioContext | undefined;
+		let scriptNode: ScriptProcessorNode | undefined;
+		let mediaStreamSource: MediaStreamAudioSourceNode | undefined;
+		let audioEncoder: AudioEncoder | undefined;
+		let audioDecoder: AudioDecoder | undefined;
+		let decodedFrames: DecodedFrame[] = [];
+		let decodedUrl: string | undefined;
+
+		function updateStatus(message: string, isError = false) {
+			if (!statusEl) return;
+			statusEl.textContent = message;
+			statusEl.dataset.state = isError ? "error" : "info";
+		}
+
+		// --- WebCodecs ---
+
+		function handleDecodedFrame(frame: AudioData) {
+			const buffer = new ArrayBuffer(frame.allocationSize({ planeIndex: 0 }));
+			frame.copyTo(buffer, { planeIndex: 0 });
+			decodedFrames.push({
+				buffer,
+				sampleRate: frame.sampleRate,
+				numberOfFrames: frame.numberOfFrames,
+				numberOfChannels: frame.numberOfChannels,
+			});
+			frame.close();
+		}
+
+		function handleEncodedChunk(chunk: EncodedAudioChunk) {
+			if (audioDecoder?.state !== "configured") return;
+			try {
+				audioDecoder.decode(chunk);
+			} catch (error) {
+				console.error("Decoding error:", error);
+			}
+		}
+
+		function initCodecs(sampleRate: number, numberOfChannels: number, frameDuration: number) {
+			audioEncoder = new AudioEncoder({
+				output: handleEncodedChunk,
+				error: (error) => updateStatus(`Encoder error: ${error.message}`, true),
+			});
+			audioEncoder.configure({
+				codec: "opus",
+				sampleRate,
+				numberOfChannels,
+				opus: { frameDuration },
+			});
+
+			audioDecoder = new AudioDecoder({
+				output: handleDecodedFrame,
+				error: (error) => updateStatus(`Decoder error: ${error.message}`, true),
+			});
+			audioDecoder.configure({ codec: "opus", sampleRate, numberOfChannels });
+		}
+
+		function handleAudioProcess(event: AudioProcessingEvent) {
+			if (audioEncoder?.state !== "configured") return;
+
+			const { inputBuffer, outputBuffer } = event;
+			// Monitor: pass the live input straight through to the output.
+			for (let channel = 0; channel < outputBuffer.numberOfChannels; channel++) {
+				outputBuffer.getChannelData(channel).set(inputBuffer.getChannelData(channel));
+			}
+
+			const audioData = new AudioData({
+				format: "f32-planar",
+				sampleRate: inputBuffer.sampleRate,
+				numberOfFrames: inputBuffer.length,
+				numberOfChannels: inputBuffer.numberOfChannels,
+				timestamp: event.playbackTime * 1_000_000,
+				data: inputBuffer.getChannelData(0).buffer.slice(0),
+			});
+
+			try {
+				audioEncoder.encode(audioData);
+			} catch (error) {
+				console.error("Encoding error:", error);
+				audioData.close();
+			}
+		}
+
+		function buildAndPlayDecodedWav() {
+			if (!decodedPlayer) return;
+			if (decodedFrames.length === 0) {
+				updateStatus("Test complete. No audio was decoded.", true);
+				return;
+			}
+
+			try {
+				const first = decodedFrames[0];
+				if (!first) return;
+				const totalSamples = decodedFrames.reduce((acc, frame) => acc + frame.numberOfFrames, 0);
+				const audioBuffer = new AudioBuffer({
+					length: totalSamples,
+					sampleRate: first.sampleRate,
+					numberOfChannels: first.numberOfChannels,
+				});
+
+				// Frames are f32-planar; only channel 0 is stitched (the capture is mono).
+				let offset = 0;
+				for (const frame of decodedFrames) {
+					audioBuffer.getChannelData(0).set(new Float32Array(frame.buffer), offset);
+					offset += frame.numberOfFrames;
+				}
+
+				if (decodedUrl) URL.revokeObjectURL(decodedUrl);
+				decodedUrl = URL.createObjectURL(bufferToWave(audioBuffer));
+				decodedPlayer.src = decodedUrl;
+				decodedPlayer.play();
+				updateStatus("Test complete. Playing decoded audio.");
+			} catch (error) {
+				console.error("Error building WAV:", error);
+				const message = error instanceof Error ? error.message : String(error);
+				updateStatus(`Error building decoded audio: ${message}`, true);
+			}
+
+			decodedFrames = [];
+		}
+
+		function stopTest() {
+			if (!startButton || !stopButton || !originalPlayer) return;
+			startButton.disabled = false;
+			stopButton.disabled = true;
+			updateStatus("Test stopping…");
+
+			mediaStream?.getTracks().forEach((track) => track.stop());
+			mediaStream = undefined;
+			originalPlayer.srcObject = null;
+
+			if (scriptNode) {
+				scriptNode.disconnect();
+				scriptNode.onaudioprocess = null;
+				scriptNode = undefined;
+			}
+			mediaStreamSource?.disconnect();
+			mediaStreamSource = undefined;
+
+			if (audioEncoder && audioEncoder.state !== "closed") audioEncoder.close();
+			audioEncoder = undefined;
+			if (audioDecoder && audioDecoder.state !== "closed") audioDecoder.close();
+			audioDecoder = undefined;
+			if (audioContext && audioContext.state !== "closed") audioContext.close();
+			audioContext = undefined;
+
+			updateStatus("Processing decoded audio…");
+			buildAndPlayDecodedWav();
+		}
+
+		async function startTest() {
+			if (!startButton || !stopButton || !durationInput || !originalPlayer || !decodedPlayer)
+				return;
+			if (!("AudioEncoder" in window) || !("AudioDecoder" in window)) {
+				updateStatus("Error: WebCodecs API not supported in this browser.", true);
+				return;
+			}
+
+			startButton.disabled = true;
+			stopButton.disabled = false;
+			decodedPlayer.removeAttribute("src");
+			decodedFrames = [];
+			updateStatus("Requesting microphone permission…");
+
+			try {
+				mediaStream = await navigator.mediaDevices.getUserMedia({
+					audio: { sampleRate: 48000, channelCount: 1 },
+				});
+
+				originalPlayer.srcObject = mediaStream;
+				originalPlayer.muted = true;
+				originalPlayer.play();
+
+				updateStatus("Microphone connected. Initializing codecs…");
+
+				const frameDuration = Number.parseInt(durationInput.value, 10);
+				if (Number.isNaN(frameDuration) || frameDuration <= 0) {
+					updateStatus("Invalid frame duration.", true);
+					stopTest();
+					return;
+				}
+
+				const context = new AudioContext();
+				audioContext = context;
+				const channelCount = 1;
+				mediaStreamSource = context.createMediaStreamSource(mediaStream);
+				scriptNode = context.createScriptProcessor(4096, channelCount, channelCount);
+
+				initCodecs(context.sampleRate, channelCount, frameDuration);
+
+				scriptNode.onaudioprocess = handleAudioProcess;
+				mediaStreamSource.connect(scriptNode);
+				scriptNode.connect(context.destination);
+
+				updateStatus(`Test started. Encoding with Opus frame duration: ${frameDuration} μs`);
+			} catch (error) {
+				console.error("Error starting test:", error);
+				const message = error instanceof Error ? error.message : String(error);
+				updateStatus(`Error: ${message}`, true);
+				stopTest();
+			}
+		}
+
+		startButton.addEventListener("click", startTest);
+		stopButton.addEventListener("click", stopTest);
+	}
+
+	init();
+</script>

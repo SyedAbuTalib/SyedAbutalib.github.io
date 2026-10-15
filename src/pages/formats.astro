@@ -1,0 +1,254 @@
+---
+import PageLayout from "@/layouts/Base.astro";
+
+const meta = {
+	description:
+		"Records a generated canvas + sine-wave stream with MediaRecorder into containers like Matroska or QuickTime and verifies the browser can play the result back natively.",
+	title: "Media Formats Compatibility Test",
+};
+
+const FORMATS = [
+	{ mime: "video/matroska;codecs=vp9", label: "video/matroska (VP9)" },
+	{ mime: "video/x-matroska;codecs=vp9", label: "video/x-matroska (VP9)" },
+	{ mime: "audio/matroska;codecs=opus", label: "audio/matroska (Opus)" },
+	{ mime: "audio/x-matroska;codecs=opus", label: "audio/x-matroska (Opus)" },
+	{ mime: "video/quicktime;codecs=vp9", label: "video/quicktime (MOV / VP9)" },
+];
+---
+
+<PageLayout meta={meta}>
+	<h1 class="title mb-6">Media Formats Compatibility Test</h1>
+	<p class="mb-10">
+		Verifies that the browser can record and natively play back specific container formats (like{" "}
+		<code>video/matroska</code> or <code>video/quicktime</code>) via <code>MediaRecorder</code>.
+	</p>
+
+	<section aria-labelledby="source-heading" class="mb-12">
+		<h2 id="source-heading" class="title mb-4 text-xl">
+			1. Start Content Source
+		</h2>
+		<p class="mb-4">
+			Generates a red bouncing box (video) and a 440 Hz sine wave (audio) to record.
+		</p>
+		<canvas
+			id="canvas"
+			width="320"
+			height="240"
+			class="border-muted/40 mb-4 block max-w-full border"
+		></canvas>
+		<button id="btnStartSource" class="demo-button" type="button">
+			Start Animation & Audio
+		</button>
+	</section>
+
+	<section aria-labelledby="record-heading" class="mb-12">
+		<h2 id="record-heading" class="title mb-4 text-xl">
+			2. Record
+		</h2>
+		<label class="text-muted mb-1 block" for="mimeSelect">
+			Format
+		</label>
+		<select id="mimeSelect" class="demo-input mb-4 w-full sm:max-w-sm">
+			{FORMATS.map((format) => (
+				<option value={format.mime}>{format.label}</option>
+			))}
+		</select>
+		<div class="flex flex-wrap gap-3">
+			<button id="btnStartRecord" class="demo-button" type="button" disabled>
+				Start Recording
+			</button>
+			<button id="btnStopRecord" class="demo-button" type="button" disabled>
+				Stop & Verify
+			</button>
+		</div>
+		<p id="status" class="demo-status mt-4" role="status">
+			Waiting for source…
+		</p>
+	</section>
+
+	<section aria-labelledby="verify-heading">
+		<h2 id="verify-heading" class="title mb-4 text-xl">
+			3. Verification (Playback & Download)
+		</h2>
+		<div id="playbackArea" class="space-y-6">
+			<p class="text-muted" data-placeholder>
+				Recorded clips will appear here…
+			</p>
+		</div>
+	</section>
+</PageLayout>
+
+<script>
+	function init() {
+		const canvas = document.getElementById("canvas") as HTMLCanvasElement | null;
+		const btnStartSource = document.getElementById("btnStartSource") as HTMLButtonElement | null;
+		const btnStartRecord = document.getElementById("btnStartRecord") as HTMLButtonElement | null;
+		const btnStopRecord = document.getElementById("btnStopRecord") as HTMLButtonElement | null;
+		const mimeSelect = document.getElementById("mimeSelect") as HTMLSelectElement | null;
+		const statusEl = document.getElementById("status");
+		const playbackArea = document.getElementById("playbackArea");
+		const ctx = canvas?.getContext("2d");
+		if (
+			!canvas ||
+			!ctx ||
+			!btnStartSource ||
+			!btnStartRecord ||
+			!btnStopRecord ||
+			!mimeSelect ||
+			!statusEl ||
+			!playbackArea
+		) {
+			return;
+		}
+
+		let audioCtx: AudioContext | undefined;
+		let dest: MediaStreamAudioDestinationNode | undefined;
+		let mediaStream: MediaStream | undefined;
+		let recorder: MediaRecorder | undefined;
+		let chunks: Blob[] = [];
+		let animationId: number | undefined;
+		let frame = 0;
+		let x = 0;
+		let speed = 2;
+
+		function setStatus(message: string, state: "info" | "success" | "error" | "warning" = "info") {
+			if (!statusEl) return;
+			statusEl.textContent = message;
+			statusEl.dataset.state = state;
+		}
+
+		function draw() {
+			if (!canvas || !ctx) return;
+			ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+			ctx.fillStyle = "#f0f0f0";
+			ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+			ctx.fillStyle = "black";
+			ctx.font = "16px monospace";
+			ctx.fillText(`Time: ${new Date().toLocaleTimeString()}`, 10, 30);
+			ctx.fillText(`Frame: ${frame++}`, 10, 50);
+
+			ctx.fillStyle = "#D32F2F";
+			ctx.fillRect(x, 100, 50, 50);
+
+			x += speed;
+			if (x > canvas.width - 50 || x < 0) speed = -speed;
+
+			animationId = requestAnimationFrame(draw);
+		}
+
+		btnStartSource.addEventListener("click", () => {
+			if (!audioCtx) {
+				audioCtx = new AudioContext();
+				dest = audioCtx.createMediaStreamDestination();
+				const oscillator = audioCtx.createOscillator();
+				oscillator.type = "sine";
+				oscillator.frequency.setValueAtTime(440, audioCtx.currentTime);
+				oscillator.connect(dest);
+				oscillator.start();
+			}
+			if (animationId === undefined) draw();
+
+			const audioTrack = dest?.stream.getAudioTracks()[0];
+			mediaStream = new MediaStream(canvas.captureStream(30).getVideoTracks());
+			if (audioTrack) mediaStream.addTrack(audioTrack);
+
+			btnStartSource.disabled = true;
+			btnStartSource.textContent = "Source Running";
+			btnStartRecord.disabled = false;
+			setStatus("Source active. Ready to record.", "success");
+		});
+
+		function extensionFor(mimeType: string) {
+			if (mimeType.includes("quicktime") || mimeType.includes("mov")) return "mov";
+			if (mimeType.includes("webm")) return "webm";
+			if (mimeType.includes("mp4")) return "mp4";
+			return mimeType.startsWith("audio/") ? "mka" : "mkv";
+		}
+
+		function addResult(blob: Blob, mimeType: string) {
+			if (!playbackArea) return;
+			playbackArea.querySelector("[data-placeholder]")?.remove();
+
+			const url = URL.createObjectURL(blob);
+			const sizeKB = (blob.size / 1024).toFixed(2);
+			const ext = extensionFor(mimeType);
+
+			const item = document.createElement("div");
+			item.className = "border-muted/40 border-b pb-6";
+
+			const title = document.createElement("p");
+			title.className = "font-semibold break-all";
+			title.textContent = `Format: ${mimeType} (${sizeKB} KB)`;
+
+			const media = document.createElement(mimeType.startsWith("video") ? "video" : "audio");
+			media.controls = true;
+			media.src = url;
+			media.className =
+				media instanceof HTMLVideoElement
+					? "border-muted/40 mt-3 aspect-video w-full border"
+					: "mt-3 w-full";
+
+			const download = document.createElement("a");
+			download.href = url;
+			download.download = `test_recording_${Date.now()}.${ext}`;
+			download.className = "cactus-link text-accent mt-3 inline-block font-semibold";
+			download.textContent = `Download .${ext} file`;
+
+			item.append(title, media, download);
+			playbackArea.prepend(item);
+		}
+
+		btnStartRecord.addEventListener("click", () => {
+			const mimeType = mimeSelect.value;
+			chunks = [];
+
+			if (!mediaStream) {
+				setStatus("Error: start the content source first.", "error");
+				return;
+			}
+
+			try {
+				const audioTrack = mediaStream.getAudioTracks()[0];
+				const streamToRecord =
+					mimeType.startsWith("audio/") && audioTrack ? new MediaStream([audioTrack]) : mediaStream;
+
+				if (!MediaRecorder.isTypeSupported(mimeType)) {
+					setStatus(`Error: ${mimeType} is NOT supported by this browser.`, "error");
+					return;
+				}
+
+				recorder = new MediaRecorder(streamToRecord, { mimeType });
+				recorder.ondataavailable = (event) => {
+					if (event.data.size > 0) chunks.push(event.data);
+				};
+				recorder.onstop = () => {
+					const blob = new Blob(chunks, { type: mimeType });
+					setStatus(`Finished. Last file size: ${(blob.size / 1024).toFixed(2)} KB.`, "success");
+					addResult(blob, mimeType);
+				};
+
+				recorder.start();
+				setStatus(`Recording… (${mimeType})`, "warning");
+
+				btnStartRecord.disabled = true;
+				btnStopRecord.disabled = false;
+				mimeSelect.disabled = true;
+			} catch (error) {
+				console.error(error);
+				const message = error instanceof Error ? error.message : String(error);
+				setStatus(`Exception: ${message}`, "error");
+			}
+		});
+
+		btnStopRecord.addEventListener("click", () => {
+			recorder?.stop();
+			btnStartRecord.disabled = false;
+			btnStopRecord.disabled = true;
+			mimeSelect.disabled = false;
+		});
+	}
+
+	init();
+</script>

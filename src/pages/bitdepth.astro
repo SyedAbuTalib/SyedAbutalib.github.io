@@ -1,0 +1,259 @@
+---
+import PageLayout from "@/layouts/Base.astro";
+
+const meta = {
+	description:
+		"Records a 5-second clip from your microphone and plays it back so you can verify the capture isn't scrambled or distorted.",
+	title: "Audio Capture Playback Test",
+};
+---
+
+<PageLayout meta={meta}>
+	<h1 class="title mb-6">Audio Capture Playback Test</h1>
+	<p class="mb-10">
+		Records a 5-second clip from your microphone via <code>getUserMedia</code> and plays it back so
+		you can verify the capture sounds correct and is not scrambled or distorted.
+	</p>
+
+	<section aria-labelledby="controls-heading" class="mb-12">
+		<h2 id="controls-heading" class="sr-only">
+			Controls
+		</h2>
+		<div class="flex flex-wrap gap-3">
+			<button id="startButton" class="demo-button" type="button">
+				1. Start Audio Test
+			</button>
+			<button id="recordButton" class="demo-button" type="button" disabled>
+				2. Record 5s Clip
+			</button>
+		</div>
+		<p id="status" class="demo-status mt-4" role="status">
+			Awaiting test start…
+		</p>
+	</section>
+
+	<section id="results" aria-labelledby="results-heading" hidden>
+		<h2 id="results-heading" class="title mb-4 text-xl">
+			Recording Complete
+		</h2>
+		<audio id="audioPlayback" controls class="w-full"></audio>
+		<p class="mt-4">
+			<a id="downloadLink" class="cactus-link text-accent font-semibold">
+				Download WAV file
+			</a>
+		</p>
+		<p class="text-muted mt-1">
+			You can optionally download the recorded clip to analyze it further.
+		</p>
+	</section>
+</PageLayout>
+
+<script>
+	type StatusState = "info" | "success" | "error";
+
+	function mergeBuffers(bufferArray: Float32Array[], totalLength: number) {
+		const result = new Float32Array(totalLength);
+		let offset = 0;
+		for (const buffer of bufferArray) {
+			result.set(buffer, offset);
+			offset += buffer.length;
+		}
+		return result;
+	}
+
+	function writeString(view: DataView, offset: number, string: string) {
+		for (let i = 0; i < string.length; i++) {
+			view.setUint8(offset + i, string.charCodeAt(i));
+		}
+	}
+
+	function floatTo16BitPCM(output: DataView, offset: number, input: Float32Array) {
+		let pos = offset;
+		for (let i = 0; i < input.length; i++, pos += 2) {
+			const s = Math.max(-1, Math.min(1, input[i] ?? 0));
+			output.setInt16(pos, s < 0 ? s * 0x8000 : s * 0x7fff, true);
+		}
+	}
+
+	function floatTo24BitPCM(output: DataView, offset: number, input: Float32Array) {
+		let pos = offset;
+		for (let i = 0; i < input.length; i++, pos += 3) {
+			const s = Math.max(-1, Math.min(1, input[i] ?? 0));
+			const val = Math.trunc(s < 0 ? s * 0x800000 : s * 0x7fffff);
+			output.setInt8(pos, val & 0xff);
+			output.setInt8(pos + 1, (val >> 8) & 0xff);
+			output.setInt8(pos + 2, (val >> 16) & 0xff);
+		}
+	}
+
+	function floatTo32BitPCM(output: DataView, offset: number, input: Float32Array) {
+		let pos = offset;
+		for (let i = 0; i < input.length; i++, pos += 4) {
+			const s = Math.max(-1, Math.min(1, input[i] ?? 0));
+			output.setFloat32(pos, s, true);
+		}
+	}
+
+	function encodeWAV(samples: Float32Array, sampleRate: number, bitsPerSample: 16 | 24 | 32) {
+		const isFloat = bitsPerSample === 32;
+		const bytesPerSample = bitsPerSample / 8;
+		const numChannels = 1;
+		const headerSize = isFloat ? 46 : 44;
+
+		const buffer = new ArrayBuffer(headerSize + samples.length * bytesPerSample);
+		const view = new DataView(buffer);
+
+		const blockAlign = numChannels * bytesPerSample;
+		const byteRate = sampleRate * blockAlign;
+
+		writeString(view, 0, "RIFF");
+		view.setUint32(4, headerSize - 8 + samples.length * bytesPerSample, true);
+		writeString(view, 8, "WAVE");
+
+		writeString(view, 12, "fmt ");
+		if (isFloat) {
+			view.setUint32(16, 18, true);
+			view.setUint16(20, 3, true); // IEEE float
+		} else {
+			view.setUint32(16, 16, true);
+			view.setUint16(20, 1, true); // PCM
+		}
+
+		view.setUint16(22, numChannels, true);
+		view.setUint32(24, sampleRate, true);
+		view.setUint32(28, byteRate, true);
+		view.setUint16(32, blockAlign, true);
+		view.setUint16(34, bitsPerSample, true);
+		if (isFloat) {
+			view.setUint16(36, 0, true); // cbSize
+		}
+
+		writeString(view, isFloat ? 38 : 36, "data");
+		view.setUint32(isFloat ? 42 : 40, samples.length * bytesPerSample, true);
+
+		if (isFloat) {
+			floatTo32BitPCM(view, headerSize, samples);
+		} else if (bitsPerSample === 16) {
+			floatTo16BitPCM(view, headerSize, samples);
+		} else {
+			floatTo24BitPCM(view, headerSize, samples);
+		}
+
+		return new Blob([view], { type: "audio/wav" });
+	}
+
+	function init() {
+		const startButton = document.getElementById("startButton") as HTMLButtonElement | null;
+		const recordButton = document.getElementById("recordButton") as HTMLButtonElement | null;
+		const statusEl = document.getElementById("status");
+		const resultsEl = document.getElementById("results");
+		const audioPlayback = document.getElementById("audioPlayback") as HTMLAudioElement | null;
+		const downloadLink = document.getElementById("downloadLink") as HTMLAnchorElement | null;
+		if (
+			!startButton ||
+			!recordButton ||
+			!statusEl ||
+			!resultsEl ||
+			!audioPlayback ||
+			!downloadLink
+		) {
+			return;
+		}
+
+		let audioStream: MediaStream | undefined;
+		let audioContext: AudioContext | undefined;
+		let scriptNode: ScriptProcessorNode | undefined;
+		let audioBuffers: Float32Array[] = [];
+		let audioUrl: string | undefined;
+
+		function setStatus(message: string, state: StatusState = "info") {
+			if (!statusEl) return;
+			statusEl.textContent = message;
+			statusEl.dataset.state = state;
+		}
+
+		startButton.addEventListener("click", async () => {
+			setStatus("Requesting audio stream…");
+			resultsEl.hidden = true;
+			recordButton.disabled = true;
+
+			try {
+				audioStream = await navigator.mediaDevices.getUserMedia({ audio: true, video: false });
+				const track = audioStream.getAudioTracks()[0];
+				if (!track) {
+					throw new Error("No audio tracks found in the stream.");
+				}
+				const settings = track.getSettings();
+				console.log("Audio stream settings:", settings);
+				setStatus(
+					`Success! Stream obtained. Browser reports sampleRate: ${settings.sampleRate}, sampleSize: ${settings.sampleSize}`,
+					"success",
+				);
+				recordButton.disabled = false;
+			} catch (error) {
+				console.error("getUserMedia error:", error);
+				const name = error instanceof Error ? error.name : String(error);
+				setStatus(`Error: ${name}. Could not get audio stream.`, "error");
+			}
+		});
+
+		recordButton.addEventListener("click", () => {
+			if (!audioStream) {
+				setStatus("Audio stream not started.", "error");
+				return;
+			}
+
+			recordButton.disabled = true;
+			startButton.disabled = true;
+			setStatus("Recording for 5 seconds…");
+			audioBuffers = [];
+
+			const context = new AudioContext();
+			audioContext = context;
+			const source = context.createMediaStreamSource(audioStream);
+
+			const processor = context.createScriptProcessor(4096, 1, 1);
+			scriptNode = processor;
+			processor.onaudioprocess = (event) => {
+				audioBuffers.push(new Float32Array(event.inputBuffer.getChannelData(0)));
+			};
+
+			source.connect(processor);
+			processor.connect(context.destination);
+
+			setTimeout(stopRecordingAndGenerateWav, 5000);
+		});
+
+		function stopRecordingAndGenerateWav() {
+			if (!audioContext || !scriptNode || !startButton || !recordButton) return;
+			if (!resultsEl || !audioPlayback || !downloadLink) return;
+
+			scriptNode.disconnect();
+			setStatus("Recording finished. Generating WAV file…");
+
+			const totalLength = audioBuffers.reduce((acc, buf) => acc + buf.length, 0);
+			const wavBlob = encodeWAV(
+				mergeBuffers(audioBuffers, totalLength),
+				audioContext.sampleRate,
+				32,
+			);
+
+			if (audioContext.state !== "closed") {
+				audioContext.close();
+			}
+
+			if (audioUrl) URL.revokeObjectURL(audioUrl);
+			audioUrl = URL.createObjectURL(wavBlob);
+			audioPlayback.src = audioUrl;
+			downloadLink.href = audioUrl;
+			downloadLink.download = "recording.wav";
+
+			resultsEl.hidden = false;
+			startButton.disabled = false;
+			recordButton.disabled = false;
+			setStatus("Test complete. Check results below.", "success");
+		}
+	}
+
+	init();
+</script>

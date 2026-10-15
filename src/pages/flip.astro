@@ -1,0 +1,312 @@
+---
+import PageLayout from "@/layouts/Base.astro";
+
+const meta = {
+	description:
+		"Live camera preview with a VideoFrame transform that can flip and rotate frames, plus MediaRecorder capture in a selectable container/codec.",
+	title: "Live Video Preview, Recording, Flip & Rotation",
+};
+---
+
+<PageLayout meta={meta}>
+	<h1 class="title mb-6">Live Video Preview, Recording, Flip & Rotation</h1>
+	<p class="mb-10">
+		Pipes the camera through a <code>MediaStreamTrackProcessor</code> → <code>VideoFrame</code>{" "}
+		transform → <code>MediaStreamTrackGenerator</code> chain, so each frame can be flipped or
+		rotated before it reaches the preview and the <code>MediaRecorder</code>. Recordings download
+		when you stop.
+	</p>
+
+	<section aria-labelledby="preview-heading" class="mb-12">
+		<h2 id="preview-heading" class="sr-only">
+			Preview
+		</h2>
+		<video
+			id="video"
+			autoplay
+			playsinline
+			muted
+			class="border-muted/40 aspect-video w-full border bg-black"
+		></video>
+	</section>
+
+	<section aria-labelledby="controls-heading">
+		<h2 id="controls-heading" class="sr-only">
+			Controls
+		</h2>
+		<label class="text-muted mb-1 block" for="codecPreferences">
+			Recording format
+		</label>
+		<select id="codecPreferences" class="demo-input mb-4 w-full sm:max-w-md" disabled></select>
+		<div class="flex flex-wrap gap-3">
+			<button id="startRecording" class="demo-button" type="button" disabled>
+				Start Recording
+			</button>
+			<button id="stopRecording" class="demo-button" type="button" disabled>
+				Stop Recording
+			</button>
+			<button
+				id="flip"
+				class="demo-button"
+				data-variant="outline"
+				type="button"
+				aria-pressed="false"
+				disabled
+			>
+				Flip Horizontally
+			</button>
+			<button id="rotate" class="demo-button" data-variant="outline" type="button" disabled>
+				Rotate 90°
+			</button>
+		</div>
+		<dl class="mt-3 grid grid-cols-[auto_1fr] gap-x-4 gap-y-1">
+			<dt class="text-muted">flip</dt>
+			<dd id="flipState">off</dd>
+			<dt class="text-muted">rotation</dt>
+			<dd id="rotationState">0°</dd>
+		</dl>
+		<p id="statusMessage" class="demo-status mt-4" role="status">
+			Initializing camera…
+		</p>
+		<p id="errorMessage" class="demo-status mt-3" data-state="error" role="alert" hidden></p>
+	</section>
+</PageLayout>
+
+<script>
+	import { whenPageShown } from "@/utils/prerender";
+
+	// Insertable-streams API (Chromium). Not in lib.dom yet, so declare what we use.
+	declare class MediaStreamTrackProcessor {
+		constructor(init: { track: MediaStreamTrack });
+		readonly readable: ReadableStream<VideoFrame>;
+	}
+	declare class MediaStreamTrackGenerator extends MediaStreamTrack {
+		constructor(init: { kind: "video" | "audio" });
+		readonly writable: WritableStream<VideoFrame>;
+	}
+	type FrameInit = VideoFrameInit & { rotation?: number; flip?: boolean };
+
+	const RECORDING_FORMATS = [
+		{ desc: "MP4 (H.264, AAC)", mimeType: 'video/mp4; codecs="avc1.42E01E, mp4a.40.2"' },
+		{ desc: "MP4 (H.264)", mimeType: 'video/mp4; codecs="avc1.42E01E"' },
+		{ desc: "WebM (VP9, Opus)", mimeType: 'video/webm; codecs="vp9, opus"' },
+		{ desc: "WebM (VP8, Opus)", mimeType: 'video/webm; codecs="vp8, opus"' },
+		{ desc: "WebM (H.264, Opus)", mimeType: 'video/webm; codecs="h264, opus"' },
+		{ desc: "WebM (VP9)", mimeType: "video/webm; codecs=vp9" },
+		{ desc: "WebM (VP8)", mimeType: "video/webm; codecs=vp8" },
+		{ desc: "WebM (Default)", mimeType: "video/webm" },
+	];
+	const H264_VIDEO_BITS_PER_SECOND = 60_000_000;
+	const VIDEO_CONSTRAINTS: MediaTrackConstraints = {
+		width: { ideal: 3840 },
+		height: { ideal: 2160 },
+		frameRate: { ideal: 60, min: 24 },
+	};
+
+	function init() {
+		const videoElement = document.getElementById("video") as HTMLVideoElement | null;
+		const startButton = document.getElementById("startRecording") as HTMLButtonElement | null;
+		const stopButton = document.getElementById("stopRecording") as HTMLButtonElement | null;
+		const flipButton = document.getElementById("flip") as HTMLButtonElement | null;
+		const rotateButton = document.getElementById("rotate") as HTMLButtonElement | null;
+		const codecSelect = document.getElementById("codecPreferences") as HTMLSelectElement | null;
+		const statusEl = document.getElementById("statusMessage");
+		const errorEl = document.getElementById("errorMessage");
+		const flipState = document.getElementById("flipState");
+		const rotationState = document.getElementById("rotationState");
+		if (
+			!videoElement ||
+			!startButton ||
+			!stopButton ||
+			!flipButton ||
+			!rotateButton ||
+			!codecSelect ||
+			!statusEl ||
+			!errorEl ||
+			!flipState ||
+			!rotationState
+		) {
+			return;
+		}
+
+		let mediaRecorder: MediaRecorder | undefined;
+		let recordedBlobs: Blob[] = [];
+		let hFlip = false;
+		let currentRotation = 0;
+		let processedLiveStream: MediaStream | undefined;
+
+		function setStatus(message: string, state: "info" | "success" | "warning" = "info") {
+			if (!statusEl) return;
+			statusEl.textContent = message;
+			statusEl.dataset.state = state;
+		}
+		function setError(message: string) {
+			if (!errorEl) return;
+			errorEl.textContent = message;
+			errorEl.hidden = message === "";
+		}
+		function setControls(enabled: boolean) {
+			if (!startButton || !flipButton || !rotateButton || !codecSelect) return;
+			startButton.disabled = !enabled;
+			flipButton.disabled = !enabled;
+			rotateButton.disabled = !enabled;
+			codecSelect.disabled = !enabled;
+		}
+
+		function populateCodecSelector() {
+			if (!codecSelect) return false;
+			for (const format of RECORDING_FORMATS) {
+				if (MediaRecorder.isTypeSupported(format.mimeType)) {
+					const option = document.createElement("option");
+					option.value = format.mimeType;
+					option.textContent = `${format.desc} (${format.mimeType})`;
+					codecSelect.appendChild(option);
+				} else {
+					console.warn(`MIME type not supported: ${format.mimeType}`);
+				}
+			}
+			if (codecSelect.options.length === 0) {
+				setStatus("No supported recording formats found!", "warning");
+				setControls(false);
+				return false;
+			}
+			codecSelect.disabled = false;
+			return true;
+		}
+
+		async function initCamera() {
+			if (!videoElement) return;
+			setError("");
+			setStatus("Requesting camera access…");
+			try {
+				if (!populateCodecSelector()) {
+					setError("No supported recording formats found. Cannot initialize.");
+					return;
+				}
+				if (!("MediaStreamTrackProcessor" in window) || !("MediaStreamTrackGenerator" in window)) {
+					throw new Error("MediaStreamTrackProcessor/Generator are not available in this browser");
+				}
+
+				const liveStream = await navigator.mediaDevices.getUserMedia({
+					video: VIDEO_CONSTRAINTS,
+					audio: true,
+				});
+				setStatus("Camera accessed. Setting up preview…");
+
+				const originalVideoTrack = liveStream.getVideoTracks()[0];
+				const originalAudioTrack = liveStream.getAudioTracks()[0];
+				if (!originalVideoTrack) throw new Error("No video track in the camera stream");
+
+				const processor = new MediaStreamTrackProcessor({ track: originalVideoTrack });
+				const generator = new MediaStreamTrackGenerator({ kind: "video" });
+
+				const transformer = new TransformStream<VideoFrame, VideoFrame>({
+					transform(videoFrame, controller) {
+						const frameInit: FrameInit = {
+							timestamp: videoFrame.timestamp,
+							displayWidth: videoFrame.displayWidth,
+							displayHeight: videoFrame.displayHeight,
+							rotation: currentRotation,
+						};
+						if (videoFrame.visibleRect) frameInit.visibleRect = videoFrame.visibleRect;
+						if (hFlip) frameInit.flip = true;
+						controller.enqueue(new VideoFrame(videoFrame, frameInit));
+						videoFrame.close();
+					},
+				});
+				processor.readable.pipeThrough(transformer).pipeTo(generator.writable);
+
+				const tracks: MediaStreamTrack[] = [generator];
+				if (originalAudioTrack) tracks.push(originalAudioTrack);
+				processedLiveStream = new MediaStream(tracks);
+				videoElement.srcObject = processedLiveStream;
+
+				setControls(true);
+				setStatus("Live preview active. Ready to record.", "success");
+			} catch (error) {
+				console.error("Error initializing camera:", error);
+				setError(`Error initializing camera: ${String(error)}. Please check permissions.`);
+				setStatus("Camera initialization failed.", "warning");
+				setControls(false);
+			}
+		}
+
+		function startRecording() {
+			if (!stopButton || !codecSelect) return;
+			if (!processedLiveStream) {
+				setError("Live stream not available. Cannot start recording.");
+				return;
+			}
+			setStatus("Recording started…", "warning");
+			setControls(false);
+			stopButton.disabled = false;
+
+			recordedBlobs = [];
+			const selectedMimeType = codecSelect.value;
+			const options: MediaRecorderOptions = { mimeType: selectedMimeType };
+			if (/mp4|avc1|h264/.test(selectedMimeType)) {
+				options.videoBitsPerSecond = H264_VIDEO_BITS_PER_SECOND;
+			}
+
+			try {
+				mediaRecorder = new MediaRecorder(processedLiveStream, options);
+			} catch (error) {
+				console.error("Exception while creating MediaRecorder:", error);
+				setError(`Error creating MediaRecorder (MIME: ${selectedMimeType}): ${String(error)}`);
+				setStatus("Recording failed to start.", "warning");
+				setControls(true);
+				stopButton.disabled = true;
+				return;
+			}
+
+			mediaRecorder.onstop = () => {
+				setStatus("Processing recorded video…");
+				const blob = new Blob(recordedBlobs, { type: selectedMimeType });
+				const url = URL.createObjectURL(blob);
+				const extension = selectedMimeType.includes("mp4") ? "mp4" : "webm";
+				const link = document.createElement("a");
+				link.hidden = true;
+				link.href = url;
+				link.download = `video_hFlip_${hFlip ? "ON" : "OFF"}_rot_${currentRotation}.${extension}`;
+				document.body.appendChild(link);
+				link.click();
+				setTimeout(() => {
+					link.remove();
+					URL.revokeObjectURL(url);
+				}, 100);
+				setStatus("Live preview active. Ready to record again.", "success");
+			};
+			mediaRecorder.ondataavailable = (event) => {
+				if (event.data.size > 0) recordedBlobs.push(event.data);
+			};
+
+			mediaRecorder.start();
+			console.log("MediaRecorder started with options:", options, mediaRecorder);
+		}
+
+		function stopRecording() {
+			if (!stopButton) return;
+			if (mediaRecorder && mediaRecorder.state !== "inactive") mediaRecorder.stop();
+			setStatus("Recording stopped. Download will start shortly.");
+			setControls(true);
+			stopButton.disabled = true;
+		}
+
+		startButton.addEventListener("click", startRecording);
+		stopButton.addEventListener("click", stopRecording);
+		flipButton.addEventListener("click", () => {
+			hFlip = !hFlip;
+			flipButton.setAttribute("aria-pressed", String(hFlip));
+			flipState.textContent = hFlip ? "on" : "off";
+		});
+		rotateButton.addEventListener("click", () => {
+			currentRotation = (currentRotation + 90) % 360;
+			rotationState.textContent = `${currentRotation}°`;
+		});
+
+		initCamera();
+	}
+
+	// Don't ask for the camera while the page is only being prerendered.
+	whenPageShown(init);
+</script>

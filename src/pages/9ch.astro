@@ -1,0 +1,347 @@
+---
+import PageLayout from "@/layouts/Base.astro";
+
+const meta = {
+	description:
+		"Verifies decodeAudioData(), Web Audio multichannel routing, and direct <audio> element playback of 2–16 channel WAVs, with per-channel peak meters.",
+	title: "Multichannel Audio Verification Suite",
+};
+---
+
+<PageLayout meta={meta}>
+	<h1 class="title mb-6">Multichannel Audio Verification Suite</h1>
+	<p class="mb-6">
+		Verifying <code>decodeAudioData()</code>, Web Audio multichannel routing, and direct{" "}
+		<code>&lt;audio&gt;</code> element playback. Each card below is a generated 16-bit WAV with a
+		distinct sine tone per channel (220 Hz + 110 Hz × channel index).
+	</p>
+
+	<aside class="admonition mb-10" data-admonition-type="note" aria-label="Background">
+		<p class="admonition-title" aria-hidden="true">
+			Background
+		</p>
+		<div class="admonition-content">
+			<p class="mt-2 mb-2 font-semibold">Why the original test was silent / reported 2 channels:</p>
+			<ul class="list-inside list-disc space-y-2" role="list">
+				<li>
+					<strong>
+						<code>MediaElementAudioSourceNode.channelCount</code> is 2 by W3C spec:
+					</strong>{" "}
+					the <code>channelCount</code> property on an <code>AudioNode</code> specifies how{" "}
+					<em>inputs</em> to that node are up/down-mixed. Because source nodes have 0 inputs,{" "}
+					<code>channelCount</code> defaults to 2 and has no effect on output channels. The actual
+					channel count is found via <code>decodeAudioData()</code> or by querying output pin
+					connections.
+				</li>
+				<li>
+					<strong>
+						<code>createMediaElementSource()</code> detaches native speaker output:
+					</strong>{" "}
+					calling <code>createMediaElementSource(audio)</code> redirects audio away from standard
+					browser playback into the Web Audio graph. If the context is suspended (autoplay policy)
+					or not routed to <code>destination</code>, the player goes silent.
+				</li>
+				<li>
+					<strong>Discrete stereo downmixing on macOS:</strong> for channel counts &gt; 6, the Web
+					Audio spec mandates discrete routing. Stereo headphones/speakers only receive channels 0
+					&amp; 1; channels 2+ are dropped unless mixed down to stereo.
+				</li>
+			</ul>
+		</div>
+	</aside>
+
+	<section aria-labelledby="custom-heading" class="mb-10">
+		<h2 id="custom-heading" class="sr-only">
+			Custom file
+		</h2>
+		<div
+			id="dropzone"
+			class="border-muted/40 text-muted rounded-sm border-2 border-dashed p-6 text-center transition-colors"
+		>
+			<strong class="text-global-text">Optional:</strong> drag &amp; drop your own WAV /
+			multichannel audio file here, or{" "}
+			<button
+				id="browse-button"
+				class="cactus-link text-accent cursor-pointer font-semibold"
+				type="button"
+			>
+				browse
+			</button>{" "}
+			to test your custom assets.
+			<input id="file-input" type="file" accept="audio/*,.wav" class="sr-only" />
+		</div>
+		<p id="drop-status" class="demo-status mt-4" role="status" hidden></p>
+	</section>
+
+	<section aria-labelledby="cards-heading">
+		<h2 id="cards-heading" class="sr-only">
+			Test cards
+		</h2>
+		<div id="cards-container" class="space-y-6"></div>
+	</section>
+</PageLayout>
+
+<script>
+	type Tone = "ok" | "err";
+	type LogLine = { text: string; tone?: Tone };
+
+	const TEST_SUITES = [
+		{ name: "2 Channels (Stereo)", channels: 2 },
+		{ name: "10 Channels (5.1.4 Dolby Atmos Layout)", channels: 10 },
+		{ name: "12 Channels (7.1.4 Dolby Atmos Layout)", channels: 12 },
+		{ name: "16 Channels (Discrete Multichannel)", channels: 16 },
+	];
+
+	let sharedAudioCtx: AudioContext | undefined;
+
+	function getAudioContext() {
+		if (!sharedAudioCtx) sharedAudioCtx = new AudioContext();
+		if (sharedAudioCtx.state === "suspended") sharedAudioCtx.resume();
+		return sharedAudioCtx;
+	}
+
+	/** Multichannel 16-bit PCM WAV with a distinct sine frequency per channel. */
+	function generateMultichannelWav(numChannels: number, sampleRate = 48000, durationSec = 1.5) {
+		const numFrames = sampleRate * durationSec;
+		const bytesPerSample = 2;
+		const blockAlign = numChannels * bytesPerSample;
+		const dataSize = numFrames * blockAlign;
+		const buffer = new ArrayBuffer(44 + dataSize);
+		const view = new DataView(buffer);
+
+		const writeStr = (offset: number, str: string) => {
+			for (let i = 0; i < str.length; i++) view.setUint8(offset + i, str.charCodeAt(i));
+		};
+
+		writeStr(0, "RIFF");
+		view.setUint32(4, 36 + dataSize, true);
+		writeStr(8, "WAVE");
+		writeStr(12, "fmt ");
+		view.setUint32(16, 16, true);
+		view.setUint16(20, 1, true); // PCM
+		view.setUint16(22, numChannels, true);
+		view.setUint32(24, sampleRate, true);
+		view.setUint32(28, sampleRate * blockAlign, true);
+		view.setUint16(32, blockAlign, true);
+		view.setUint16(34, 16, true); // 16-bit
+		writeStr(36, "data");
+		view.setUint32(40, dataSize, true);
+
+		let offset = 44;
+		for (let i = 0; i < numFrames; i++) {
+			for (let ch = 0; ch < numChannels; ch++) {
+				const freq = 220 + ch * 110;
+				const sample = Math.sin((2 * Math.PI * freq * i) / sampleRate) * 0.6;
+				view.setInt16(offset, Math.max(-32768, Math.min(32767, sample * 32767)), true);
+				offset += 2;
+			}
+		}
+		return new Blob([buffer], { type: "audio/wav" });
+	}
+
+	function writeLog(term: HTMLElement, lines: LogLine[], append = false) {
+		if (!append) term.replaceChildren();
+		for (const [index, { text, tone }] of lines.entries()) {
+			if (append || index > 0) term.append("\n");
+			const span = document.createElement("span");
+			if (tone === "ok") span.className = "text-lime-500 font-semibold";
+			if (tone === "err") span.className = "text-red-500 font-semibold";
+			span.textContent = text;
+			term.append(span);
+		}
+		term.scrollTop = term.scrollHeight;
+	}
+
+	function createTestCard(container: HTMLElement, title: string, numChannels: number, blob: Blob) {
+		const blobUrl = URL.createObjectURL(blob);
+		const card = document.createElement("article");
+		card.className = "border-muted/40 rounded-sm border p-4";
+
+		const meterCols = Array.from(
+			{ length: numChannels },
+			(_, i) =>
+				`<div class="bg-muted/20 relative flex-1 overflow-hidden rounded-xs"><div class="bg-accent absolute inset-x-0 bottom-0 h-0 transition-[height]" data-meter="${i}"></div></div>`,
+		).join("");
+		const meterLabels = Array.from(
+			{ length: numChannels },
+			(_, i) => `<span class="flex-1">Ch${i}</span>`,
+		).join("");
+
+		card.innerHTML = `
+			<header class="mb-3 flex flex-wrap items-center justify-between gap-2">
+				<h3 class="font-semibold" data-title></h3>
+				<span class="bg-accent/10 text-accent rounded-full px-2.5 py-0.5 text-xs font-semibold">${numChannels} channels</span>
+			</header>
+			<div class="flex flex-wrap gap-2">
+				<button class="demo-button" type="button" data-action="decode">1. Verify decodeAudioData()</button>
+				<button class="demo-button" type="button" data-variant="outline" data-action="downmix">2. Play Stereo Downmix (hear all channels)</button>
+				<button class="demo-button" type="button" data-variant="outline" data-action="discrete">3. Play Direct (discrete routing)</button>
+			</div>
+			<p class="text-muted mt-4 mb-1 text-xs font-semibold uppercase">Decoded signal levels per channel</p>
+			<div class="bg-muted/10 flex h-6 items-stretch gap-1 rounded-sm p-1">${meterCols}</div>
+			<div class="text-muted mb-4 flex gap-1 text-center text-[0.65rem]">${meterLabels}</div>
+			<div class="border-muted/40 border-t pt-3">
+				<p class="text-muted mb-2">Native browser &lt;audio&gt; player (direct media pipeline, no Web Audio):</p>
+				<audio controls class="w-full" src="${blobUrl}"></audio>
+			</div>
+			<div class="demo-log mt-3" data-terminal>Ready. Click "1. Verify decodeAudioData()" to decode and measure.</div>
+		`;
+
+		const titleEl = card.querySelector<HTMLElement>("[data-title]");
+		if (titleEl) titleEl.textContent = title;
+		container.appendChild(card);
+
+		const term = card.querySelector<HTMLElement>("[data-terminal]");
+		if (!term) return;
+		let decodedAudioBuffer: AudioBuffer | undefined;
+
+		const requireDecoded = () => {
+			if (decodedAudioBuffer) return decodedAudioBuffer;
+			writeLog(term, [{ text: 'Please run "1. Verify decodeAudioData()" first.', tone: "err" }]);
+			return undefined;
+		};
+
+		// 1. decodeAudioData verification + per-channel peak meters
+		card.querySelector("[data-action='decode']")?.addEventListener("click", async () => {
+			const ctx = getAudioContext();
+			try {
+				writeLog(term, [{ text: "Fetching and decoding buffer…" }]);
+				decodedAudioBuffer = await ctx.decodeAudioData(await blob.arrayBuffer());
+
+				for (let c = 0; c < decodedAudioBuffer.numberOfChannels; c++) {
+					const data = decodedAudioBuffer.getChannelData(c);
+					let peak = 0;
+					for (let i = 0; i < data.length; i++) {
+						const value = Math.abs(data[i] ?? 0);
+						if (value > peak) peak = value;
+					}
+					const meter = card.querySelector<HTMLElement>(`[data-meter="${c}"]`);
+					if (meter) meter.style.height = `${Math.min(100, peak * 100)}%`;
+				}
+
+				writeLog(term, [
+					{ text: "✔ decodeAudioData() SUCCEEDED:", tone: "ok" },
+					{ text: `• Channels decoded: ${decodedAudioBuffer.numberOfChannels} / ${numChannels}` },
+					{
+						text: `• Sample rate: ${decodedAudioBuffer.sampleRate} Hz | Duration: ${decodedAudioBuffer.duration.toFixed(2)}s`,
+					},
+					{ text: "• Peak amplitudes: levels rendered above." },
+				]);
+			} catch (error) {
+				const message = error instanceof Error ? error.message : String(error);
+				writeLog(term, [{ text: `✖ decodeAudioData() failed: ${message}`, tone: "err" }]);
+			}
+		});
+
+		// 2. Stereo downmix: even channels → L, odd channels → R
+		card.querySelector("[data-action='downmix']")?.addEventListener("click", () => {
+			const decoded = requireDecoded();
+			if (!decoded) return;
+			const ctx = getAudioContext();
+
+			const stereo = ctx.createBuffer(2, decoded.length, decoded.sampleRate);
+			const left = stereo.getChannelData(0);
+			const right = stereo.getChannelData(1);
+			const scale = decoded.numberOfChannels / 2;
+			for (let c = 0; c < decoded.numberOfChannels; c++) {
+				const channelData = decoded.getChannelData(c);
+				const dest = c % 2 === 0 ? left : right;
+				for (let i = 0; i < decoded.length; i++) {
+					dest[i] = (dest[i] ?? 0) + (channelData[i] ?? 0) / scale;
+				}
+			}
+
+			const source = ctx.createBufferSource();
+			source.buffer = stereo;
+			source.connect(ctx.destination);
+			source.start();
+			writeLog(
+				term,
+				[{ text: `▶ Playing all ${numChannels} channels downmixed to stereo.` }],
+				true,
+			);
+		});
+
+		// 3. Direct (discrete) routing
+		card.querySelector("[data-action='discrete']")?.addEventListener("click", () => {
+			const decoded = requireDecoded();
+			if (!decoded) return;
+			const ctx = getAudioContext();
+
+			const source = ctx.createBufferSource();
+			source.buffer = decoded;
+			source.connect(ctx.destination);
+			source.start();
+			writeLog(
+				term,
+				[
+					{
+						text: "▶ Playing direct to destination (channels 0 & 1 routed to stereo speakers, 2+ dropped per spec).",
+					},
+				],
+				true,
+			);
+		});
+	}
+
+	function init() {
+		const container = document.getElementById("cards-container");
+		const dropzone = document.getElementById("dropzone");
+		const fileInput = document.getElementById("file-input") as HTMLInputElement | null;
+		const browseButton = document.getElementById("browse-button");
+		const dropStatus = document.getElementById("drop-status");
+		if (!container || !dropzone || !fileInput || !browseButton || !dropStatus) return;
+
+		for (const suite of TEST_SUITES) {
+			createTestCard(
+				container,
+				suite.name,
+				suite.channels,
+				generateMultichannelWav(suite.channels),
+			);
+		}
+
+		function setDropStatus(message: string, state: "info" | "success" | "error") {
+			if (!dropStatus) return;
+			dropStatus.textContent = message;
+			dropStatus.dataset.state = state;
+			dropStatus.hidden = false;
+		}
+
+		async function handleCustomFile(file: File) {
+			if (!container) return;
+			const ctx = getAudioContext();
+			try {
+				setDropStatus(`Decoding ${file.name}…`, "info");
+				const decoded = await ctx.decodeAudioData(await file.arrayBuffer());
+				createTestCard(container, `Uploaded: ${file.name}`, decoded.numberOfChannels, file);
+				setDropStatus(
+					`Added "${file.name}" (${decoded.numberOfChannels} channels) at the bottom of the list.`,
+					"success",
+				);
+			} catch (error) {
+				const message = error instanceof Error ? error.message : String(error);
+				setDropStatus(`Failed to decode uploaded file: ${message}`, "error");
+			}
+		}
+
+		browseButton.addEventListener("click", () => fileInput.click());
+		fileInput.addEventListener("change", () => {
+			const file = fileInput.files?.[0];
+			if (file) handleCustomFile(file);
+		});
+		dropzone.addEventListener("dragover", (event) => {
+			event.preventDefault();
+			dropzone.classList.add("border-accent");
+		});
+		dropzone.addEventListener("dragleave", () => dropzone.classList.remove("border-accent"));
+		dropzone.addEventListener("drop", (event) => {
+			event.preventDefault();
+			dropzone.classList.remove("border-accent");
+			const file = event.dataTransfer?.files[0];
+			if (file) handleCustomFile(file);
+		});
+	}
+
+	init();
+</script>

@@ -1,0 +1,131 @@
+---
+import PageLayout from "@/layouts/Base.astro";
+
+const meta = {
+	description:
+		"Injects a VTTCue into a metadata text track after playback has already passed the cue's time range, and logs whether its enter/exit events fire retroactively.",
+	title: "Dynamic VTTCue Timing Test",
+};
+---
+
+<PageLayout meta={meta}>
+	<h1 class="title mb-6">Dynamic VTTCue Timing Test</h1>
+	<p class="mb-10">
+		Plays a silent clip and, once playback passes 8 seconds, injects a <code>VTTCue</code> spanning
+		1–3 s into a metadata track. The cue's <code>enter</code> event should <em>not</em> fire
+		retroactively — the log below records what actually happens.
+	</p>
+
+	<section aria-labelledby="player-heading" class="mb-12">
+		<h2 id="player-heading" class="sr-only">
+			Player
+		</h2>
+		<video
+			id="vtt-video"
+			controls
+			autoplay
+			muted
+			preload="metadata"
+			class="border-muted/40 aspect-video w-full border"
+		>
+			<source src="/assets/media/silent.mp4" type="video/mp4" />
+			<track id="vtt-track" label="Dynamic Cues" kind="metadata" srclang="en" default />
+			Your browser does not support the video tag.
+		</video>
+	</section>
+
+	<section aria-labelledby="log-heading">
+		<h2 id="log-heading" class="title mb-4 text-xl">
+			Status Log
+		</h2>
+		<div id="vtt-log" class="demo-log" role="log" aria-live="polite">
+			<p class="text-muted">Waiting for video to start and reach 8 seconds…</p>
+		</div>
+	</section>
+</PageLayout>
+
+<script>
+	import { whenPageShown } from "@/utils/prerender";
+
+	type Tone = "muted" | "info" | "success" | "error" | "warning" | "plain";
+
+	const TONE_CLASS: Record<Tone, string> = {
+		muted: "text-muted",
+		info: "text-blue-400",
+		success: "text-lime-500 font-semibold",
+		error: "text-red-500 font-semibold",
+		warning: "text-orange-400 font-semibold",
+		plain: "",
+	};
+
+	function start() {
+		const video = document.getElementById("vtt-video") as HTMLVideoElement | null;
+		const trackElement = document.getElementById("vtt-track") as HTMLTrackElement | null;
+		const logEl = document.getElementById("vtt-log");
+		if (!video || !trackElement || !logEl) return;
+
+		const track = trackElement.track;
+		let cueAdded = false;
+
+		function log(message: string, tone: Tone = "plain") {
+			if (!video || !logEl) return;
+			const line = document.createElement("p");
+			if (TONE_CLASS[tone]) line.className = TONE_CLASS[tone];
+			line.textContent = `[${video.currentTime.toFixed(2)}s] ${message}`;
+			logEl.appendChild(line);
+			logEl.scrollTop = logEl.scrollHeight;
+		}
+
+		video.addEventListener("loadedmetadata", () => {
+			log("Video metadata loaded. Starting playback…", "warning");
+			video.play().catch((error: unknown) => {
+				const message = error instanceof Error ? error.message : String(error);
+				log(`Playback failed (browsers usually require a user gesture): ${message}`, "error");
+				log("Please press the play button manually.", "error");
+			});
+		});
+
+		video.addEventListener("timeupdate", () => {
+			const currentTime = video.currentTime;
+
+			if (currentTime >= 8 && !cueAdded) {
+				cueAdded = true;
+
+				const cueStart = 1;
+				const cueEnd = 3;
+				const cue = new VTTCue(cueStart, cueEnd, "Problem Cue Added Late");
+
+				cue.onenter = () => {
+					log(
+						`✅ CUE ENTERED at ${video.currentTime.toFixed(2)}s! (Cue: ${cueStart}–${cueEnd}s)`,
+						"success",
+					);
+				};
+				cue.onexit = () => {
+					log(
+						`❌ CUE EXITED at ${video.currentTime.toFixed(2)}s! (Cue: ${cueStart}–${cueEnd}s)`,
+						"error",
+					);
+				};
+
+				track.addCue(cue);
+
+				log("--- Cue injected ---", "info");
+				log(`Current time: ${currentTime.toFixed(2)}s.`, "info");
+				log(`Injected cue range: ${cueStart}s to ${cueEnd}s.`, "info");
+				log(
+					"Observation: the 'enter' event for the 1–3s cue should NOT fire retroactively.",
+					"info",
+				);
+			}
+
+			if (Math.floor(currentTime) > Math.floor(video.currentTime - 0.1)) {
+				log(`Video time: ${currentTime.toFixed(1)}s`, "muted");
+			}
+		});
+
+		video.addEventListener("ended", () => log("Video playback ended."));
+	}
+
+	whenPageShown(start);
+</script>

@@ -1,0 +1,72 @@
+---
+import PageLayout from "@/layouts/Base.astro";
+
+const meta = {
+	description:
+		"Checks whether this browser lets an <audio autoplay> element start without a user gesture.",
+	title: "Autoplay Permission Test",
+};
+---
+
+<PageLayout meta={meta}>
+	<h1 class="title mb-6">Autoplay Permission Test</h1>
+	<p class="mb-10">
+		The player below carries the <code>autoplay</code> attribute. If this browser's autoplay policy
+		allows it, the clip starts on its own; otherwise it stays paused until you press play.
+	</p>
+
+	<section aria-labelledby="player-heading">
+		<h2 id="player-heading" class="sr-only">
+			Player
+		</h2>
+		<audio id="autoplay-audio" controls autoplay class="w-full">
+			<source src="/assets/media/autoplay.wav" type="audio/wav" />
+		</audio>
+		<p id="status" class="demo-status mt-4" role="status">
+			Waiting for the browser to decide…
+		</p>
+	</section>
+</PageLayout>
+
+<script>
+	import { whenPageShown } from "@/utils/prerender";
+
+	function start() {
+		const audio = document.getElementById("autoplay-audio") as HTMLAudioElement | null;
+		const statusEl = document.getElementById("status");
+		if (!audio || !statusEl) return;
+
+		let started = false;
+		const setStatus = (message: string, state: "success" | "warning" | "error") => {
+			statusEl.textContent = message;
+			statusEl.dataset.state = state;
+		};
+		const markStarted = () => {
+			if (started) return;
+			started = true;
+			setStatus("Playing — autoplay was allowed.", "success");
+		};
+
+		// Playback may already be underway if the clip was cached.
+		if (!audio.paused) markStarted();
+		audio.addEventListener("play", markStarted);
+		audio.addEventListener("error", () => {
+			setStatus("Error: the audio file could not be loaded.", "error");
+		});
+
+		// If the clip is ready but still paused shortly after, autoplay was blocked.
+		audio.addEventListener(
+			"canplay",
+			() => {
+				setTimeout(() => {
+					if (!started && audio.paused) {
+						setStatus("Autoplay was blocked by the browser — press play to start.", "warning");
+					}
+				}, 1000);
+			},
+			{ once: true },
+		);
+	}
+
+	whenPageShown(start);
+</script>

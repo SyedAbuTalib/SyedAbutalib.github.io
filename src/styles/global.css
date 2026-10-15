@@ -119,6 +119,7 @@
 @layer components {
 	@import "./components/admonition.css";
 	@import "./components/github-card.css";
+	@import "./components/demo.css";
 	@import "katex/dist/katex.min.css";
 
 	/* KaTeX output should follow the page's text colour in both themes */

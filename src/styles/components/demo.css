@@ -1,0 +1,59 @@
+/* Shared controls for the demo/test pages (see src/data/demos.ts). */
+
+.demo-button {
+	@apply bg-accent border-accent text-global-bg inline-flex cursor-pointer items-center justify-center gap-2 rounded-sm border px-3 py-1.5 font-semibold transition-colors;
+	@apply hover:bg-accent/85 hover:border-accent/85;
+	@apply focus-visible:outline-accent focus-visible:outline-2 focus-visible:outline-offset-2;
+
+	/* Secondary actions: outlined, accent text. */
+	&[data-variant="outline"] {
+		@apply text-accent bg-transparent;
+		@apply hover:bg-accent/10 hover:border-accent;
+	}
+
+	/* Toggle buttons (aria-pressed) fill in when active, whatever the variant. */
+	&[aria-pressed="true"] {
+		@apply bg-accent border-accent text-global-bg;
+		@apply hover:bg-accent/85 hover:border-accent/85;
+	}
+
+	&:disabled {
+		@apply border-muted/40 text-muted cursor-not-allowed bg-transparent;
+	}
+}
+
+/* <input> / <select> */
+.demo-input {
+	@apply border-muted/40 bg-global-bg text-global-text rounded-sm border px-3 py-1.5;
+	@apply focus-visible:outline-accent focus-visible:outline-2 focus-visible:outline-offset-2;
+
+	&:disabled {
+		@apply text-muted cursor-not-allowed;
+	}
+}
+
+/* Status line styled like a compact admonition; colour follows data-state. */
+.demo-status {
+	--demo-status-color: var(--color-muted);
+	@apply border-s-2 px-4 py-3;
+	border-color: var(--demo-status-color);
+	background-color: color-mix(in oklab, var(--demo-status-color) 5%, transparent);
+
+	&[data-state="info"] {
+		--demo-status-color: var(--color-blue-400);
+	}
+	&[data-state="success"] {
+		--demo-status-color: var(--color-lime-500);
+	}
+	&[data-state="warning"] {
+		--demo-status-color: var(--color-orange-400);
+	}
+	&[data-state="error"] {
+		--demo-status-color: var(--color-red-500);
+	}
+}
+
+/* Scrolling log / terminal output. */
+.demo-log {
+	@apply border-muted/40 bg-global-text/5 max-h-56 overflow-y-auto rounded-sm border px-4 py-3 break-words whitespace-pre-wrap;
+}
