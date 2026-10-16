@@ -27,6 +27,8 @@ export const siteConfig: SiteConfig = {
 			day: "numeric",
 			month: "short",
 			year: "numeric",
+			// The site is built on GitHub's servers (UTC); show dates in Pacific time instead.
+			timeZone: "America/Los_Angeles",
 		},
 	},
 };
