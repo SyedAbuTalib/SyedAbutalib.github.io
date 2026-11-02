@@ -59,6 +59,12 @@ export const demos: Demo[] = [
 			"Verifies decodeAudioData(), Web Audio multichannel routing, and direct <audio> element playback with per-channel peak level meters.",
 	},
 	{
+		title: "Speaker Layout vs WebAudio maxChannelCount",
+		href: "/channel-check/",
+		description:
+			"Per output device: the channel count the media pipeline renders IAMF (MSE) playback with, read back via captureStream(), next to AudioContext.destination.maxChannelCount.",
+	},
+	{
 		title: "Spotify Heardle",
 		href: "https://syedabutalib.github.io/heardle/",
 		description:

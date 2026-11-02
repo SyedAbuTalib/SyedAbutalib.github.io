@@ -1,0 +1,398 @@
+---
+import { MSE_TYPES } from "@/data/mse";
+import PageLayout from "@/layouts/Base.astro";
+
+const meta = {
+	description:
+		"Per output device: the channel count the media pipeline renders IAMF (MSE) playback with, read back via captureStream(), next to AudioContext.destination.maxChannelCount.",
+	title: "Speaker Layout vs WebAudio maxChannelCount",
+};
+
+const samples: { name: string; type: keyof typeof MSE_TYPES; label: string }[] = [
+	{ name: "714_frag.mp4", type: "mp4_iamf_avc_high_l40", label: "IAMF 7.1.4 + AVC" },
+	{
+		name: "iamf_alternating_sine_waves_714.mp4",
+		type: "mp4_iamf_avc_high_l40",
+		label: "IAMF 7.1.4, alternating sines",
+	},
+	{
+		name: "iamf_alternating_sine_waves_stereo.mp4",
+		type: "mp4_iamf_avc_high_l40",
+		label: "IAMF stereo",
+	},
+	{ name: "iamf_syed_voice_audio_only.mp4", type: "audio_iamf_opus", label: "IAMF audio-only" },
+	{ name: "stereo_opus.webm", type: "opus", label: "Plain Opus stereo (non-IAMF control)" },
+];
+---
+
+<PageLayout meta={meta}>
+	<h1 class="title mb-6">Speaker Layout vs WebAudio maxChannelCount</h1>
+	<p class="mb-6">
+		Two readouts for one output device. The media pipeline follows the speaker configuration set
+		in Audio MIDI Setup; Web Audio exposes every physical channel. Change the configuration, reload,
+		and run both sides again.
+	</p>
+
+	<aside class="admonition mb-10" data-admonition-type="note" aria-label="How to read it">
+		<p class="admonition-title" aria-hidden="true">How to read it</p>
+		<div class="admonition-content">
+			<ul class="list-inside list-disc space-y-2" role="list">
+				<li>
+					<strong>Media channels</strong> come from <code>video.captureStream()</code>: the audio
+					track's <code>channelCount</code> is set from the buses the renderer produces, so it equals
+					the layout Chrome picked for the device — 12 for 7.1.4, 6 for 5.1, 2 for stereo, N for an
+					unconfigured N-channel device. The same value shows in <code>chrome://media-internals</code>{" "}
+					→ Audio as <code>channels:</code>.
+				</li>
+				<li>
+					<strong><code>destination.channelCount</code> is 2 on every device</strong> — that is the Web
+					Audio default, not the speaker layout. <code>maxChannelCount</code> is the physical channel
+					count; opening more channels than the speaker configuration becomes a discrete stream.
+				</li>
+				<li>
+					Listing specific devices needs <code>enumerateDevices()</code> labels, which Chrome only
+					returns after a microphone permission. Without it, both sides use the system default
+					output.
+				</li>
+			</ul>
+		</div>
+	</aside>
+
+	<section aria-labelledby="device-heading" class="mb-12">
+		<h2 id="device-heading" class="title mb-4 text-xl">Output device</h2>
+		<div class="flex flex-wrap items-center gap-3">
+			<select id="cc-device" class="demo-input w-full sm:max-w-md" aria-label="Output device">
+				<option value="">System default</option>
+			</select>
+			<button id="cc-list-devices" class="demo-button" data-variant="outline" type="button">
+				List devices (asks for microphone permission once)
+			</button>
+		</div>
+		<p id="cc-device-status" class="demo-status mt-4" role="status" hidden></p>
+	</section>
+
+	<section aria-labelledby="media-heading" class="mb-12">
+		<h2 id="media-heading" class="title mb-4 text-xl">1. IAMF player (MSE)</h2>
+		<div class="mb-4 flex flex-wrap items-center gap-3">
+			<select id="cc-sample" class="demo-input w-full sm:max-w-md" aria-label="Sample">
+				{samples.map((sample) => (
+					<option value={sample.name} data-type={sample.type}>
+						{sample.name} — {sample.label}
+					</option>
+				))}
+			</select>
+			<button id="cc-play-media" class="demo-button" type="button">Play and read back</button>
+		</div>
+		<video id="cc-video" controls playsinline class="border-muted/40 aspect-video w-full border"
+		></video>
+		<dl class="mt-3 grid grid-cols-[auto_1fr] gap-x-4 gap-y-1">
+			<dt class="text-muted">media channels</dt>
+			<dd>
+				<span id="cc-media-channels" class="text-accent text-3xl font-bold">—</span>
+				<span id="cc-media-layout" class="text-muted ms-2"></span>
+			</dd>
+			<dt class="text-muted">file</dt>
+			<dd id="cc-media-file" class="break-all">—</dd>
+			<dt class="text-muted">type</dt>
+			<dd id="cc-media-type" class="break-all">—</dd>
+			<dt class="text-muted">device</dt>
+			<dd id="cc-media-device">—</dd>
+		</dl>
+		<p id="cc-media-status" class="demo-status mt-4" role="status" hidden></p>
+	</section>
+
+	<section aria-labelledby="webaudio-heading" class="mb-12">
+		<h2 id="webaudio-heading" class="title mb-4 text-xl">2. Web Audio</h2>
+		<div class="mb-4 flex flex-wrap items-center gap-3">
+			<button id="cc-probe-webaudio" class="demo-button" type="button">
+				Create AudioContext and read back
+			</button>
+			<label class="flex items-center gap-2">
+				<span>Play tones on</span>
+				<input
+					id="cc-tone-channels"
+					class="demo-input w-20"
+					type="number"
+					min="1"
+					max="32"
+					value="2"
+					aria-label="Channel count for tones"
+				/>
+				<span>channels</span>
+			</label>
+			<button id="cc-play-tones" class="demo-button" data-variant="outline" type="button">
+				Play
+			</button>
+			<button id="cc-stop-tones" class="demo-button" data-variant="outline" type="button">
+				Stop
+			</button>
+		</div>
+		<dl class="grid grid-cols-[auto_1fr] gap-x-4 gap-y-1">
+			<dt class="text-muted">channelCount / maxChannelCount</dt>
+			<dd>
+				<span id="cc-webaudio-channels" class="text-accent text-3xl font-bold">—</span>
+				<span id="cc-webaudio-layout" class="text-muted ms-2"></span>
+			</dd>
+			<dt class="text-muted">device</dt>
+			<dd id="cc-webaudio-device">—</dd>
+			<dt class="text-muted">context</dt>
+			<dd id="cc-webaudio-context">—</dd>
+		</dl>
+		<p id="cc-webaudio-status" class="demo-status mt-4" role="status" hidden></p>
+	</section>
+
+	<section aria-labelledby="log-heading">
+		<h2 id="log-heading" class="title mb-4 text-xl">Log</h2>
+		<pre id="cc-log" class="demo-log font-mono text-sm"></pre>
+	</section>
+</PageLayout>
+
+<script>
+	import { MSE_TYPES } from "@/data/mse";
+	import { describeChannels } from "@/utils/mediaInfo";
+	import { whenPageShown } from "@/utils/prerender";
+
+	type SinkContextOptions = AudioContextOptions & { sinkId?: string };
+	type CapturableVideo = HTMLVideoElement & { captureStream(): MediaStream };
+	type StatusState = "info" | "success" | "warning" | "error";
+
+	function byId<T extends HTMLElement>(id: string): T {
+		const el = document.getElementById(id);
+		if (!el) throw new Error(`#${id} is missing`);
+		return el as T;
+	}
+
+	const sleep = (ms: number) => new Promise<void>((resolve) => setTimeout(resolve, ms));
+
+	const deviceSelect = byId<HTMLSelectElement>("cc-device");
+	const sampleSelect = byId<HTMLSelectElement>("cc-sample");
+	const video = byId<CapturableVideo>("cc-video");
+	const toneChannels = byId<HTMLInputElement>("cc-tone-channels");
+	const logEl = byId<HTMLElement>("cc-log");
+
+	function setText(id: string, text: string) {
+		byId(id).textContent = text;
+	}
+
+	function setStatus(id: string, text: string, state: StatusState) {
+		const el = byId(id);
+		el.textContent = text;
+		el.dataset.state = state;
+		el.hidden = false;
+	}
+
+	function appendLog(line: string) {
+		const stamp = new Date().toISOString().slice(11, 23);
+		logEl.textContent = `${stamp} ${line}\n${logEl.textContent ?? ""}`;
+	}
+
+	function selectedDevice() {
+		const option = deviceSelect.selectedOptions[0];
+		return { id: option?.value ?? "", label: option?.textContent?.trim() || "System default" };
+	}
+
+	async function listDevices() {
+		try {
+			const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+			for (const track of stream.getTracks()) track.stop();
+			const outputs = (await navigator.mediaDevices.enumerateDevices()).filter(
+				(device) =>
+					device.kind === "audiooutput" && !/^(Default|Communications) - /i.test(device.label),
+			);
+			deviceSelect.replaceChildren(
+				new Option("System default", ""),
+				...outputs.map((device) => new Option(device.label, device.deviceId)),
+			);
+			setStatus("cc-device-status", `${outputs.length} output device(s) listed.`, "success");
+			appendLog(`outputs: ${outputs.map((device) => device.label).join(" | ")}`);
+		} catch (error) {
+			setStatus("cc-device-status", `Could not list devices: ${String(error)}`, "error");
+		}
+	}
+
+	function resetVideo() {
+		video.pause();
+		video.removeAttribute("src");
+		video.load();
+	}
+
+	async function appendWholeFile(url: string, mime: string) {
+		const bytes = await (await fetch(url)).arrayBuffer();
+		const mediaSource = new MediaSource();
+		video.src = URL.createObjectURL(mediaSource);
+		await new Promise<void>((resolve, reject) => {
+			mediaSource.addEventListener(
+				"sourceopen",
+				() => {
+					try {
+						const sourceBuffer = mediaSource.addSourceBuffer(mime);
+						sourceBuffer.addEventListener(
+							"updateend",
+							() => {
+								if (mediaSource.readyState === "open") mediaSource.endOfStream();
+								resolve();
+							},
+							{ once: true },
+						);
+						sourceBuffer.appendBuffer(bytes);
+					} catch (error) {
+						reject(error);
+					}
+				},
+				{ once: true },
+			);
+		});
+	}
+
+	/** Channel count of the buses the media pipeline renders, via the captureStream() track. */
+	async function readMediaChannels(): Promise<number> {
+		const stream = video.captureStream();
+		const started = performance.now();
+		while (performance.now() - started < 6000) {
+			if (video.error) throw new Error(`media error ${video.error.code}`);
+			const track = stream.getAudioTracks()[0];
+			const channels = track?.getSettings().channelCount;
+			if (channels && video.currentTime > 0.3) return channels;
+			await sleep(100);
+		}
+		throw new Error("no audio track settings after 6 s");
+	}
+
+	async function playAndMeasure() {
+		const option = sampleSelect.selectedOptions[0];
+		const name = option?.value ?? "";
+		const mime = MSE_TYPES[option?.dataset.type ?? ""] ?? "";
+		const device = selectedDevice();
+		setText("cc-media-channels", "…");
+		setText("cc-media-layout", "");
+		setText("cc-media-file", name);
+		setText("cc-media-type", mime);
+		setText("cc-media-device", device.label);
+		setStatus("cc-media-status", "Loading…", "info");
+		try {
+			resetVideo();
+			if (!MediaSource.isTypeSupported(mime)) {
+				throw new Error(`MediaSource.isTypeSupported is false for ${mime}`);
+			}
+			await video.setSinkId(device.id);
+			await appendWholeFile(`/assets/media/${name}`, mime);
+			video.loop = true;
+			video.volume = 0.5;
+			await video.play();
+			const channels = await readMediaChannels();
+			setText("cc-media-channels", String(channels));
+			setText("cc-media-layout", describeChannels(channels));
+			setStatus(
+				"cc-media-status",
+				`Playing. The media pipeline renders ${channels} channel(s) on ${device.label}; chrome://media-internals → Audio shows the same stream now.`,
+				"success",
+			);
+			appendLog(`media: ${name} on ${device.label} → ${channels} channel(s)`);
+		} catch (error) {
+			setText("cc-media-channels", "—");
+			setStatus("cc-media-status", String(error), "error");
+			appendLog(`media error: ${String(error)}`);
+		}
+	}
+
+	let context: AudioContext | undefined;
+	let oscillators: OscillatorNode[] = [];
+
+	async function closeContext() {
+		for (const oscillator of oscillators) {
+			try {
+				oscillator.stop();
+			} catch {
+				// Already stopped.
+			}
+		}
+		oscillators = [];
+		if (context) {
+			await context.close().catch(() => undefined);
+			context = undefined;
+		}
+	}
+
+	function createContext(sinkId: string) {
+		const options: SinkContextOptions | undefined = sinkId ? { sinkId } : undefined;
+		return new AudioContext(options);
+	}
+
+	async function probeWebAudio() {
+		const device = selectedDevice();
+		try {
+			await closeContext();
+			context = createContext(device.id);
+			await context.resume();
+			const { channelCount, maxChannelCount } = context.destination;
+			toneChannels.value = String(maxChannelCount);
+			setText("cc-webaudio-channels", `${channelCount} / ${maxChannelCount}`);
+			setText("cc-webaudio-layout", `max ${describeChannels(maxChannelCount)}`);
+			setText("cc-webaudio-device", device.label);
+			setText("cc-webaudio-context", `${context.sampleRate} Hz, ${context.state}`);
+			setStatus(
+				"cc-webaudio-status",
+				`channelCount ${channelCount} is the Web Audio default; maxChannelCount ${maxChannelCount} is the physical channel count.`,
+				"success",
+			);
+			appendLog(
+				`webaudio: ${device.label} → channelCount=${channelCount} maxChannelCount=${maxChannelCount}`,
+			);
+		} catch (error) {
+			setStatus("cc-webaudio-status", String(error), "error");
+			appendLog(`webaudio error: ${String(error)}`);
+		}
+	}
+
+	async function playTones() {
+		const device = selectedDevice();
+		const channels = Number(toneChannels.value);
+		try {
+			await closeContext();
+			context = createContext(device.id);
+			await context.resume();
+			const destination = context.destination;
+			destination.channelCount = channels;
+			destination.channelCountMode = "explicit";
+			destination.channelInterpretation = "discrete";
+			const merger = context.createChannelMerger(channels);
+			merger.connect(destination);
+			for (let index = 0; index < channels; index += 1) {
+				const oscillator = context.createOscillator();
+				const gain = context.createGain();
+				oscillator.frequency.value = 200 + index * 35;
+				gain.gain.value = 0.2;
+				oscillator.connect(gain).connect(merger, 0, index);
+				oscillator.start();
+				oscillators.push(oscillator);
+			}
+			setText("cc-webaudio-context", `${context.sampleRate} Hz, ${context.state}`);
+			setStatus(
+				"cc-webaudio-status",
+				`Playing ${channels} discrete channel(s) on ${device.label} (channelCount=${destination.channelCount}).`,
+				"success",
+			);
+			appendLog(`webaudio: playing ${channels} channel(s) on ${device.label}`);
+		} catch (error) {
+			setStatus("cc-webaudio-status", `channelCount=${channels}: ${String(error)}`, "error");
+			appendLog(`webaudio: channelCount=${channels} → ${String(error)}`);
+		}
+	}
+
+	async function stopTones() {
+		await closeContext();
+		setStatus("cc-webaudio-status", "Stopped.", "info");
+	}
+
+	byId<HTMLButtonElement>("cc-list-devices").addEventListener("click", listDevices);
+	byId<HTMLButtonElement>("cc-play-media").addEventListener("click", playAndMeasure);
+	byId<HTMLButtonElement>("cc-probe-webaudio").addEventListener("click", probeWebAudio);
+	byId<HTMLButtonElement>("cc-play-tones").addEventListener("click", playTones);
+	byId<HTMLButtonElement>("cc-stop-tones").addEventListener("click", stopTones);
+
+	whenPageShown(() => {
+		if (typeof MediaSource === "undefined") {
+			setStatus("cc-media-status", "MediaSource is not available in this browser.", "error");
+		}
+	});
+</script>
